@@ -1,11 +1,5 @@
 const admin = require("firebase-admin");
-
-const privateKey = settingJSON?.privateKey;
-
-if (!privateKey) {
-  console.error("❌ Firebase private key not found in global setting.");
-  process.exit(1); // Exit process to prevent running without credentials
-}
+const getFirebaseAdmin = require("../util/privateKey");
 
 //import model
 const User = require("../models/user.model");
@@ -31,7 +25,13 @@ const validateUserAccessToken = async (req, res, next) => {
   try {
     console.log("🔹 [AUTH] Verifying Firebase token...");
 
-    const [decodedToken, mongoUser] = await Promise.all([admin.auth().verifyIdToken(token), User.findOne({ firebaseUid: userUid }).select("_id isBlock").lean()]);
+    const firebaseAdmin = await getFirebaseAdmin();
+    firebaseAdmin.app();
+
+    const [decodedToken, mongoUser] = await Promise.all([
+      firebaseAdmin.auth().verifyIdToken(token),
+      User.findOne({ firebaseUid: userUid }).select("_id isBlock").lean(),
+    ]);
 
     if (!decodedToken) {
       console.warn("⚠️ [AUTH] Token verification failed.");

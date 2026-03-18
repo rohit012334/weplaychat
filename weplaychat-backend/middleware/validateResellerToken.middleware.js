@@ -1,11 +1,5 @@
 const admin = require("firebase-admin");
-
-const privateKey = settingJSON?.privateKey;
-
-if (!privateKey) {
-  console.error("❌ Firebase private key not found in global setting.");
-  process.exit(1); // Exit process to prevent running without credentials
-}
+const getFirebaseAdmin = require("../util/privateKey");
 
 //import model
 const Reseller = require("../models/Reseller.model");
@@ -29,7 +23,14 @@ const validateResellerFirebaseToken = async (req, res, next) => {
   const token = authHeader.split("Bearer ")[1];
 
   try {
-    const [decodedToken, reseller] = await Promise.all([admin.auth().verifyIdToken(token), Reseller.findOne({ uid: resellerUid }).select("_id email password")]);
+    // Ensure Firebase Admin SDK is initialized (required before verifyIdToken).
+    const firebaseAdmin = await getFirebaseAdmin();
+    firebaseAdmin.app();
+
+    const [decodedToken, reseller] = await Promise.all([
+      firebaseAdmin.auth().verifyIdToken(token),
+      Reseller.findOne({ uid: resellerUid }).select("_id email password"),
+    ]);
 
     if (!decodedToken || !decodedToken.email) {
       console.warn("⚠️ [AUTH] Invalid token. Email not found.");

@@ -1,11 +1,5 @@
 const admin = require("firebase-admin");
-
-const privateKey = settingJSON?.privateKey;
-
-if (!privateKey) {
-  console.error("❌ Firebase private key not found in global setting.");
-  process.exit(1); // Exit process to prevent running without credentials
-}
+const getFirebaseAdmin = require("../util/privateKey");
 
 //import model
 const Agency = require("../models/agency.model");
@@ -29,7 +23,16 @@ const validateAgencyFirebaseToken = async (req, res, next) => {
   const token = authHeader.split("Bearer ")[1];
 
   try {
-    const [decodedToken, agency] = await Promise.all([admin.auth().verifyIdToken(token), Agency.findOne({ uid: agencyUid }).select("_id email password")]);
+    // Ensure Firebase Admin SDK is initialized (required before verifyIdToken).
+    const firebaseAdmin = await getFirebaseAdmin();
+    // Throws if default app still isn't registered; helps catch init issues early.
+    firebaseAdmin.app();
+    console.log("✅ [AUTH] Firebase Admin default app ready");
+
+    const [decodedToken, agency] = await Promise.all([
+      firebaseAdmin.auth().verifyIdToken(token),
+      Agency.findOne({ uid: agencyUid }).select("_id email password"),
+    ]);
 
     if (!decodedToken || !decodedToken.email) {
       console.warn("⚠️ [AUTH] Invalid token. Email not found.");
