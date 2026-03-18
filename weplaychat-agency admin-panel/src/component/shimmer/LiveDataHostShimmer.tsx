@@ -1,5 +1,4 @@
 import React from "react";
-import "../../assets/shimmer/LiveDataHostShimmer.css";
 
 const LiveDataHostShimmer = () => {
   return (

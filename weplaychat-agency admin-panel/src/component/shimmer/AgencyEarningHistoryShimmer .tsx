@@ -1,5 +1,4 @@
 import React from "react";
-import "../../assets/shimmer/AgencyEarningHistoryShimmer.css";
 
 const AgencyEarningHistoryShimmer = () => {
   return (

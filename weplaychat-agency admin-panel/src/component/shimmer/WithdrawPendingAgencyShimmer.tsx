@@ -1,5 +1,4 @@
 import React from "react";
-import "../../assets/shimmer/WithdrawPendingAgencyShimmer.css";
 
 const WithdrawPendingAgencyShimmer = () => {
   return (

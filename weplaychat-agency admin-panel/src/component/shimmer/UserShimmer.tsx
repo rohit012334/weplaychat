@@ -1,5 +1,4 @@
 import React from "react";
-import "../../assets/shimmer/UserShimmer.css";
 
 const UserShimmer = () => {
   return (

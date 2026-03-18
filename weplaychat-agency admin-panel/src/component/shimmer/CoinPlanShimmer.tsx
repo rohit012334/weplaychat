@@ -1,5 +1,4 @@
 import React from "react";
-import "../../assets/shimmer/CoinPlanShimmer.css";
 
 const CoinPlanShimmer = () => {
   return (

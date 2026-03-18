@@ -1,5 +1,4 @@
 import React from "react";
-import "../../assets/shimmer/AcceptedHostRequestShimmer.css";
 
 const AcceptedHostRequestShimmer = () => {
   return (
