@@ -14,10 +14,13 @@ const nextConfig = {
     ],
   },
   async rewrites() {
+    // In production, localhost is the Vercel runtime, not your backend.
+    // Configure NEXT_PUBLIC_API_BASE_URL (e.g. https://<backend>.up.railway.app)
+    const apiBaseUrl = (process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000").replace(/\/$/, "");
     return [
       {
         source: "/api/:path*",
-        destination: "http://localhost:8000/api/:path",
+        destination: `${apiBaseUrl}/api/:path*`,
       },
     ];
   },
