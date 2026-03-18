@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter } from "next/router";
 import { useEffect, useRef, useState } from "react";
 import { openDialog } from "@/store/dialogSlice";
 import { RootStore, useAppDispatch } from "@/store/store";

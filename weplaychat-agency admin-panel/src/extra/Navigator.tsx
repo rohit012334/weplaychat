@@ -1,9 +1,11 @@
 import { Tooltip } from "@mui/material";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useRouter } from "next/router";
 
 const Navigator = (props: any) => {
-  const location = usePathname();
+  const router = useRouter();
+  // Pages Router mein asPath is current URL ko reflect karta hai (query ke saath).
+  const location = (router.asPath || "").split("?")[0];
 
   const { name, path, navIcon, onClick, navSVG, navIconImg, key, path2 , path3 , path4 , path5, path6, path7, path8 } =
     props;

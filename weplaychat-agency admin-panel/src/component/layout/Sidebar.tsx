@@ -1,7 +1,7 @@
 import Navigator from "@/extra/Navigator";
 import { useEffect, useState } from "react";
 import sideBarLogo from "../../assets/images/unnamed__2_..-removebg-preview.png";
-import { useRouter } from "next/navigation";
+import { useRouter } from "next/router";
 import $ from "jquery";
 import { projectName } from "@/utils/config";
 import CommonDialog from "@/utils/CommonDialog";
