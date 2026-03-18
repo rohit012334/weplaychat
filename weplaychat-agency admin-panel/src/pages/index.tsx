@@ -2,7 +2,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Login from "./agencyLogin";
-import "../globals.css";
 
 import Registration from "./Registration";
 import axios from "axios";

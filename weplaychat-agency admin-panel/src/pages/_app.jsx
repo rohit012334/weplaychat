@@ -1,6 +1,7 @@
 "use client";
 import { Providers } from "@/Provider";
 import { ToastContainer } from "react-toastify";
+import "../globals.css";
 import "react-toastify/dist/ReactToastify.css";
 import "../assets/scss/custom/custom.css";
 import "../assets/scss/default/default.css";
