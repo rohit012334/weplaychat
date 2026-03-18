@@ -9,6 +9,7 @@ import TrashIcon from "@/assets/images/delete.svg";
 import EditIcon from "@/assets/images/edit.svg";
 import ToggleSwitch from "@/extra/TogggleSwitch";
 import CommonDialog from "@/utils/CommonDialog";
+import { baseURL } from "@/utils/config";
 import { getBanners, deleteBanner, updateBannerStatus } from "@/store/bannerSlice";
 import BannerDialog from "@/component/banner/BannerDialog";
 
