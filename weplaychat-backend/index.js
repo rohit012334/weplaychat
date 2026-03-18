@@ -48,6 +48,15 @@ const port = process.env.PORT || 8000;
 async function startServer() {
   console.log("🔄 Initializing server...");
 
+  // Basic routes (keep these up even if DB/services are down)
+  app.get("/", (req, res) => {
+    res.status(200).json({ ok: true, name: process.env.APP_NAME || "WePlayChat" });
+  });
+
+  app.get("/health", (req, res) => {
+    res.status(200).json({ ok: true });
+  });
+
   // Start Server immediately
   server.listen(port, () => {
     console.log("Hello World! listening on " + port);
