@@ -1,0 +1,409 @@
+import { openDialog } from "@/store/dialogSlice";
+import { RootStore, useAppDispatch } from "@/store/store";
+import { baseURL } from "@/utils/config";
+import { useRouter } from "next/router";
+import React, { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
+import Table from "@/extra/Table";
+import Pagination from "@/extra/Pagination";
+import ReasonDialog from "@/component/hostRequest/HostReasonDialog";
+import { getWithdrawalRequest } from "@/store/withdrawalSlice";
+import male from "@/assets/images/male.png";
+import { getDefaultCurrency } from "@/store/settingSlice";
+import infoImage from "@/assets/images/info.svg";
+import coin from "@/assets/images/coin.png";
+import WithdrawerShimmer from "../Shimmer/WithdrawerShimmer";
+
+const AcceptedWithrawRequest = (props: any) => {
+  const { statusType, type, startDate, endDate } = props;
+  const router = useRouter();
+
+  const person = type === "user" ? 3 : type === "host" ? 2 : type === "agency" ? 1 : null;
+  const status = statusType === "pending_Request" ? 1
+    : statusType === "accepted_Request" ? 2
+    : statusType === "declined_Request" ? 3 : null;
+
+  const { acceptedWithdrawal, totalAcceptedWithdrawal } = useSelector((state: RootStore) => state.withdrawal);
+  const { dialogueType } = useSelector((state: RootStore) => state.dialogue);
+  const { defaultCurrency } = useSelector((state: RootStore) => state.setting);
+  const dispatch = useAppDispatch();
+
+  const [search,      setSearch]      = useState<string | undefined>("All");
+  const [rowsPerPage, setRowsPerPage] = useState<number>(20);
+  const [page,        setPage]        = useState<number>(1);
+  const [openInfo,    setOpenInfo]    = useState(false);
+  const [infoData,    setInfoData]    = useState<any>(null);
+
+  useEffect(() => { dispatch(getDefaultCurrency()); }, [dispatch]);
+
+  useEffect(() => {
+    const payload: any = { start: page, limit: rowsPerPage, search, startDate, endDate, person, status };
+    if (status && person && statusType && type) dispatch(getWithdrawalRequest(payload));
+  }, [dispatch, page, rowsPerPage, search, person, status, startDate, endDate, statusType, type]);
+
+  const handleChangePage     = (_: any, newPage: any) => setPage(newPage);
+  const handleChangeRowsPerPage = (event: any) => { setRowsPerPage(parseInt(event, 10)); setPage(1); };
+
+  const withdrawTable = [
+    {
+      Header: "No",
+      Cell: ({ index }: { index: number }) => (
+        <span className="aw-cell-no">{(page - 1) * rowsPerPage + index + 1}</span>
+      ),
+    },
+    {
+      Header: "Unique ID",
+      Cell: ({ row }: { row: any }) => (
+        <span className="aw-cell-mono">{row?.uniqueId || "—"}</span>
+      ),
+    },
+    type === "agency"
+      ? {
+          Header: "Agency",
+          Cell: ({ row }: { row: any }) => {
+            const imgPath = row?.agencyId?.image?.replace(/\\/g, "/") || "";
+            return (
+              <div className="aw-person-cell">
+                <img
+                  src={row?.agencyId?.image ? baseURL + imgPath : male.src}
+                  alt={row?.agencyId?.name}
+                  className="aw-avatar"
+                  onError={(e: any) => { e.target.src = male.src; }}
+                />
+                <span className="aw-person-name">{row?.agencyId?.name || "—"}</span>
+              </div>
+            );
+          },
+        }
+      : {
+          Header: "Host",
+          Cell: ({ row }: { row: any }) => {
+            const imgPath = row?.hostId?.image?.replace(/\\/g, "/") || "";
+            return (
+              <div className="aw-person-cell" onClick={() => router.push("/Host/HostInfoPage")}
+                style={{ cursor: "pointer" }}>
+                <img
+                  src={row?.hostId?.image ? baseURL + imgPath : male.src}
+                  alt={row?.hostId?.name}
+                  className="aw-avatar"
+                  onError={(e: any) => { e.target.src = male.src; }}
+                />
+                <span className="aw-person-name">{row?.hostId?.name || "—"}</span>
+              </div>
+            );
+          },
+        },
+    {
+      Header: "Coin",
+      Cell: ({ row }: { row: any }) => (
+        <div className="aw-coin-cell">
+          <img src={coin.src} height={20} width={20} alt="Coin" />
+          <span className="aw-coin-val">{row?.coin || 0}</span>
+        </div>
+      ),
+    },
+    {
+      Header: `Amount (${defaultCurrency?.symbol})`,
+      Cell: ({ row }: { row: any }) => (
+        <span className="aw-badge aw-badge-green">
+          {defaultCurrency?.symbol}{row?.amount || 0}
+        </span>
+      ),
+    },
+    {
+      Header: "Date",
+      Cell: ({ row }: { row: any }) => (
+        <span className="aw-cell-date">{row?.acceptOrDeclineDate?.split(",")[0] || "—"}</span>
+      ),
+    },
+    {
+      Header: "Info",
+      Cell: ({ row }: { row: any }) => (
+        <button
+          className="aw-info-btn"
+          title="View Payment Info"
+          onClick={() => { setInfoData(row); setOpenInfo(true); }}
+        >
+          <img src={infoImage.src} height={16} width={16} alt="Info" />
+        </button>
+      ),
+    },
+  ];
+
+  return (
+    <>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Outfit:wght@400;500;600;700&display=swap');
+
+        .aw-wrap {
+          --accent:  #6366f1;
+          --a-soft:  rgba(99,102,241,0.09);
+          --a-mid:   rgba(99,102,241,0.16);
+          --green:   #10b981;
+          --g-soft:  rgba(16,185,129,0.10);
+          --g-mid:   rgba(16,185,129,0.22);
+          --g-glow:  rgba(16,185,129,0.18);
+          --amber:   #f59e0b;
+          --am-soft: rgba(245,158,11,0.10);
+          --am-mid:  rgba(245,158,11,0.22);
+          --border:  #e8eaf2;
+          --txt:     #64748b;
+          --txt-dark:#1e2235;
+          --txt-dim: #a0a8c0;
+          --white:   #ffffff;
+          --bg:      #f4f5fb;
+          font-family: 'Outfit', sans-serif;
+        }
+
+        /* No */
+        .aw-wrap .aw-cell-no {
+          font-family: 'Rajdhani', sans-serif;
+          font-weight: 700; font-size: 14px; color: var(--txt-dim);
+        }
+
+        /* Mono ID */
+        .aw-wrap .aw-cell-mono {
+          font-family: monospace; font-size: 12px; color: var(--txt);
+          background: var(--bg); padding: 3px 8px;
+          border-radius: 6px; border: 1px solid var(--border);
+          white-space: nowrap;
+        }
+
+        /* Person cell */
+        .aw-wrap .aw-person-cell {
+          display: flex; align-items: center; gap: 10px;
+        }
+        .aw-wrap .aw-avatar {
+          width: 38px; height: 38px; border-radius: 50%;
+          object-fit: cover; border: 2px solid var(--border); flex-shrink: 0;
+        }
+        .aw-wrap .aw-person-name {
+          font-size: 13.5px; font-weight: 600; color: var(--txt-dark);
+          white-space: nowrap;
+        }
+
+        /* Coin cell */
+        .aw-wrap .aw-coin-cell {
+          display: inline-flex; align-items: center; gap: 7px;
+          background: var(--am-soft); border: 1px solid var(--am-mid);
+          padding: 4px 11px; border-radius: 20px;
+        }
+        .aw-wrap .aw-coin-val {
+          font-size: 13px; font-weight: 700; color: var(--amber);
+        }
+
+        /* Badges */
+        .aw-wrap .aw-badge {
+          display: inline-flex; align-items: center;
+          padding: 3px 11px; border-radius: 20px;
+          font-size: 12.5px; font-weight: 700; white-space: nowrap;
+        }
+        .aw-wrap .aw-badge-green {
+          background: var(--g-soft); color: var(--green);
+          border: 1px solid var(--g-mid);
+        }
+
+        /* Date */
+        .aw-wrap .aw-cell-date {
+          font-size: 12.5px; color: var(--txt-dim);
+          font-weight: 500; white-space: nowrap;
+        }
+
+        /* Info button */
+        .aw-wrap .aw-info-btn {
+          width: 34px; height: 34px; border-radius: 9px;
+          display: inline-flex; align-items: center; justify-content: center;
+          border: 1.5px solid var(--border); background: var(--bg);
+          cursor: pointer;
+          transition: background .14s, border-color .14s, transform .12s;
+        }
+        .aw-wrap .aw-info-btn:hover {
+          background: var(--g-soft); border-color: var(--green); transform: scale(1.08);
+        }
+
+        /* Pagination */
+        .aw-wrap .aw-pagination {
+          padding: 16px 0 0; border-top: 1px solid var(--border); margin-top: 4px;
+        }
+
+        /* ── Info Modal ── */
+        .aw-modal-overlay {
+          position: fixed; inset: 0; z-index: 1300;
+          background: rgba(15,17,35,0.55);
+          backdrop-filter: blur(4px);
+          display: flex; align-items: center; justify-content: center;
+          padding: 16px;
+        }
+        .aw-modal-box {
+          --green:   #10b981;
+          --g-soft:  rgba(16,185,129,0.09);
+          --g-mid:   rgba(16,185,129,0.20);
+          --g-glow:  rgba(16,185,129,0.22);
+          --border:  #e8eaf2;
+          --txt:     #64748b;
+          --txt-dark:#1e2235;
+          --txt-dim: #a0a8c0;
+          --white:   #ffffff;
+          --bg:      #f7f8fc;
+          --error:   #f43f5e;
+          --e-soft:  rgba(244,63,94,0.08);
+
+          font-family: 'Outfit', sans-serif;
+          background: var(--white);
+          border-radius: 20px;
+          width: 100%; max-width: 460px;
+          box-shadow: 0 24px 64px rgba(15,17,35,0.18), 0 0 0 1px var(--border);
+          overflow: hidden;
+          animation: aw-modal-in .22s cubic-bezier(.4,0,.2,1);
+          max-height: 90vh; display: flex; flex-direction: column;
+        }
+        @keyframes aw-modal-in {
+          from { opacity:0; transform:translateY(14px) scale(0.97); }
+          to   { opacity:1; transform:translateY(0)    scale(1);    }
+        }
+        .aw-modal-box .aw-modal-header {
+          display: flex; align-items: center; justify-content: space-between;
+          padding: 20px 24px 18px;
+          background: linear-gradient(135deg, var(--g-soft), rgba(16,185,129,0.02));
+          border-bottom: 1px solid var(--border); flex-shrink: 0;
+        }
+        .aw-modal-box .aw-modal-header-left { display: flex; align-items: center; gap: 10px; }
+        .aw-modal-box .aw-modal-icon {
+          width: 38px; height: 38px; border-radius: 11px;
+          background: var(--g-soft); color: var(--green);
+          display: flex; align-items: center; justify-content: center;
+          border: 1px solid var(--g-mid); flex-shrink: 0;
+        }
+        .aw-modal-box .aw-modal-title {
+          font-family: 'Rajdhani', sans-serif; font-size: 18px;
+          font-weight: 700; color: var(--txt-dark); margin: 0; line-height: 1.1;
+        }
+        .aw-modal-box .aw-modal-sub { font-size: 11.5px; color: var(--txt-dim); margin-top: 1px; }
+        .aw-modal-box .aw-modal-close {
+          width: 32px; height: 32px; border-radius: 9px;
+          display: flex; align-items: center; justify-content: center;
+          border: 1.5px solid var(--border); background: var(--bg);
+          cursor: pointer; color: var(--txt-dim);
+          transition: background .14s, color .14s, border-color .14s;
+        }
+        .aw-modal-box .aw-modal-close:hover {
+          background: var(--e-soft); border-color: var(--error); color: var(--error);
+        }
+        .aw-modal-box .aw-modal-body {
+          padding: 20px 24px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px;
+        }
+        .aw-modal-box .aw-info-row {
+          display: flex; flex-direction: column; gap: 5px;
+        }
+        .aw-modal-box .aw-info-label {
+          font-size: 11.5px; font-weight: 600; color: var(--txt-dim);
+          text-transform: uppercase; letter-spacing: 0.04em;
+        }
+        .aw-modal-box .aw-info-val {
+          font-size: 13.5px; font-weight: 600; color: var(--txt-dark);
+          background: var(--bg); padding: 9px 14px;
+          border-radius: 10px; border: 1.5px solid var(--border);
+          word-break: break-all;
+        }
+        .aw-modal-box .aw-modal-footer {
+          padding: 14px 24px 20px;
+          border-top: 1px solid var(--border); flex-shrink: 0;
+          display: flex; justify-content: flex-end;
+        }
+        .aw-modal-box .aw-modal-close-btn {
+          padding: 9px 22px; border-radius: 10px; border: none;
+          background: linear-gradient(135deg, var(--green), #059669);
+          color: #fff; font-family: 'Outfit', sans-serif;
+          font-size: 13.5px; font-weight: 600; cursor: pointer;
+          box-shadow: 0 4px 14px var(--g-glow);
+          transition: box-shadow .15s, transform .13s;
+        }
+        .aw-modal-box .aw-modal-close-btn:hover {
+          box-shadow: 0 6px 20px var(--g-glow); transform: translateY(-1px);
+        }
+      `}</style>
+
+      {dialogueType === "reasondialog" && <ReasonDialog />}
+
+      <div className="aw-wrap">
+        <Table
+          data={acceptedWithdrawal}
+          mapData={withdrawTable}
+          PerPage={rowsPerPage}
+          Page={page}
+          type="server"
+          shimmer={<WithdrawerShimmer />}
+        />
+        <div className="aw-pagination">
+          <Pagination
+            type="server"
+            serverPage={page}
+            setServerPage={setPage}
+            serverPerPage={rowsPerPage}
+            onPageChange={handleChangePage}
+            onRowsPerPageChange={handleChangeRowsPerPage}
+            totalData={totalAcceptedWithdrawal}
+          />
+        </div>
+      </div>
+
+      {/* ── Payment Info Modal ── */}
+      {openInfo && (
+        <div className="aw-modal-overlay" onClick={() => setOpenInfo(false)}>
+          <div className="aw-modal-box" onClick={(e) => e.stopPropagation()}>
+
+            <div className="aw-modal-header">
+              <div className="aw-modal-header-left">
+                <div className="aw-modal-icon">
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="8" x2="12" y2="12"/>
+                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                  </svg>
+                </div>
+                <div>
+                  <h4 className="aw-modal-title">Payment Detail</h4>
+                  <p className="aw-modal-sub">Accepted withdrawal info</p>
+                </div>
+              </div>
+              <button className="aw-modal-close" onClick={() => setOpenInfo(false)}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                  <line x1="18" y1="6" x2="6" y2="18"/>
+                  <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
+            </div>
+
+            <div className="aw-modal-body">
+              {/* Payment Gateway */}
+              <div className="aw-info-row">
+                <span className="aw-info-label">Payment Gateway</span>
+                <span className="aw-info-val">{infoData?.paymentGateway || "—"}</span>
+              </div>
+
+              {/* Dynamic payment details */}
+              {infoData?.paymentDetails &&
+                Object.entries(infoData.paymentDetails).map(([key, value]: [string, any]) => (
+                  <div className="aw-info-row" key={key}>
+                    <span className="aw-info-label">{key}</span>
+                    <span className="aw-info-val">{value || "—"}</span>
+                  </div>
+                ))}
+            </div>
+
+            <div className="aw-modal-footer">
+              <button className="aw-modal-close-btn" onClick={() => setOpenInfo(false)}>
+                Close
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+    </>
+  );
+};
+
+export default AcceptedWithrawRequest;
