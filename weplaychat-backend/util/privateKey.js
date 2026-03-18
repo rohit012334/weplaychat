@@ -18,10 +18,14 @@ const initFirebase = async () => {
 
       const serviceAccount = validation.privateKey;
 
-      if (!admin.apps.length) {
-        console.log("🔄 Initializing Firebase Admin SDK...");
+      // Firebase Admin throws "The default Firebase app does not exist" if no default app is registered.
+      // Even if admin.apps is non-empty (named apps exist), we must ensure the default app exists.
+      try {
+        admin.app(); // throws if default app doesn't exist
+      } catch {
+        console.log("🔄 Initializing default Firebase Admin app...");
         admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
-        console.log("✅ Firebase initialized successfully");
+        console.log("✅ Default Firebase app initialized successfully");
       }
 
       firebaseInstance = admin;
