@@ -17,9 +17,6 @@ const Block = require("./models/block.model");
 //generateHistoryUniqueId
 const generateHistoryUniqueId = require("./util/generateHistoryUniqueId");
 
-//private key
-const admin = require("./util/privateKey");
-
 //mongoose
 const mongoose = require("mongoose");
 

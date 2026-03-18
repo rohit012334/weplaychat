@@ -8,7 +8,7 @@ const cryptr = getCryptr();
 
 // delete file
 const { deleteFile } = require("../../util/deletefile");
-const firebaseAdminPromise = require("../../util/privateKey");
+const getFirebaseAdmin = require("../../util/privateKey");
 const { generateRoleUniqueId } = require("../../util/generateUniqueId");
 
 // fs and mongoose
@@ -75,7 +75,7 @@ exports.createReseller = async (req, res) => {
 
         let firebaseInstance;
         try {
-            firebaseInstance = await firebaseAdminPromise;
+            firebaseInstance = await getFirebaseAdmin();
         } catch (firebaseError) {
             console.error("Firebase initialization failed in createReseller:", firebaseError);
             if (req.file) deleteFile(req.file.path);
@@ -432,7 +432,7 @@ exports.deleteReseller = async (req, res) => {
             });
         }
 
-        const firebaseInstance = await firebaseAdminPromise;
+        const firebaseInstance = await getFirebaseAdmin();
 
         if (reseller.uid) {
             await firebaseInstance.auth().deleteUser(reseller.uid);
@@ -480,7 +480,7 @@ exports.updateResellerPasswordById = async (req, res) => {
             });
         }
 
-        const firebaseInstance = await firebaseAdminPromise;
+        const firebaseInstance = await getFirebaseAdmin();
 
         if (reseller.uid) {
             await firebaseInstance.auth().updateUser(reseller.uid, {

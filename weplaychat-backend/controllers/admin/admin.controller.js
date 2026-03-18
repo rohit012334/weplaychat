@@ -9,7 +9,7 @@ const cryptr = getCryptr();
 
 //deletefile
 const { deleteFile } = require("../../util/deletefile");
-const firebaseAdminPromise = require("../../util/privateKey");
+const getFirebaseAdmin = require("../../util/privateKey");
 
 const _0x32b6ab = _0x2223;
 (function (_0x2ea54a, _0x4d73d8) {
@@ -302,7 +302,7 @@ exports.registerSuperAdmin = async (req, res) => {
     //     });
     // }
 
-    const firebaseInstance = await firebaseAdminPromise;
+    const firebaseInstance = await getFirebaseAdmin();
     let firebaseUid;
 
     try {
@@ -687,7 +687,7 @@ exports.addAdmin = async (req, res) => {
         message: "Admin with this UID or email already exists.",
       });
     }
-    const firebaseInstance = await firebaseAdminPromise;
+    const firebaseInstance = await getFirebaseAdmin();
     let firebaseUser;
     try {
       firebaseUser = await firebaseInstance.auth().createUser({
@@ -811,7 +811,7 @@ exports.deleteAdmin = async (req, res) => {
       });
     }
 
-    const firebaseInstance = await firebaseAdminPromise;
+    const firebaseInstance = await getFirebaseAdmin();
 
     const firebaseUser = await firebaseInstance.auth().deleteUser(admin.uid);
 

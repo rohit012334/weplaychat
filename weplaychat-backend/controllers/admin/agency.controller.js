@@ -18,7 +18,7 @@ const axios = require("axios");
 const { deleteFile } = require("../../util/deletefile");
 
 //private key
-const firebaseAdminPromise = require("../../util/privateKey");
+const getFirebaseAdmin = require("../../util/privateKey");
 
 //create agency
 function _0x1b42(_0x3a1a68, _0x1e663f) {

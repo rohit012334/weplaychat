@@ -36,4 +36,4 @@ const initFirebase = async () => {
   return initializationPromise;
 };
 
-module.exports = initFirebase();
+module.exports = initFirebase;

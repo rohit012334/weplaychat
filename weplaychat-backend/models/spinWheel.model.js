@@ -32,7 +32,5 @@ const spinWheelSchema = new mongoose.Schema(
   }
 );
 
-spinWheelSchema.index({ key: 1 });
-
 module.exports = mongoose.model("SpinWheel", spinWheelSchema);
 

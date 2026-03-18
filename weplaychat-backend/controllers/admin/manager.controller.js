@@ -6,7 +6,7 @@ const cryptr = getCryptr();
 
 //deletefile
 const { deleteFile } = require("../../util/deletefile");
-const firebaseAdminPromise = require("../../util/privateKey");
+const getFirebaseAdmin = require("../../util/privateKey");
 
 exports.createManager = async (req, res) => {
   try {
@@ -67,7 +67,7 @@ exports.createManager = async (req, res) => {
 
     let firebaseInstance;
     try {
-      firebaseInstance = await firebaseAdminPromise;
+      firebaseInstance = await getFirebaseAdmin();
     } catch (firebaseError) {
       console.error("Firebase initialization failed in createManager:", firebaseError);
       if (req.file) deleteFile(req.file.path);
@@ -242,7 +242,7 @@ exports.deleteManager = async (req, res) => {
       return res.status(400).json({ status: false, message: "Manager not found." });
     }
 
-    const firebaseInstance = await firebaseAdminPromise;
+    const firebaseInstance = await getFirebaseAdmin();
     if (manager.uid) {
       await firebaseInstance.auth().deleteUser(manager.uid);
     }

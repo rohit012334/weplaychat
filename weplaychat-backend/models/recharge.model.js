@@ -68,6 +68,5 @@ const rechargeSchema = new Schema(
 rechargeSchema.index({ userId: 1, createdAt: -1 });
 rechargeSchema.index({ resellerId: 1, createdAt: -1 });
 rechargeSchema.index({ status: 1, createdAt: -1 });
-rechargeSchema.index({ uniqueId: 1 });
 
 module.exports = mongoose.model("Recharge", rechargeSchema);
