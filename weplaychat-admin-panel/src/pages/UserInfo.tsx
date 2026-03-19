@@ -431,7 +431,7 @@ const UserInfo = () => {
                       .map((url: string, i: number) => (
                         <img
                           key={i}
-                          src={baseURL + url}
+                          src={getStorageUrl(url)}
                           className="ui-id-img"
                           alt={`ID Proof ${i + 1}`}
                         />
@@ -451,7 +451,7 @@ const UserInfo = () => {
                     {userProfile.photoGallery.map((url: string, i: number) => (
                       <img
                         key={i}
-                        src={userProfile?.image ? baseURL + url : male.src}
+                        src={userProfile?.image ? getStorageUrl(url) : male.src}
                         className="ui-gallery-img"
                         alt={`Gallery ${i + 1}`}
                       />
