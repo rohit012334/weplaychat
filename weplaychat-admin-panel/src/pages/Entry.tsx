@@ -50,14 +50,15 @@ const EntryContent = () => {
   const renderPreview = (row: any) => {
     const src = getFileUrl(row.file);
     if (!src) return <span className="ec-no-file">No file</span>;
-    if (row.type === "mp4") {
+    const type = (row.type || "").toLowerCase().trim();
+    if (type === "mp4") {
       return (
         <video src={src} autoPlay loop muted
           style={{ width: "70px", height: "50px", objectFit: "cover", borderRadius: "8px", border: "1px solid #e8eaf2" }}
         />
       );
     }
-    if (row.type === "svga") {
+    if (type === "svga") {
       return (
         <div style={{ width: "70px", height: "50px", overflow: "hidden", borderRadius: "8px", background: "#f8f9fa", display: "flex", alignItems: "center", justifyContent: "center" }}>
           <SvgaPlayer url={src} id={`table-entry-${row._id}`} key={src} />

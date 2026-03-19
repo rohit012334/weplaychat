@@ -37,7 +37,7 @@ const EventContent = () => {
             Cell: ({ row }: { row: any }) => {
                 const src = row?.image ? getImageUrl(row.image) : "";
                 if (!src) return <span className="bc-no-img">No Image</span>;
-                if (src.toLowerCase().endsWith(".svga")) {
+                if (src.toLowerCase().trim().endsWith(".svga")) {
                     return (
                         <div style={{ width: "90px", height: "50px", overflow: "hidden", borderRadius: "8px", background: "#f8f9fa", display: "flex", alignItems: "center", justifyContent: "center", cursor: "zoom-in" }} onClick={() => setPreviewSrc(src)}>
                             <SvgaPlayer url={src} id={`table-event-${row._id}`} key={src} />
