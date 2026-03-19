@@ -4,7 +4,7 @@ import { RootStore, useAppDispatch } from "@/store/store";
 import { closeDialog } from "@/store/dialogSlice";
 import Button from "@/extra/Button";
 import { createBackground, updateBackground } from "@/store/backgroundSlice";
-import { baseURL } from "@/utils/config";
+import { baseURL, getStorageUrl } from "@/utils/config";
 import { DangerRight } from "@/api/toastServices";
 
 type FileType = "mp4" | "jpg" | "png";
@@ -44,8 +44,7 @@ const BackgroundDialog = () => {
             setMongoId(dialogueData._id || "");
             setFileType(dialogueData.type || "");
             if (dialogueData.file) {
-                const src = dialogueData.file.startsWith("http") ? dialogueData.file : `${baseURL}${dialogueData.file}`;
-                setFilePreview(src);
+                setFilePreview(getStorageUrl(dialogueData.file));
             }
         }
     }, [dialogueData]);

@@ -10,7 +10,8 @@ import CommonDialog from "@/utils/CommonDialog";
 import { getEvents, deleteEvent } from "@/store/eventSlice";
 import EventDialog from "@/component/event/EventDialog";
 import RootLayout from "@/component/layout/Layout";
-import { baseURL } from "@/utils/config";
+import { baseURL, getStorageUrl } from "@/utils/config";
+import SvgaPlayer from "@/extra/SvgaPlayer";
 
 const EventContent = () => {
     const dispatch = useDispatch();
@@ -27,11 +28,7 @@ const EventContent = () => {
         dispatch(getEvents({ start: page, limit: rowsPerPage }));
     }, [dispatch, page, rowsPerPage]);
 
-    const getImageUrl = (p: string) => {
-        if (!p) return "";
-        const norm = p.replace(/\\/g, "/");
-        return norm.startsWith("http") ? norm : `${baseURL}${norm.startsWith("/") ? norm.slice(1) : norm}`;
-    };
+    const getImageUrl = (p: string) => getStorageUrl(p);
 
     const eventTable = [
         { Header: "No", Cell: ({ index }: { index: any }) => <span className="bc-cell-num">{(page - 1) * rowsPerPage + parseInt(index) + 1}</span> },
@@ -39,15 +36,21 @@ const EventContent = () => {
             Header: "Image",
             Cell: ({ row }: { row: any }) => {
                 const src = row?.image ? getImageUrl(row.image) : "";
-                return src ? (
+                if (!src) return <span className="bc-no-img">No Image</span>;
+                if (src.toLowerCase().endsWith(".svga")) {
+                    return (
+                        <div style={{ width: "90px", height: "50px", overflow: "hidden", borderRadius: "8px", background: "#f8f9fa", display: "flex", alignItems: "center", justifyContent: "center", cursor: "zoom-in" }} onClick={() => setPreviewSrc(src)}>
+                            <SvgaPlayer url={src} id={`table-event-${row._id}`} key={src} />
+                        </div>
+                    );
+                }
+                return (
                     <img
                         src={src}
                         onClick={() => setPreviewSrc(src)}
                         style={{ width: "90px", height: "50px", objectFit: "cover", borderRadius: "8px", border: "1px solid #e8eaf2", cursor: "zoom-in" }}
                         alt="Event"
                     />
-                ) : (
-                    <span className="bc-no-img">No Image</span>
                 );
             }
         },
@@ -148,7 +151,13 @@ const EventContent = () => {
                     </button>
                   </div>
                   <div className="img-preview-body">
-                    <img src={previewSrc} alt="Event preview" />
+                    {previewSrc.toLowerCase().endsWith(".svga") ? (
+                        <div style={{ width: "100%", height: "min(76vh, 720px)", display: "flex", justifyContent: "center", background: "#f8f9fa" }}>
+                            <SvgaPlayer url={previewSrc} id="preview-event-zoom" key={previewSrc} />
+                        </div>
+                    ) : (
+                        <img src={previewSrc} alt="Event preview" />
+                    )}
                   </div>
                 </div>
               </div>

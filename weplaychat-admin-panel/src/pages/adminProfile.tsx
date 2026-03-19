@@ -11,6 +11,7 @@ import { isSkeleton } from "@/utils/allSelector";
 import male from "@/assets/images/user.png";
 import { auth } from "@/component/lib/firebaseConfig";
 import React from "react";
+import { DangerRight } from "@/api/toastServices";
 
 interface ErrorState {
   name: string; email: string;
@@ -63,19 +64,34 @@ const AdminProfile = () => {
       });
       return;
     }
-    const formData = new FormData();
-    if (image) formData.append("image", image);
-    formData.append("name", name);
-    formData.append("email", email);
-
-    const user = auth?.currentUser;
-    if (!user?.email) return;
-    const stored: any = sessionStorage.getItem("data");
-    const decryptedPassword = CryptoJS.AES.decrypt(stored, key).toString(CryptoJS.enc.Utf8);
-    const credential = EmailAuthProvider.credential(user.email, decryptedPassword);
-    await reauthenticateWithCredential(user, credential);
-    if (user.email !== email) await updateEmail(user, email);
-    dispatch(adminProfileUpdate(formData));
+    
+    try {
+      const user = auth?.currentUser;
+      if (user) {
+        // If email is being changed, we MUST re-authenticate
+        if (user.email !== email) {
+          const stored: any = sessionStorage.getItem("data");
+          if (!stored) {
+             DangerRight("Session expired. Please logout and login again to change email.");
+             return;
+          }
+          const decryptedPassword = CryptoJS.AES.decrypt(stored, key).toString(CryptoJS.enc.Utf8);
+          const credential = EmailAuthProvider.credential(user.email || "", decryptedPassword);
+          await reauthenticateWithCredential(user, credential);
+          await updateEmail(user, email);
+        }
+      }
+      
+      const formData = new FormData();
+      if (image) formData.append("image", image);
+      formData.append("name", name);
+      formData.append("email", email);
+      
+      dispatch(adminProfileUpdate(formData));
+    } catch (err: any) {
+      console.error(err);
+      DangerRight(err.message || "Failed to update profile");
+    }
   };
 
   const handleChangePassword = async () => {

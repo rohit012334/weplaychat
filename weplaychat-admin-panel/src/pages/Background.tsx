@@ -11,7 +11,7 @@ import ToggleSwitch from "@/extra/TogggleSwitch";
 import CommonDialog from "@/utils/CommonDialog";
 import { getBackgrounds, deleteBackground, updateBackgroundStatus } from "@/store/backgroundSlice";
 import BackgroundDialog from "@/component/background/BackgroundDialog";
-import { baseURL } from "@/utils/config";
+import { baseURL, getStorageUrl } from "@/utils/config";
 
 const BackgroundPage = () => {
     const dispatch = useDispatch();
@@ -27,10 +27,7 @@ const BackgroundPage = () => {
         dispatch(getBackgrounds({ start: page, limit: rowsPerPage }));
     }, [dispatch, page, rowsPerPage]);
 
-    const getFileUrl = (filePath: string) => {
-        if (!filePath) return "";
-        return filePath.startsWith("http") ? filePath : `${baseURL}${filePath}`;
-    };
+    const getFileUrl = (filePath: string) => getStorageUrl(filePath);
 
     const backgroundTable = [
         {

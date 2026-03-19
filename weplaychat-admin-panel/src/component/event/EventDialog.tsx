@@ -5,7 +5,8 @@ import { closeDialog } from "@/store/dialogSlice";
 import { ExInput } from "@/extra/Input";
 import Button from "@/extra/Button";
 import { createEvent, updateEvent } from "@/store/eventSlice";
-import { baseURL } from "@/utils/config";
+import { baseURL, getStorageUrl } from "@/utils/config";
+import SvgaPlayer from "@/extra/SvgaPlayer";
 
 const EventDialog = () => {
     const { dialogueData } = useSelector((state: RootStore) => state.dialogue);
@@ -23,8 +24,7 @@ const EventDialog = () => {
             setMongoId(dialogueData._id || "");
             setLink(dialogueData.link || "");
             if (dialogueData.image) {
-                const norm = String(dialogueData.image).replace(/\\/g, "/");
-                setImagePreview(norm.startsWith("http") ? norm : `${baseURL}${norm.startsWith("/") ? norm.slice(1) : norm}`);
+                setImagePreview(getStorageUrl(dialogueData.image));
             }
         }
     }, [dialogueData]);
@@ -75,9 +75,17 @@ const EventDialog = () => {
                                     <div className="col-12 mt-3">
                                         <label className="form-label" style={{ fontWeight: 600, fontSize: "14px", color: "#555" }}>Event Image</label>
                                         <div onClick={() => fileInputRef.current?.click()} style={{ border: "2px dashed #8F6DFF", borderRadius: "12px", padding: "12px", cursor: "pointer", textAlign: "center", background: "#faf8ff", minHeight: "100px", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: "8px" }}>
-                                            {imagePreview ? <img src={imagePreview} alt="Preview" style={{ maxWidth: "100%", maxHeight: "150px", borderRadius: "8px", objectFit: "cover" }} /> : <span style={{ color: "#8F6DFF" }}>Click to upload image</span>}
+                                            {imagePreview ? (
+                                                imagePreview.toLowerCase().endsWith(".svga") ? (
+                                                    <SvgaPlayer url={imagePreview} id="preview-event-svga" key={imagePreview} />
+                                                ) : (
+                                                    <img src={imagePreview} alt="Preview" style={{ maxWidth: "100%", maxHeight: "150px", borderRadius: "8px", objectFit: "cover" }} />
+                                                )
+                                            ) : (
+                                                <span style={{ color: "#8F6DFF" }}>Click to upload image or SVGA</span>
+                                            )}
                                         </div>
-                                        <input ref={fileInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleImageChange} />
+                                        <input ref={fileInputRef} type="file" accept="image/*,.svga" style={{ display: "none" }} onChange={handleImageChange} />
                                     </div>
 
                                     <div className="mt-4 d-flex justify-content-end gap-1">

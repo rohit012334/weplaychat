@@ -11,7 +11,8 @@ import ToggleSwitch from "@/extra/TogggleSwitch";
 import CommonDialog from "@/utils/CommonDialog";
 import { getEntryTags, deleteEntryTag, updateEntryTagStatus } from "@/store/entryTagSlice";
 import EntryTagDialog from "@/component/entryTag/EntryTagDialog";
-import { baseURL } from "@/utils/config";
+import { baseURL, getStorageUrl } from "@/utils/config";
+import SvgaPlayer from "@/extra/SvgaPlayer";
 
 const EntryTagPage = () => {
     const dispatch = useDispatch();
@@ -27,10 +28,7 @@ const EntryTagPage = () => {
         dispatch(getEntryTags({ start: page, limit: rowsPerPage }));
     }, [dispatch, page, rowsPerPage]);
 
-    const getFileUrl = (filePath: string) => {
-        if (!filePath) return "";
-        return filePath.startsWith("http") ? filePath : `${baseURL}${filePath}`;
-    };
+    const getFileUrl = (filePath: string) => getStorageUrl(filePath);
 
     const entryTagTable = [
         { Header: "No", Cell: ({ index }: { index: any }) => <span className="ec-cell-num">{(page - 1) * rowsPerPage + parseInt(index) + 1}</span> },
@@ -39,7 +37,8 @@ const EntryTagPage = () => {
             Cell: ({ row }: { row: any }) => {
                 const src = getFileUrl(row.file);
                 if (row.type === "mp4") return <video src={src} autoPlay loop muted width="70" height="50" style={{ borderRadius: 8 }} />;
-                return <span style={{ color: "#6366f1", fontWeight: 700 }}>SVGA</span>;
+                if (row.type === "svga") return <div style={{ width: 70, height: 50, borderRadius: 8, overflow: "hidden", background: "#f8f9fa", display: "flex", alignItems: "center", justifyContent: "center" }}><SvgaPlayer url={src} id={`table-svga-${row._id}`} key={src} /></div>;
+                return <span style={{ color: "#6366f1", fontWeight: 700 }}>{row.type}</span>;
             },
         },
         { Header: "Type", Cell: ({ row }: { row: any }) => <span style={{ textTransform: "uppercase", fontSize: 12, fontWeight: 700 }}>{row.type}</span> },

@@ -10,7 +10,8 @@ import ToggleSwitch from "@/extra/TogggleSwitch";
 import CommonDialog from "@/utils/CommonDialog";
 import { getFrames, deleteFrame, updateFrameStatus } from "@/store/frameSlice";
 import FrameDialog from "@/component/frame/FrameDialog";
-import { baseURL } from "@/utils/config";
+import { baseURL, getStorageUrl } from "@/utils/config";
+import SvgaPlayer from "@/extra/SvgaPlayer";
 
 const FrameContent = () => {
   const dispatch = useDispatch();
@@ -43,10 +44,7 @@ const FrameContent = () => {
     }
   };
 
-  const getFileUrl = (filePath: string) => {
-    if (!filePath) return "";
-    return filePath.startsWith("http") ? filePath : `${baseURL}${filePath}`;
-  };
+  const getFileUrl = (filePath: string) => getStorageUrl(filePath);
 
   const renderPreview = (row: any) => {
     const src = getFileUrl(row.file);
@@ -60,7 +58,9 @@ const FrameContent = () => {
     }
     if (row.type === "svga") {
       return (
-        <span className="fc-svga-badge">SVGA</span>
+        <div style={{ width: "70px", height: "50px", overflow: "hidden", borderRadius: "8px", background: "#f8f9fa", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <SvgaPlayer url={src} id={`table-frame-${row._id}`} key={src} />
+        </div>
       );
     }
     return (

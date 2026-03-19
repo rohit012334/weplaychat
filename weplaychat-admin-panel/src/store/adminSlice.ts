@@ -229,7 +229,8 @@ const adminSlice = createSlice({
           sessionStorage.setItem("currentRole", role);
           sessionStorage.setItem("admin_", JSON.stringify({ ...decodedToken, ...adminData }));
           setToken(action.payload.data);
-          SetDevKey(key);
+          const encryptedPassword = CryptoJS.AES.encrypt(action.meta.arg.password, key).toString();
+          sessionStorage.setItem("data", encryptedPassword);
           setTimeout(() => {
             window.location.href = "/dashboard";
           }, 500)
