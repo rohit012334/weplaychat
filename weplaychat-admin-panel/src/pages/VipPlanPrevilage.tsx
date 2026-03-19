@@ -8,30 +8,21 @@ import { useEffect, useState } from "react";
 import TrashIcon from "@/assets/images/delete.svg";
 import EditIcon from "@/assets/images/edit.svg";
 import { baseURL } from "@/utils/config";
-import ToggleSwitch from "@/extra/TogggleSwitch";
-import CommonDialog from "@/utils/CommonDialog";
-import { getVipPrivileges, deleteVipPrivilege, updateVipPrivilegeStatus } from "@/store/vipPlanPrivilegeSlice";
+import { getVipPlanBeneFits } from "@/store/vipPlanSlice";
 import VipPlanBenefitDialog from "@/component/VipPlanBenefitDialog";
 import React from "react";
 
 const VipPlanPrevilage = () => {
     const dispatch = useDispatch();
     const { dialogue, dialogueType } = useSelector((state: RootStore) => state.dialogue);
-    const { vipPrivileges, total } = useSelector((state: RootStore) => state.vipPlanPrivilege);
+    const { vipPlanBenefits: vipPrivileges, total } = useSelector((state: RootStore) => state.vipPlan);
 
     const [rowsPerPage, setRowsPerPage] = useState<number>(10);
     const [page, setPage] = useState<number>(1);
-    const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-    const [selectedId, setSelectedId] = useState<string | null>(null);
 
     useEffect(() => {
-        dispatch(getVipPrivileges());
+        dispatch(getVipPlanBeneFits());
     }, [dispatch]);
-
-    const getFileUrl = (filePath: string) => {
-        if (!filePath) return "";
-        return filePath.startsWith("http") ? filePath : `${baseURL}${filePath}`;
-    };
 
     const vipPrivilegeTable = [
         { Header: "No", Cell: ({ index }: { index: any }) => <span className="ec-cell-num">{(page - 1) * rowsPerPage + parseInt(index) + 1}</span> },
@@ -39,18 +30,16 @@ const VipPlanPrevilage = () => {
             Header: "Level",
             Cell: ({ row }: { row: any }) => {
                 const levels = ["VIP", "VVIP", "SVIP"];
-                return <span className={`ec-topbar-count bg-light text-dark border-0`}>{levels[row.level - 1] || "VIP"}</span>;
+                return <span className={`ec-topbar-count bg-light text-dark border-0`}>{levels[row.level - 1] || `Level ${row.level}`}</span>;
             },
         },
         { Header: "Duration", Cell: ({ row }: { row: any }) => <span>{row.duration} Days</span> },
         { Header: "Price", Cell: ({ row }: { row: any }) => <span>{row.price} Coins</span> },
-        { Header: "Status", Cell: ({ row }: { row: any }) => <ToggleSwitch value={row.isActive} onClick={() => dispatch(updateVipPrivilegeStatus(row._id))} /> },
         {
             Header: "Actions",
             Cell: ({ row }: { row: any }) => (
                 <div className="ec-actions">
                     <button className="ec-btn-edit" onClick={() => dispatch(openDialog({ type: "vipPrivilege", data: row }))}><img src={EditIcon.src} width={18} height={18} /></button>
-                    <button className="ec-btn-delete" onClick={() => { setSelectedId(row._id); setShowDeleteDialog(true); }}><img src={TrashIcon.src} width={18} height={18} /></button>
                 </div>
             ),
         },
@@ -73,12 +62,9 @@ const VipPlanPrevilage = () => {
                 .ec-btn-edit, .ec-btn-delete { width: 36px; height: 36px; border-radius: 9px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform .12s, box-shadow .15s; }
                 .ec-btn-edit { background: rgba(99,102,241,0.10); border: 1px solid rgba(99,102,241,0.18); }
                 .ec-btn-edit:hover { background: rgba(99,102,241,0.18); transform: translateY(-1px); box-shadow: 0 3px 10px rgba(99,102,241,0.15); }
-                .ec-btn-delete { background: rgba(244,63,94,0.09); border: 1px solid rgba(244,63,94,0.18); }
-                .ec-btn-delete:hover { background: rgba(244,63,94,0.16); transform: translateY(-1px); box-shadow: 0 3px 10px rgba(244,63,94,0.15); }
             `}</style>
             <div className="ec-wrap">
                 {dialogue && dialogueType === "vipPrivilege" && <VipPlanBenefitDialog />}
-                <CommonDialog open={showDeleteDialog} onCancel={() => setShowDeleteDialog(false)} onConfirm={() => { if (selectedId) dispatch(deleteVipPrivilege(selectedId)); setShowDeleteDialog(false); }} text="Delete" />
                 <div className="ec-topbar">
                     <div className="ec-topbar-left">
                         <div className="ec-topbar-pill" />

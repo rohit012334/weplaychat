@@ -2,12 +2,12 @@ import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { RootStore, useAppDispatch } from "@/store/store";
 import { closeDialog } from "@/store/dialogSlice";
-import { createVipPrivilege, updateVipPrivilege } from "@/store/vipPlanPrivilegeSlice";
+import { updateVipPlanBenefits } from "@/store/vipPlanSlice";
 import { DangerRight } from "@/api/toastServices";
 
 const VipPlanBenefitDialog = () => {
   const { dialogueData } = useSelector((state: RootStore) => state.dialogue);
-  const { isLoading } = useSelector((state: RootStore) => state.vipPlanPrivilege);
+  const { isLoading } = useSelector((state: RootStore) => state.vipPlan);
   const dispatch = useAppDispatch();
 
   const [mongoId, setMongoId] = useState("");
@@ -43,17 +43,16 @@ const VipPlanBenefitDialog = () => {
   const handleSubmit = (e: React.FormEvent) => {
      e.preventDefault();
      if (!duration || !price) { DangerRight("All fields are required"); return; }
+     
      const payload = { 
         level, 
         duration: parseInt(duration), 
         price: parseInt(price),
-        benefits 
+        benefits,
+        ...(mongoId ? { privilegeId: mongoId } : {})
      };
-     if (mongoId) {
-        dispatch(updateVipPrivilege({ data: payload, privilegeId: mongoId }));
-     } else {
-        dispatch(createVipPrivilege(payload));
-     }
+
+     dispatch(updateVipPlanBenefits(payload));
      dispatch(closeDialog());
   };
 
