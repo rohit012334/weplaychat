@@ -64,6 +64,17 @@ async function startServer() {
     res.status(200).json({ ok: true });
   });
 
+  // Normalize storage paths so //storage/... and //app/storage/... match the /storage route (fixes double-slash from frontend)
+  app.use((req, res, next) => {
+    const u = req.url;
+    if (u.startsWith("//storage/")) {
+      req.url = "/storage/" + u.slice(10);
+    } else if (u.startsWith("//app/storage/")) {
+      req.url = "/storage/" + u.slice(14);
+    }
+    next();
+  });
+
   // Serve uploaded files (images, documents, mp4) — register before listen so /storage works from first request
   app.use("/storage", express.static(storageDir));
 
