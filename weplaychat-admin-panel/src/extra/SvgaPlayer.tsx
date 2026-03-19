@@ -10,55 +10,78 @@ interface SvgaPlayerProps {
 
 const SvgaPlayer: React.FC<SvgaPlayerProps> = ({ url, style, className, id = "svga-player" }) => {
   const containerRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     if (!containerRef.current || !url) return;
 
     let player: any = null;
-    let isMounted = true;
+    let cancelled = false;
+    let retryTimer: ReturnType<typeof setTimeout> | null = null;
 
-    const initPlayer = async () => {
+    const cleanupPlayer = () => {
+      if (player) {
+        try {
+          player.stopAnimation();
+          player.clear();
+        } catch (_err) {
+          // Ignore cleanup errors from third-party player internals.
+        }
+      }
+      player = null;
+      if (containerRef.current) containerRef.current.innerHTML = "";
+    };
+
+    const runPlayer = async (withRetry = true) => {
       try {
         const { Player, Parser } = await import("svgaplayerweb");
-        if (!isMounted || !containerRef.current) return;
+        if (cancelled || !containerRef.current) return;
 
-        // Clean previous
-        containerRef.current.innerHTML = "";
-        
+        cleanupPlayer();
         player = new Player(containerRef.current);
         player.setContentMode("AspectFit");
         player.loops = 0;
 
         const parser = new Parser();
-        parser.load(url, (videoItem: any) => {
-          if (!isMounted || !player) return;
-          player.setVideoItem(videoItem);
-          player.startAnimation();
-        }, (err: any) => {
-          console.error("SVGA Parser Error:", url, err);
-        });
+        parser.load(
+          url,
+          (videoItem: any) => {
+            if (cancelled || !player) return;
+            player.setVideoItem(videoItem);
+            player.startAnimation();
+          },
+          (err: any) => {
+            if (cancelled) return;
+            console.error("SVGA Parser Error:", url, err);
+            // Some files fail on first parse in certain environments; one retry helps.
+            if (withRetry) {
+              retryTimer = setTimeout(() => runPlayer(false), 250);
+            }
+          }
+        );
       } catch (err) {
-        console.error("SVGA Init Error:", err);
+        if (!cancelled) console.error("SVGA Init Error:", err);
       }
     };
 
-    initPlayer();
+    runPlayer(true);
 
     return () => {
-      isMounted = false;
-      if (player) {
-        player.stopAnimation();
-        player.clear();
-      }
+      cancelled = true;
+      if (retryTimer) clearTimeout(retryTimer);
+      cleanupPlayer();
     };
   }, [url]);
 
   return (
-    <div 
+    <div
+      id={id}
       ref={containerRef} 
       className={className}
       style={{ 
         width: "100%", 
         height: "100%", 
+        minWidth: 1,
+        minHeight: 1,
         position: "relative",
         overflow: "hidden",
         display: "flex",
