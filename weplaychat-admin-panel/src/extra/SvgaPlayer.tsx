@@ -21,7 +21,7 @@ const SvgaPlayer: React.FC<SvgaPlayerProps> = ({ url, style, className, id = "sv
             const parser = new Parser();
             player = new Player(containerRef.current!);
             
-            player.setContentMode("AspectFill");
+            player.setContentMode("AspectFit");
             player.loops = 0; // infinite
             
             parser.load(url, (videoItem: any) => {
@@ -49,7 +49,23 @@ const SvgaPlayer: React.FC<SvgaPlayerProps> = ({ url, style, className, id = "sv
     };
   }, [url]);
 
-  return <div id={id} ref={containerRef} className={className} style={{ width: "100%", height: "100%", ...style }} />;
+  return (
+    <div 
+      id={id} 
+      ref={containerRef} 
+      className={className} 
+      style={{ 
+        width: "100%", 
+        height: "100%", 
+        position: "relative",
+        overflow: "hidden",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        ...style 
+      }} 
+    />
+  );
 };
 
 export default SvgaPlayer;
