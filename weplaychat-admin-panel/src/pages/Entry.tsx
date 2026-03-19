@@ -96,27 +96,7 @@ const EntryContent = () => {
     },
     {
       Header: "Preview",
-      Cell: ({ row }: { row: any }) => (
-        <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-          {renderPreview(row)}
-          {row?.file && (
-            <span
-              style={{
-                position: "relative",
-                zIndex: 2,
-                fontSize: "10px",
-                color: "#94a3b8",
-                maxWidth: "70px",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-              }}
-            >
-              {row.file.split("/").pop() || row.file.split("\\").pop()}
-            </span>
-          )}
-        </div>
-      ),
+      Cell: ({ row }: { row: any }) => renderPreview(row),
     },
     {
       Header: "Type",
