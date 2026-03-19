@@ -17,7 +17,7 @@ const SvgaPlayer: React.FC<SvgaPlayerProps> = ({ url, style, className, id = "sv
     let player: any = null;
     let cancelled = false;
     let canvasRetryDone = false;
-    let retryTimer: ReturnType<typeof setTimeout> | null = null;
+    let retryTimer: any = null;
 
     const cleanupPlayer = () => {
       if (player) {
