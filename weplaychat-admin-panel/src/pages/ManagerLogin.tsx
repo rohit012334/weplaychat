@@ -9,6 +9,8 @@ import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../component/lib/firebaseConfig";
 import { DangerRight } from "@/api/toastServices";
 import Link from "next/link";
+import axios from "axios";
+import { baseURL } from "@/utils/config";
 
 // ── Same logo as Sidebar ──
 import LogoNew from "@/assets/images/unnamed__2_..-removebg-preview.png";
@@ -41,16 +43,33 @@ export default function ManagerLogin() {
     }
   }, [isAuth, router]);
 
-  const loginFirebase = async (email: string, password: string) => {
+  const loginFirebase = async (identifier: string, password: string) => {
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      let finalEmail = identifier.trim();
+
+      // Resolve ID to email if needed
+      if (!finalEmail.includes("@")) {
+        try {
+          const res = await axios.get(`${baseURL}api/admin/admin/resolve-id?identifier=${finalEmail}`);
+          if (res.data.status) {
+            finalEmail = res.data.email;
+          } else {
+             DangerRight(res.data.message || "Invalid Manager ID");
+             return null;
+          }
+        } catch (err) {
+           console.error("ID resolution failed:", err);
+        }
+      }
+
+      const userCredential = await signInWithEmailAndPassword(auth, finalEmail, password);
       const token = await userCredential.user.getIdToken(true);
       const uid = userCredential.user.uid;
       sessionStorage.setItem("token", token);
       sessionStorage.setItem("uid", uid);
-      return token;
+      return { token, email: finalEmail };
     } catch (error: any) {
-      DangerRight("Invalid credentials. Please check your email and password.");
+      DangerRight("Invalid credentials. Please check your email/ID and password.");
       return null;
     }
   };
@@ -69,11 +88,11 @@ export default function ManagerLogin() {
     }
 
     // Step 1: Firebase auth
-    const token = await loginFirebase(email, password);
+    const result = await loginFirebase(email, password);
 
-    if (token) {
+    if (result && result.token) {
       // Step 2: Validate against Admin collection with role=manager
-      dispatch(loginManager({ email, password }));
+      dispatch(loginManager({ email: result.email, password }));
     }
 
     dispatch(setLoading(false));
@@ -552,17 +571,17 @@ export default function ManagerLogin() {
 
           <div className="lg-form">
 
-            {/* Email */}
+            {/* Email or ID */}
             <div className="lg-field">
-              <label>Email Address</label>
+              <label>Email Address or ID</label>
               <input
                 type="text"
                 value={email}
-                placeholder="Enter your email"
+                placeholder="Enter your email or ID (e.g. MG123456)"
                 onKeyDown={handleKeyPress}
                 onChange={(e: any) => {
                   setEmail(e.target.value);
-                  setError({ ...error, email: e.target.value ? "" : "Email Id is Required" });
+                  setError({ ...error, email: e.target.value ? "" : "Email or ID is Required" });
                 }}
               />
               {error.email && <span className="lg-error">{error.email}</span>}

@@ -1,4 +1,5 @@
 const Admin = require("../../models/admin.model");
+const generateAdminCode = require("../../util/generateAdminCode");
 
 //fs
 const fs = require("fs");
@@ -164,8 +165,10 @@ exports.registerAdmin = async (req, res) => {
       });
     }
 
+    const uniqueId = await generateAdminCode("AD");
     const newAdmin = new Admin({
       uid: uid.trim(),
+      uniqueId,
       name: (req.body.name || "").trim(),
       email: email.trim(),
       password: cryptr.encrypt(password.trim()),
@@ -328,9 +331,11 @@ exports.registerSuperAdmin = async (req, res) => {
       }
     }
 
+    const uniqueId = await generateAdminCode("AD");
     // Save to MongoDB
     const superAdmin = new Admin({
       uid: firebaseUid,
+      uniqueId,
       name: name.trim(),
       email: email.trim(),
       password: cryptr.encrypt(password),
@@ -376,8 +381,11 @@ exports.validateAdminLogin = async (req, res) => {
         .json({ status: false, message: "Oops! Invalid details!" });
     }
 
-    const admin = await Admin.findOne({ email: email.trim() })
-      .select("_id name email password purchaseCode role")
+    const identifier = email.trim();
+    const admin = await Admin.findOne({ 
+      $or: [{ email: identifier }, { uniqueId: identifier }] 
+    })
+      .select("_id name email uniqueId password purchaseCode role")
       .lean();
 
     if (!admin) {
@@ -385,7 +393,7 @@ exports.validateAdminLogin = async (req, res) => {
         .status(200)
         .json({
           status: false,
-          message: "Oops! Admin not found with that email.",
+          message: "Oops! Admin not found with that email or ID.",
         });
     }
 
@@ -616,6 +624,31 @@ exports.performPasswordReset = async (req, res) => {
       .json({ status: false, error: error.message || "Internal Server Error" });
   }
 };
+// resolve identifier (ID to email)
+exports.resolveIdentifier = async (req, res) => {
+  try {
+    const { identifier } = req.query;
+    if (!identifier) return res.status(200).json({ status: false, message: "ID is required" });
+
+    // Check in Admin model first
+    let user = await Admin.findOne({ uniqueId: identifier.trim() }).select("email").lean();
+    
+    // If not found, check in Reseller model 
+    if (!user) {
+      const Reseller = require("../../models/Reseller.model");
+      user = await Reseller.findOne({ uniqueId: identifier.trim() }).select("email").lean();
+    }
+
+    if (!user) {
+      return res.status(200).json({ status: false, message: "No account found with this ID" });
+    }
+
+    return res.status(200).json({ status: true, email: user.email });
+  } catch (error) {
+    console.error("resolveIdentifier error:", error);
+    return res.status(500).json({ status: false, message: "Internal server error" });
+  }
+};
 // =============================
 // ADMIN SIGNUP / REGISTER
 // =============================
@@ -711,9 +744,11 @@ exports.addAdmin = async (req, res) => {
 
     const superAdmin = await Admin.findOne({ role: "superadmin" });
 
+    const uniqueId = await generateAdminCode("AD");
     // 8) Create admin
     const admin = new Admin({
       uid: firebaseUser.uid,
+      uniqueId,
       name,
       email,
       image: req.files?.image ? req.files.image[0].path : "",

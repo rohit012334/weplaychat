@@ -42,7 +42,12 @@ const Manager = (props: any) => {
           <div className="mg-avatar">
             {row?.name ? row.name.charAt(0).toUpperCase() : "M"}
           </div>
-          <span className="mg-name-txt">{row?.name || "—"}</span>
+          <div className="mg-name-info" style={{ display: 'flex', flexDirection: 'column' }}>
+            <span className="mg-name-txt">{row?.name || "—"}</span>
+            <span className="mg-uid-sm" style={{ fontSize: '11px', color: 'var(--ac)', fontWeight: '600' }}>
+              {row?.uniqueId ? `@${row.uniqueId}` : ''}
+            </span>
+          </div>
         </div>
       ),
     },

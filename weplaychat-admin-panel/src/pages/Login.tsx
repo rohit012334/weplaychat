@@ -9,6 +9,8 @@ import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../component/lib/firebaseConfig";
 import { DangerRight } from "@/api/toastServices";
 import Link from "next/link";
+import axios from "axios";
+import { baseURL } from "@/utils/config";
 
 // ── Same logo as Sidebar ──
 import LogoNew from "@/assets/images/unnamed__2_..-removebg-preview.png";
@@ -53,9 +55,26 @@ export default function Login() {
     setLoginLoading(false);
   };
 
-  const loginUser = async (email: string, password: string) => {
+  const loginUser = async (identifier: string, password: string) => {
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      let finalEmail = identifier.trim();
+
+      // If identifier doesn't look like an email, try to resolve it
+      if (!finalEmail.includes("@")) {
+        try {
+          const res = await axios.get(`${baseURL}api/admin/admin/resolve-id?identifier=${finalEmail}`);
+          if (res.data.status) {
+            finalEmail = res.data.email;
+          } else {
+            DangerRight(res.data.message || "Invalid ID");
+            return null;
+          }
+        } catch (err) {
+          console.error("ID resolution failed:", err);
+        }
+      }
+
+      const userCredential = await signInWithEmailAndPassword(auth, finalEmail, password);
       console.log(userCredential);
       const uid = userCredential?.user?.uid;
       if (!userCredential.user) return null;
@@ -64,7 +83,7 @@ export default function Login() {
       sessionStorage.setItem("uid", uid);
       return token;
     } catch (error: any) {
-      DangerRight("Invalid credentials. Please check your email and password.");
+      DangerRight("Invalid credentials. Please check your email/ID and password.");
       return null;
     }
   };
@@ -541,17 +560,17 @@ export default function Login() {
 
           <div className="lg-form">
 
-            {/* Email */}
+            {/* Email or ID */}
             <div className="lg-field">
-              <label>Email Address</label>
+              <label>Email Address or ID</label>
               <input
                 type="text"
                 value={email}
-                placeholder="Enter your email"
+                placeholder="Enter your email or ID (e.g. AD123456)"
                 onKeyDown={handleKeyPress}
                 onChange={(e: any) => {
                   setEmail(e.target.value);
-                  setError({ ...error, email: e.target.value ? "" : "Email Id is Required" });
+                  setError({ ...error, email: e.target.value ? "" : "Email or ID is Required" });
                 }}
               />
               {error.email && <span className="lg-error">{error.email}</span>}

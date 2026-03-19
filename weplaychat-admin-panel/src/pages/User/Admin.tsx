@@ -46,7 +46,7 @@ const Admin = (props: any) => {
                         <div className="ad-avatar">{initials}</div>
                         <div>
                             <p className="ad-name">{row?.name || "—"}</p>
-                            <p className="ad-email-sm">{row?.email || "—"}</p>
+                            <p className="ad-email-sm">{row?.uniqueId ? `@${row.uniqueId}` : (row?.email || "—")}</p>
                         </div>
                     </div>
                 );

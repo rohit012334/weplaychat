@@ -1,4 +1,5 @@
 const Admin = require("../../models/admin.model");
+const generateAdminCode = require("../../util/generateAdminCode");
 
 //Cryptr
 const getCryptr = require("../../util/getCryptr");
@@ -111,9 +112,11 @@ exports.createManager = async (req, res) => {
     // Find the superadmin to use as createdBy
     const superAdmin = await Admin.findOne({ role: "superadmin" });
 
+    const uniqueId = await generateAdminCode("MG");
     // build image paths from multer
     const manager = new Admin({
       uid: firebaseUser.uid,
+      uniqueId,
       name: name.trim(),
       email: email.trim().toLowerCase(),
       password: cryptr.encrypt(password),
@@ -161,12 +164,16 @@ exports.validateManagerLogin = async (req, res) => {
       return res.status(200).json({ status: false, message: "Oops! Invalid details!" });
     }
 
-    const manager = await Admin.findOne({ email: email.trim(), role: "manager" })
-      .select("_id name email password role")
+    const identifier = email.trim();
+    const manager = await Admin.findOne({ 
+      $or: [{ email: identifier }, { uniqueId: identifier }], 
+      role: "manager" 
+    })
+      .select("_id name email uniqueId password role")
       .lean();
 
     if (!manager) {
-      return res.status(200).json({ status: false, message: "Oops! Manager not found with that email." });
+      return res.status(200).json({ status: false, message: "Oops! Manager not found with that email or ID." });
     }
 
     let decryptedPassword;
