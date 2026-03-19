@@ -49,15 +49,19 @@ const FrameContent = () => {
   const renderPreview = (row: any) => {
     const src = getFileUrl(row.file);
     if (!src) return <span className="fc-no-file">No file</span>;
-    const type = (row.type || "").toLowerCase().trim();
-    if (type === "mp4") {
+    const rawType = row.type;
+    const type = (String(rawType) || "").toLowerCase().trim();
+    const isSvga = type === "svga" || rawType == 3;
+    const isMp4 = type === "mp4" || rawType == 4;
+
+    if (isMp4) {
       return (
         <video src={src} autoPlay loop muted
           style={{ width: "70px", height: "50px", objectFit: "cover", borderRadius: "8px", border: "1px solid #e8eaf2" }}
         />
       );
     }
-    if (type === "svga") {
+    if (isSvga) {
       return (
         <div style={{ width: "70px", height: "50px", overflow: "hidden", borderRadius: "8px", background: "#f8f9fa", display: "flex", alignItems: "center", justifyContent: "center" }}>
           <SvgaPlayer url={src} id={`table-frame-${row._id}`} key={src} />

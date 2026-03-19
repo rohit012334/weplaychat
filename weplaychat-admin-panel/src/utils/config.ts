@@ -7,16 +7,9 @@ export function getStorageUrl(path: string | null | undefined): string {
   const p = path.replace(/\\/g, "/").trim();
   if (p.startsWith("http") || p.startsWith("blob:")) return p;
   
-  // Extract filename if path includes /storage/ (already matches case insensitive via regex)
-  if (!p.toLowerCase().includes("/storage/")) return p;
-  
-  const parts = p.split(/\/storage\//i);
-  const filename = parts.pop()?.replace(/^.*\//, "") || "";
-  if (!filename) return "";
-  
-  const base = (baseURL || "").replace(/\/+$/, "");
-  const segment = `/storage/${filename}`;
-  return base ? `${base}${segment}` : segment;
+  // Replicate Gift's exact URL construction: baseURL + path
+  const normalizedPath = p.startsWith("/") ? p : `/${p}`;
+  return `${baseURL}${normalizedPath}`;
 }
 
 // NOTE: anything used in the browser must be NEXT_PUBLIC_* (it will be exposed to users).

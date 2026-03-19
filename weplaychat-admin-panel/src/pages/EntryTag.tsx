@@ -36,9 +36,17 @@ const EntryTagPage = () => {
             Header: "Preview",
             Cell: ({ row }: { row: any }) => {
                 const src = getFileUrl(row.file);
-                const type = (row.type || "").toLowerCase().trim();
-                if (type === "mp4") return <video src={src} autoPlay loop muted width="70" height="50" style={{ borderRadius: 8 }} />;
-                if (type === "svga") return <div style={{ width: 70, height: 50, borderRadius: 8, overflow: "hidden", background: "#f8f9fa", display: "flex", alignItems: "center", justifyContent: "center" }}><SvgaPlayer url={src} id={`table-svga-${row._id}`} key={src} /></div>;
+                const rawType = row.type;
+                const type = (String(rawType) || "").toLowerCase().trim();
+                const isSvga = type === "svga" || rawType == 3;
+                const isMp4 = type === "mp4" || rawType == 4;
+
+                if (isMp4) return <video src={src} autoPlay loop muted width="70" height="50" style={{ borderRadius: 8 }} />;
+                if (isSvga) return (
+                    <div style={{ width: 70, height: 50, borderRadius: 8, overflow: "hidden", background: "#f8f9fa", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <SvgaPlayer url={src} id={`table-svga-${row._id}`} key={src} />
+                    </div>
+                );
                 return <span style={{ color: "#6366f1", fontWeight: 700 }}>{row.type}</span>;
             },
         },

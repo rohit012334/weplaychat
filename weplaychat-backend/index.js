@@ -64,20 +64,9 @@ async function startServer() {
     res.status(200).json({ ok: true });
   });
 
-  // Normalize storage paths to fix double-slash issues from frontend or different deployment environments
-  app.use((req, res, next) => {
-    if (req.url.includes("/storage/")) {
-      // Remove multiple leading slashes and normalize to exactly one /storage/...
-      const parts = req.url.split(/\/storage\//i);
-      if (parts.length > 1) {
-        req.url = "/storage/" + parts.pop();
-      }
-    }
-    next();
-  });
-
-  // Serve uploaded files (images, documents, mp4) — register before listen so /storage works from first request
-  app.use("/storage", express.static(storageDir));
+  // Serve uploaded files (images, documents, mp4, svga)
+  // Mount on both /storage and //storage to handle double-slash issues from frontend
+  app.use(["/storage", "//storage"], express.static(storageDir));
 
   // Start Server immediately
   server.listen(port, () => {

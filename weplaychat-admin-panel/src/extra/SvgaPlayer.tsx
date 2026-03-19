@@ -12,46 +12,40 @@ const SvgaPlayer: React.FC<SvgaPlayerProps> = ({ url, style, className, id = "sv
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    let player: any = null;
-    let isMounted = true;
-    
-    const loadSvga = async () => {
-      try {
-        const { Player, Parser } = await import("svgaplayerweb");
-        if (!isMounted || !containerRef.current) return;
-        
-        // Clear previous content
-        containerRef.current.innerHTML = "";
-        
-        // Setup player
-        player = new Player(containerRef.current);
-        player.setContentMode("AspectFill");
-        const parser = new Parser();
-        
-        parser.load(url, (videoItem: any) => {
-          if (!isMounted) return;
-          player.setVideoItem(videoItem);
-          player.startAnimation();
-        }, (error: any) => {
-          console.error("SVGA Load Error:", error);
-        });
-      } catch (err) {
-        console.error("SVGA Player Init Error:", err);
-      }
+    if (!containerRef.current || !url) return;
+
+    let player: any;
+    const loadPlayer = async () => {
+        try {
+            const { Player, Parser } = await import("svgaplayerweb");
+            const parser = new Parser();
+            player = new Player(containerRef.current!);
+            
+            player.setContentMode("AspectFill");
+            player.loops = 0; // infinite
+            
+            parser.load(url, (videoItem: any) => {
+                if (player) {
+                    player.setVideoItem(videoItem);
+                    player.startAnimation();
+                }
+            }, (err: any) => {
+                console.error("SvgaPlayer: Parser error for", url, err);
+            });
+        } catch (err) {
+            console.error("SvgaPlayer: Init error", err);
+        }
     };
 
-    if (url) {
-      loadSvga();
+    if (typeof window !== "undefined") {
+        loadPlayer();
     }
 
     return () => {
-      isMounted = false;
-      if (player) {
-        try {
-          player.stopAnimation();
-          player.clear();
-        } catch (e) {}
-      }
+        if (player) {
+            player.stopAnimation();
+            player.clear();
+        }
     };
   }, [url]);
 
