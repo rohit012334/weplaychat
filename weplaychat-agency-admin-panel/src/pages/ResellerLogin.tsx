@@ -9,7 +9,8 @@ import { loginReseller, setLoading } from "@/store/resellerSlice";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/component/lib/firebaseConfig";
 import { DangerRight } from "@/api/toastServices";
-import { projectName } from "@/utils/config";
+import { projectName, baseURL } from "@/utils/config";
+import axios from "axios";
 
 // ✅ Different banner for Reseller — professional & collaborative connection
 const loginImageUrl =
@@ -42,17 +43,34 @@ export default function ResellerLogin() {
     }
   }, [isAuth, router]);
 
-  const loginUser = async (email: string, password: string) => {
+  const loginUser = async (identifier: string, password: string) => {
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      let finalEmail = identifier.trim();
+
+      // Resolve ID to email if not an email format
+      if (!finalEmail.includes("@")) {
+        try {
+          const res = await axios.get(`${baseURL}api/admin/admin/resolve-id?identifier=${finalEmail}`);
+          if (res.data.status) {
+            finalEmail = res.data.email;
+          } else {
+            DangerRight(res.data.message || "Invalid Reseller ID");
+            return null;
+          }
+        } catch (err) {
+          console.error("ID resolution failed:", err);
+        }
+      }
+
+      const userCredential = await signInWithEmailAndPassword(auth, finalEmail, password);
       const uid = userCredential?.user?.uid;
       if (!userCredential.user) return null;
       const token = await userCredential?.user?.getIdToken(true);
       sessionStorage.setItem("token", token);
       sessionStorage.setItem("uid", uid);
-      return token;
+      return { token, email: finalEmail };
     } catch (error: any) {
-      DangerRight("Invalid credentials. Please check your email and password.");
+      DangerRight("Invalid credentials. Please check your email/ID and password.");
       return null;
     }
   };
@@ -68,9 +86,9 @@ export default function ResellerLogin() {
     setLoginLoading(true);
     dispatch(setLoading(true));
 
-    const token = await loginUser(email, password);
-    if (token) {
-      dispatch(loginReseller({ email, password }));
+    const result = await loginUser(email, password);
+    if (result && result.token) {
+      dispatch(loginReseller({ email: result.email, password }));
     }
 
     setLoginLoading(false);
@@ -522,15 +540,15 @@ export default function ResellerLogin() {
           <div className="lg-form">
 
             <div className="lg-field">
-              <label>Email Address</label>
+              <label>Email Address or ID</label>
               <input
                 type="text"
                 value={email}
-                placeholder="Enter your email"
+                placeholder="Enter your email or Reseller ID"
                 onKeyDown={handleKeyPress}
                 onChange={(e: any) => {
                   setEmail(e.target.value);
-                  setError({ ...error, email: e.target.value ? "" : "Email Id is Required" });
+                  setError({ ...error, email: e.target.value ? "" : "Email or ID is Required" });
                 }}
               />
               {error.email && <span className="lg-error">{error.email}</span>}

@@ -639,6 +639,12 @@ exports.resolveIdentifier = async (req, res) => {
       user = await Reseller.findOne({ uniqueId: identifier.trim() }).select("email").lean();
     }
 
+    // If not found, check in Agency model 
+    if (!user) {
+      const Agency = require("../../models/agency.model");
+      user = await Agency.findOne({ agencyCode: identifier.trim() }).select("email").lean();
+    }
+
     if (!user) {
       return res.status(200).json({ status: false, message: "No account found with this ID" });
     }

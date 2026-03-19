@@ -8,6 +8,8 @@ import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/component/lib/firebaseConfig";
 import { DangerRight } from "@/api/toastServices";
 import { agencyLogin } from "@/store/agencySlice";
+import { baseURL } from "@/utils/config";
+import axios from "axios";
 
 // ✅ New banner — group of friends chatting & connecting (WePlay Chat theme)
 const loginImageUrl =
@@ -37,23 +39,42 @@ export default function Login() {
       return setError(errorObj);
     }
     setLoginLoading(true);
-    const token = await loginUser(email, password);
-    let payload: any = { email, password };
-    if (token) dispatch(agencyLogin(payload));
+    const result = await loginUser(email, password);
+    if (result && result.token) {
+      let payload: any = { email: result.email, password };
+      dispatch(agencyLogin(payload));
+    }
     setLoginLoading(false);
   };
 
-  const loginUser = async (email: string, password: string) => {
+  const loginUser = async (identifier: string, password: string) => {
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      let finalEmail = identifier.trim();
+
+      // Resolve ID to email if not email format
+      if (!finalEmail.includes("@")) {
+         try {
+           const res = await axios.get(`${baseURL}api/admin/admin/resolve-id?identifier=${finalEmail}`);
+           if (res.data.status) {
+             finalEmail = res.data.email;
+           } else {
+             DangerRight(res.data.message || "Invalid Agency ID");
+             return null;
+           }
+         } catch (err) {
+           console.error("ID resolution failed:", err);
+         }
+      }
+
+      const userCredential = await signInWithEmailAndPassword(auth, finalEmail, password);
       const uid = userCredential?.user?.uid;
       if (!userCredential.user) return null;
       const token = await userCredential?.user?.getIdToken(true);
       sessionStorage.setItem("token", token);
       sessionStorage.setItem("uid", uid);
-      return token;
+      return { token, email: finalEmail };
     } catch (error: any) {
-      DangerRight("Invalid credentials. Please check your email and password.");
+      DangerRight("Invalid credentials. Please check your email/ID and password.");
       return null;
     }
   };
@@ -503,15 +524,15 @@ export default function Login() {
           <div className="lg-form">
 
             <div className="lg-field">
-              <label>Email Address</label>
+              <label>Email Address or ID</label>
               <input
                 type="text"
                 value={email}
-                placeholder="Enter your email"
+                placeholder="Enter your email or Agency ID"
                 onKeyDown={handleKeyPress}
                 onChange={(e: any) => {
                   setEmail(e.target.value);
-                  setError({ ...error, email: e.target.value ? "" : "Email Id is Required" });
+                  setError({ ...error, email: e.target.value ? "" : "Email or ID is Required" });
                 }}
               />
               {error.email && <span className="lg-error">{error.email}</span>}
