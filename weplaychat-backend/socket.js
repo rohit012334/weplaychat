@@ -70,7 +70,7 @@ io.on("connection", async (socket) => {
     let senderPromise, receiverPromise;
 
     if (parseData?.senderRole === "user") {
-      senderPromise = User.findById(parseData?.senderId).lean().select("_id name image coin isVip");
+      senderPromise = User.findById(parseData?.senderId).lean().select("_id name image coin isVip vipLevel");
     } else if (parseData?.senderRole === "host") {
       senderPromise = Host.findById(parseData?.senderId).lean().select("_id name image isFake coin");
     }
@@ -94,10 +94,14 @@ io.on("connection", async (socket) => {
       if (parseData.senderRole === "user" && parseData.receiverRole === "host") {
         let maxFreeChatMessages = settingJSON.maxFreeChatMessages || 10;
 
-        //Check if sender is VIP
+        //Check user's VIP level and fetch privileges dynamically
         if (sender?.isVip) {
-          const vipPrivilege = await VipPlanPrivilege.findOne().select("freeMessages").lean();
-          if (vipPrivilege?.freeMessages) {
+          const vipLevel = sender.vipLevel || 1;
+          const vipPrivilege = await VipPlanPrivilege.findOne({ level: vipLevel }).lean();
+          
+          if (vipPrivilege?.unlimitedChat) {
+            maxFreeChatMessages = 999999; // Unlimited
+          } else if (vipPrivilege?.freeMessages) {
             maxFreeChatMessages = vipPrivilege.freeMessages;
           }
         }
@@ -1306,7 +1310,7 @@ io.on("connection", async (socket) => {
         let audioCallDiscount = 0;
 
         // Check if user is VIP and apply discount
-        if (caller.isVip && caller.vipPrivilege) {
+        if (caller?.isVip && vipPrivilege) {
           audioCallDiscount = Math.min(Math.max(vipPrivilege.audioCallDiscount || 0, 0), 100);
 
           const discountAmount = Math.floor((audioCallCharge * audioCallDiscount) / 100);
@@ -1396,7 +1400,7 @@ io.on("connection", async (socket) => {
 
         // Check if user is VIP and apply discount
         if (caller.isVip && vipPrivilege) {
-          privateCallDiscount = Math.min(Math.max(vipPrivilege.privateCallDiscount || 0, 0), 100);
+          privateCallDiscount = Math.min(Math.max(vipPrivilege.videoCallDiscount || 0, 0), 100);
 
           const discountAmount = Math.floor((privateCallCharge * privateCallDiscount) / 100);
           privateCallCharge = privateCallCharge - discountAmount;
@@ -1588,12 +1592,16 @@ io.on("connection", async (socket) => {
 
       const { callerId, receiverId, callId, callMode, gender } = parsedData;
 
-      const [caller, receiver, callHistory, vipPrivilege] = await Promise.all([
-        User.findById(callerId).select("_id coin").lean(),
+      const [caller, receiver, callHistory] = await Promise.all([
+        User.findById(callerId).select("_id coin isVip vipLevel").lean(),
         Host.findById(receiverId).select("_id coin privateCallRate audioCallRate randomCallRate randomCallFemaleRate randomCallMaleRate agencyId").lean(),
         History.findById(callId).select("_id callType isPrivate createdAt updatedAt").lean(),
-        VipPlanPrivilege.findOne().select("audioCallDiscount privateCallDiscount").lean(),
       ]);
+
+      let vipPrivilege = null;
+      if (caller?.isVip) {
+        vipPrivilege = await VipPlanPrivilege.findOne({ level: caller.vipLevel || 1 }).lean();
+      }
 
       if (!caller || !receiver || !callHistory) {
         console.log("[callCoinCharged] Caller, Receiver, or CallHistory not found!");
@@ -1623,7 +1631,7 @@ io.on("connection", async (socket) => {
         let audioCallDiscount = 0;
 
         // Check if user is VIP and apply discount
-        if (caller.isVip && caller.vipPrivilege) {
+        if (caller?.isVip && vipPrivilege) {
           audioCallDiscount = Math.min(Math.max(vipPrivilege.audioCallDiscount || 0, 0), 100);
 
           const discountAmount = Math.floor((audioCallCharge * audioCallDiscount) / 100);
@@ -1713,7 +1721,7 @@ io.on("connection", async (socket) => {
 
         // Check if user is VIP and apply discount
         if (caller.isVip && vipPrivilege) {
-          privateCallDiscount = Math.min(Math.max(vipPrivilege.privateCallDiscount || 0, 0), 100);
+          privateCallDiscount = Math.min(Math.max(vipPrivilege.videoCallDiscount || 0, 0), 100);
 
           const discountAmount = Math.floor((privateCallCharge * privateCallDiscount) / 100);
           privateCallCharge = privateCallCharge - discountAmount;
@@ -1905,12 +1913,16 @@ io.on("connection", async (socket) => {
 
       const { callerId, receiverId, callMode, callType, gender } = parsedData;
 
-      const [callUniqueId, caller, receiver, vipPrivilege] = await Promise.all([
+      const [callUniqueId, caller, receiver] = await Promise.all([
         generateHistoryUniqueId(),
-        User.findById(callerId).select("_id coin isVip").lean(),
+        User.findById(callerId).select("_id coin isVip vipLevel").lean(),
         Host.findById(receiverId).select("_id coin privateCallRate audioCallRate randomCallRate randomCallFemaleRate randomCallMaleRate agencyId").lean(),
-        VipPlanPrivilege.findOne().select("audioCallDiscount privateCallDiscount randomMatchCallDiscount").lean(),
       ]);
+
+      let vipPrivilege = null;
+      if (caller?.isVip) {
+        vipPrivilege = await VipPlanPrivilege.findOne({ level: caller.vipLevel || 1 }).lean();
+      }
 
       if (!caller || !receiver) {
         console.log("[callCoinChargedForFakeCall] Caller or Receiver not found!");
@@ -2020,13 +2032,13 @@ io.on("connection", async (socket) => {
 
       if (normalizedCallMode === "private" && normalizedCallType === "audio") {
         const rate = Math.abs(receiver.audioCallRate);
-        const discount = caller.isVip && vipPrivilege?.audioCallDiscount ? Math.min(Math.max(vipPrivilege.audioCallDiscount, 0), 100) : 0;
+        const discount = (caller?.isVip && vipPrivilege?.audioCallDiscount) ? Math.min(Math.max(vipPrivilege.audioCallDiscount, 0), 100) : 0;
         await processCallPayment(rate, discount);
       }
 
       if (normalizedCallMode === "private" && normalizedCallType === "video") {
         const rate = Math.abs(receiver.privateCallRate);
-        const discount = caller.isVip && vipPrivilege?.privateCallDiscount ? Math.min(Math.max(vipPrivilege.privateCallDiscount, 0), 100) : 0;
+        const discount = (caller?.isVip && vipPrivilege?.videoCallDiscount) ? Math.min(Math.max(vipPrivilege.videoCallDiscount, 0), 100) : 0;
         await processCallPayment(rate, discount);
       }
 
@@ -2367,7 +2379,7 @@ io.on("connection", async (socket) => {
     const { userId, liveHistoryId } = dataOfaddView;
 
     const [user, liveUser, existLiveView] = await Promise.all([
-      User.findById(userId).select("_id name image gender countryFlagImage country").lean(),
+      User.findById(userId).select("_id name image gender countryFlagImage country isVip vipLevel").lean(),
       LiveBroadcaster.findOne({ liveHistoryId }).select("view").lean(),
       LiveBroadcastView.findOne({ userId, liveHistoryId }).lean(),
     ]);
@@ -2389,7 +2401,15 @@ io.on("connection", async (socket) => {
       console.log(`[liveJoinerCount] User is already in room: ${liveHistoryId}`);
     }
 
-    if (!existLiveView) {
+    let isHidden = false;
+    if (user?.isVip && user?.vipLevel === 3) {
+      const vipPrivilege = await VipPlanPrivilege.findOne({ level: 3 }).lean();
+      if (vipPrivilege?.hide) {
+        isHidden = true;
+      }
+    }
+
+    if (!existLiveView && !isHidden) {
       console.log("[liveJoinerCount] Creating new LiveView entry");
 
       await LiveBroadcastView.create({
@@ -2402,6 +2422,8 @@ io.on("connection", async (socket) => {
     const totalViews = await LiveBroadcastView.countDocuments({ liveHistoryId });
     console.log(`[liveJoinerCount] Total viewers for ${liveHistoryId}:`, totalViews);
 
+    // If user is hidden, they see a message that they joined successfully but no one else is notified? 
+    // Actually, we just don't add them to the view list.
     io.in(liveHistoryId).emit("liveJoinerCount", totalViews);
 
     await Promise.all([
@@ -2446,12 +2468,8 @@ io.on("connection", async (socket) => {
 
       await LiveBroadcaster.updateOne({ _id: liveUser._id }, { $set: { view: totalViews } });
 
-      if (!socket.rooms.has(liveHistoryId)) {
-        socket.leave(liveHistoryId);
-        console.log(`[removeLiveJoiner] joined room: ${liveHistoryId}`);
-      } else {
-        console.log(`[removeLiveJoiner] User is already in room: ${liveHistoryId}`);
-      }
+      socket.leave(liveHistoryId);
+      console.log(`[removeLiveJoiner] User left room: ${liveHistoryId}`);
     } catch (error) {
       console.error("[removeLiveJoiner] Error:", error);
     }
@@ -2462,7 +2480,14 @@ io.on("connection", async (socket) => {
       const dataOfComment = JSON.parse(data);
       console.log("[liveCommentBroadcast] Parsed data:", dataOfComment);
 
-      const { liveHistoryId } = dataOfComment;
+      const { liveHistoryId, userId, comment } = dataOfComment;
+      if (!liveHistoryId || !userId) return;
+
+      // Check if user is muted in this room
+      const viewer = await LiveBroadcastView.findOne({ liveHistoryId, userId });
+      if (viewer?.isMuted) {
+        return io.to("globalRoom:" + userId).emit("liveCommentBroadcastError", "You are muted and cannot send messages in this room.");
+      }
 
       if (!socket.rooms.has(liveHistoryId)) {
         socket.join(liveHistoryId.toString());
@@ -2473,6 +2498,7 @@ io.on("connection", async (socket) => {
 
       const [liveHistory] = await Promise.all([LiveBroadcastHistory.findById(liveHistoryId).select("_id").lean()]);
 
+      console.log(`[liveCommentBroadcast] Broadcast to room: ${liveHistoryId}`);
       io.in(liveHistoryId).emit("liveCommentBroadcast", data);
 
       const socketCount = (await io.in(liveHistoryId).fetchSockets())?.length || 0;
@@ -2828,6 +2854,92 @@ io.on("connection", async (socket) => {
       console.error("❌ Error in liveStreamEnd:", error);
     }
   });
+
+  // Room Moderation: Mute and Kick with Hierarchy
+  socket.on("roomAction", async (data) => {
+    try {
+      const parsedData = JSON.parse(data);
+      console.log("🔹 [roomAction] event received:", parsedData);
+
+      const { action, senderId, targetId, liveHistoryId } = parsedData; // action: "mute" or "kick"
+
+      if (!action || !senderId || !targetId || !liveHistoryId) {
+        return console.log("❌ [roomAction] Missing required fields.");
+      }
+
+      // Fetch sender and target details
+      const [sender, target] = await Promise.all([
+        User.findById(senderId).select("name isVip vipLevel").lean(),
+        User.findById(targetId).select("name isVip vipLevel").lean(),
+      ]);
+
+      if (!sender || !target) {
+        return console.log("❌ [roomAction] Sender or Target not found.");
+      }
+
+      const senderLevel = sender.isVip ? (sender.vipLevel || 1) : 0;
+      const targetLevel = target.isVip ? (target.vipLevel || 1) : 0;
+
+      // Hierarchy Check: Sender must have a higher level than target (or target is not VIP)
+      // SVIP (3) can action on VVIP (2), VIP (1), Normal (0)
+      // VVIP (2) can action on VIP (1), Normal (0)
+      // VIP (1) can action on Normal (0)
+      
+      const [senderPrivilege, targetPrivilege] = await Promise.all([
+        VipPlanPrivilege.findOne({ level: senderLevel }).lean(),
+        VipPlanPrivilege.findOne({ level: targetLevel }).lean(),
+      ]);
+
+      // Check if sender has general room authority
+      if (!senderPrivilege || !senderPrivilege.roomAuthority) {
+        return io.to("globalRoom:" + senderId).emit("roomActionError", "You don't have authority to perform this action.");
+      }
+
+      // Specific check for 'kick'
+      if (action === "kick" && !senderPrivilege.kick) {
+        return io.to("globalRoom:" + senderId).emit("roomActionError", "You don't have authority to kick users.");
+      }
+
+      // Hierarchy Enforcer: SVIP can mute VVIP/VIP even if target has authority. 
+      // Rule: level must be higher.
+      if (senderLevel <= targetLevel && targetLevel > 0) {
+        return io.to("globalRoom:" + senderId).emit("roomActionError", `You cannot ${action} a user with an equal or higher level.`);
+      }
+
+      // Execute Action
+      if (action === "mute") {
+        console.log(`🔇 User ${sender.name} muted ${target.name} in room ${liveHistoryId}`);
+        
+        // Persist mute in database
+        await LiveBroadcastView.updateOne({ liveHistoryId, userId: targetId }, { $set: { isMuted: true } });
+
+        io.in(liveHistoryId).emit("roomActionExecuted", { 
+          action: "mute", 
+          targetId, 
+          senderName: sender.name, 
+          targetName: target.name 
+        });
+      } else if (action === "kick") {
+        console.log(`👞 User ${sender.name} kicked ${target.name} from room ${liveHistoryId}`);
+        
+        // Remove viewer from database (so they stop appearing in counts)
+        await LiveBroadcastView.deleteOne({ liveHistoryId, userId: targetId });
+
+        io.in(liveHistoryId).emit("roomActionExecuted", { 
+          action: "kick", 
+          targetId, 
+          senderName: sender.name, 
+          targetName: target.name 
+        });
+        
+        // Target's frontend should handle the socket.leave based on this event
+      }
+
+    } catch (error) {
+      console.error("❌ [roomAction] Error:", error);
+    }
+  });
+
 
   socket.on("disconnect", async (reason) => {
     console.log(`Socket disconnected: ${id} - ${socket.id} - Reason: ${reason}`);

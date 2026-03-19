@@ -35,6 +35,7 @@ const userSchema = new mongoose.Schema(
     spins: { type: Number, default: 0 },
 
     isVip: { type: Boolean, default: false },
+    vipLevel: { type: Number, enum: [1, 2, 3], default: 1 }, // 1: VIP, 2: VVIP, 3: SVIP
     vipPlanStartDate: { type: String, default: null },
     vipPlanEndDate: { type: String, default: null },
     vipPlanId: { type: mongoose.Schema.Types.ObjectId, ref: "VipPlan", default: null },

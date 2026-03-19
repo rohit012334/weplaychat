@@ -1,4 +1,5 @@
 import Table from "@/extra/Table";
+import RootLayout from "@/component/layout/Layout";
 import Pagination from "@/extra/Pagination";
 import { openDialog } from "@/store/dialogSlice";
 import { useDispatch, useSelector } from "react-redux";
@@ -249,6 +250,10 @@ const EntryContent = () => {
       </div>
     </>
   );
+};
+
+EntryContent.getLayout = function getLayout(page: React.ReactNode) {
+    return <RootLayout>{page}</RootLayout>;
 };
 
 export default EntryContent;

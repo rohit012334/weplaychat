@@ -38,7 +38,7 @@ exports.fetchDashboardMetrics = async (req, res) => {
 
     return res.status(200).json({
       status: true,
-      message: "Get admin panel dashboard count.",
+      message: "Get global admin dashboard count.",
       data: {
         totalUsers,
         totalBlockedUsers,

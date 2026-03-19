@@ -248,17 +248,24 @@ const vipPlanSlice = createSlice({
             updateVipPlanBenefits.fulfilled,
             (state, action: PayloadAction<any>) => {
                 if (action.payload.status) {
-                        state.vipPlanBenefits = action?.payload?.data
-
-                 
-
-                      
-                        Success("Vip Plan Benefits Update Successfully");
-                 
-                }
-                else {
+                    const updatedPrivilege = action.payload.data;
+                    
+                    if (Array.isArray(state.vipPlanBenefits)) {
+                        const index = state.vipPlanBenefits.findIndex(
+                            (p: any) => p.level === updatedPrivilege.level
+                        );
+                        if (index !== -1) {
+                            state.vipPlanBenefits[index] = updatedPrivilege;
+                        } else {
+                            state.vipPlanBenefits.push(updatedPrivilege);
+                        }
+                    } else {
+                        // If it wasn't an array yet, make it one
+                        state.vipPlanBenefits = [updatedPrivilege];
+                    }
+                    Success("Vip Plan Benefits Update Successfully");
+                } else {
                     DangerRight(action?.payload?.message)
-
                 }
                 state.isLoading = false;
             }

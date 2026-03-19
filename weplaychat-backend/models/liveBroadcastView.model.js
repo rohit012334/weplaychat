@@ -9,6 +9,7 @@ const liveBroadcastViewSchema = new mongoose.Schema(
     country: { type: String, trim: true, lowercase: true, default: "" },
     userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
     liveHistoryId: { type: mongoose.Schema.Types.ObjectId, ref: "LiveBroadcastHistory", default: null },
+    isMuted: { type: Boolean, default: false },
   },
   {
     timestamps: true,

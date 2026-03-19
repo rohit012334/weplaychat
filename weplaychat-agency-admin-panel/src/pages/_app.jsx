@@ -37,7 +37,7 @@ export default function App({ Component, pageProps }) {
     <Providers>
       <Head>
         <title>WePlayChat</title>
-        <meta name="description" content="WePlayChat - Admin Panel" />
+        <meta name="description" content="WePlayChat - Global Admin" />
         <link rel="icon" href="/unnamed__2_..-removebg-preview.png" />
       </Head>
       {/* <AuthCheck> */}

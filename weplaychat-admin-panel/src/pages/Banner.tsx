@@ -1,4 +1,5 @@
 import Button from "@/extra/Button";
+import RootLayout from "@/component/layout/Layout";
 import Table from "@/extra/Table";
 import Pagination from "@/extra/Pagination";
 import { openDialog, closeDialog } from "@/store/dialogSlice";
@@ -252,6 +253,10 @@ const BannerContent = () => {
       </div>
     </>
   );
+};
+
+BannerContent.getLayout = function getLayout(page: React.ReactNode) {
+    return <RootLayout>{page}</RootLayout>;
 };
 
 export default BannerContent;

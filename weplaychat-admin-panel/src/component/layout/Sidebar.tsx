@@ -74,7 +74,16 @@ const Sidebar = () => {
   };
 
   const isAdminRoute = (p: string) =>
-    ["/Agency", "/Host", "/Banner", "/HostRequest", "/Impression"].includes(p);
+    [
+      "/dashboard", "/User/User", "/User/Manager", "/User/Admin", "/User/Reseller",
+      "/Agency", "/Host", "/HostRequest", "/Impression",
+      "/GiftCategory", "/GiftPage", "/DailyCheckInReward", "/SpinWheel", "/Banner",
+      "/Store", "/Background", "/EntryTag",
+      "/Plan", "/VipPlanPrevilage",
+      "/WithdrawRequest", "/adminProfile",
+      "/User/UserInfoPage", "/User/CoinPlanHistoryPage", "/PurchaseCoinPlanHistory",
+      "/Host/AgencyWiseHost", "/Host/HostInfoPage", "/Host/HostHistoryPage", "/HostProfile"
+    ].includes(p);
 
   useEffect(() => {
     if (role === "admin" && !isAdminRoute(nextRouter.pathname)) router.push("/Agency");
@@ -105,6 +114,7 @@ const Sidebar = () => {
     { name: "Gift", path: "/GiftPage", navSVG: <Gift />, onClick: handleOnClick },
     { name: "Daily CheckIn", path: "/DailyCheckInReward", navSVG: <DailyCheckInReward />, onClick: handleOnClick },
     { name: "Spin Wheel", path: "/SpinWheel", navSVG: <WheelIcon />, onClick: handleOnClick },
+    { name: "Banner", path: "/Banner", navSVG: <Gift />, onClick: handleOnClick },
   ];
 
   const storeMenu = [
@@ -514,7 +524,7 @@ const Sidebar = () => {
                 {/* Animated pill subtitle */}
                 <div className="sb-brand-pill">
                   <span className="sb-brand-pill-dot" />
-                  <span className="sb-brand-pill-text">Admin Panel</span>
+                  <span className="sb-brand-pill-text">Global Admin</span>
                 </div>
 
               </div>

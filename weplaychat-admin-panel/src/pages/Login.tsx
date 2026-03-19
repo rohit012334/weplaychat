@@ -530,7 +530,7 @@ export default function Login() {
           {/* Admin pill */}
           <div className="lg-admin-pill">
             <span className="lg-admin-pill-dot" />
-            <span className="lg-admin-pill-text">Admin Panel</span>
+            <span className="lg-admin-pill-text">Global Admin</span>
           </div>
 
           <h2 className="lg-title">Login to your account</h2>

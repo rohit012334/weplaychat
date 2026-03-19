@@ -30,10 +30,10 @@ const validateAdminFirebaseToken = async (req, res, next) => {
       console.warn("⚠️ [AUTH] Invalid token. Email not found.");
       return res.status(401).json({ status: false, message: "Invalid token. Authorization failed." });
     }
-    
+
     // 2. Find admin in DB
     const mainAdmin = await Admin.findOne({ uid: adminUid }).select("_id email password role uid");
-    
+
     if (!mainAdmin) {
       console.warn(`⚠️ [AUTH] Admin with UID ${adminUid} not found in database.`);
       // Check if maybe the UID in token matches but header is wrong?

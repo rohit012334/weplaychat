@@ -3,17 +3,18 @@ import { useState } from "react";
 import dynamic from "next/dynamic";
 
 // Dynamic import - pages se seedha load hoga, koi error nahi
-const BannerPage = dynamic(() => import("@/pages/Banner"), { ssr: false });
+const BackgroundPage = dynamic(() => import("@/pages/Background"), { ssr: false });
 const FramePage  = dynamic(() => import("@/pages/Frame"),  { ssr: false });
 const EntryPage  = dynamic(() => import("@/pages/Entry"),  { ssr: false });
+const EntryTagPage = dynamic(() => import("@/pages/EntryTag"), { ssr: false });
 const TagPage    = dynamic(() => import("@/pages/Tag"),    { ssr: false });
 const EventPage  = dynamic(() => import("@/pages/Event"),  { ssr: false });
 
 
 const TAB_CONFIG = [
   {
-    key: "Banner",
-    label: "Banner",
+    key: "Background",
+    label: "Background",
     icon: (
       <svg width="15" height="15" fill="currentColor" viewBox="0 0 16 16">
         <path d="M6.002 5.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0" />
@@ -40,6 +41,15 @@ const TAB_CONFIG = [
     ),
   },
   {
+    key: "EntryTag",
+    label: "Entry Tag",
+    icon: (
+      <svg width="15" height="15" fill="currentColor" viewBox="0 0 16 16">
+        <path d="M2 1a1 1 0 0 0-1 1v4.586a1 1 0 0 0 .293.707l7 7a1 1 0 0 0 1.414 0l4.586-4.586a1 1 0 0 0 0-1.414l-7-7A1 1 0 0 0 6.586 1zm4 3.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0" />
+      </svg>
+    ),
+  },
+  {
     key: "Tag",
     label: "Tag",
     icon: (
@@ -61,17 +71,17 @@ const TAB_CONFIG = [
 ];
 
 const Store = () => {
-  const [activeTab, setActiveTab] = useState<string>("Banner");
+  const [activeTab, setActiveTab] = useState<string>("Background");
 
   const renderContent = () => {
     switch (activeTab) {
-      case "Banner": return <BannerPage />;
-      case "Frame":  return <FramePage />;
-      case "Entry":  return <EntryPage />;
-      case "Tag":    return <TagPage />;
-      case "Event":  return <EventPage />;
-      default:       return null;
-
+      case "Background": return <BackgroundPage />;
+      case "Frame":       return <FramePage />;
+      case "Entry":       return <EntryPage />;
+      case "EntryTag":    return <EntryTagPage />;
+      case "Tag":         return <TagPage />;
+      case "Event":       return <EventPage />;
+      default:            return null;
     }
   };
 

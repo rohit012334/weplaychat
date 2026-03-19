@@ -153,7 +153,7 @@ exports.retrieveDashboardStats = async (req, res) => {
 
     return res.status(200).json({
       status: true,
-      message: "Get admin panel dashboard count.",
+      message: "Get agency admin panel dashboard count.",
       data: {
         pendingHostApplications,
         totalHosts,
