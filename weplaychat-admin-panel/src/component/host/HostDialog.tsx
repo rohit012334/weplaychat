@@ -265,7 +265,7 @@ const HostDialog = () => {
       setEmail(dialogueData?.email);
       setGender(dialogueData?.gender);
       setBio(dialogueData?.bio);
-      setImagePath(baseURL + dialogueData?.image);
+      setImagePath(getStorageUrl(dialogueData?.image));
       setImages(dialogueData?.photoGallery?.map((i: any) => i) || []);
       setVideocall(dialogueData?.video?.map((i: any) => i) || []);
       setVideolive(dialogueData?.liveVideo?.map((i: any) => i) || []);
@@ -397,7 +397,7 @@ const HostDialog = () => {
       maybeAppend("randomCallFemaleRate", randomCallFemaleRate, originalData.randomCallFemaleRate);
       maybeAppend("randomCallMaleRate", randomCallMaleRate, originalData.randomCallMaleRate);
       maybeAppend("randomCallRate", randomCallRate, originalData.randomCallRate);
-      if (image && imagePath !== baseURL + originalData.image) fd.append("image", image);
+      if (image && imagePath !== getStorageUrl(originalData.image)) fd.append("image", image);
       fileOperations.add.images.forEach((f) => fd.append("photoGallery", f));
       fileOperations.add.videocall.forEach((f) => fd.append("video", f));
       fileOperations.add.videolive.forEach((f) => fd.append("liveVideo", f));
