@@ -1,5 +1,6 @@
 const EntryTag = require("../../models/EntryTag.model");
 const fs = require("fs");
+const { resolveStorageAbsolutePath } = require("../../util/storagePath");
 
 // CREATE
 exports.createEntryTag = async (req, res) => {
@@ -40,8 +41,8 @@ exports.updateEntryTag = async (req, res) => {
     if (req.body.type) entryTag.type = req.body.type;
     if (req.file) {
       if (entryTag.file) {
-        const parts = entryTag.file.split("storage");
-        if (parts.length > 1 && fs.existsSync("storage" + parts[1])) fs.unlinkSync("storage" + parts[1]);
+        const oldFilePath = resolveStorageAbsolutePath(entryTag.file);
+        if (oldFilePath && fs.existsSync(oldFilePath)) fs.unlinkSync(oldFilePath);
       }
       entryTag.file = req.file.path;
     }
@@ -76,8 +77,8 @@ exports.deleteEntryTag = async (req, res) => {
     const entryTag = await EntryTag.findById(entryTagId);
     if (!entryTag) return res.status(200).json({ status: false, message: "EntryTag not found." });
     if (entryTag.file) {
-      const parts = entryTag.file.split("storage");
-      if (parts.length > 1 && fs.existsSync("storage" + parts[1])) fs.unlinkSync("storage" + parts[1]);
+      const filePath = resolveStorageAbsolutePath(entryTag.file);
+      if (filePath && fs.existsSync(filePath)) fs.unlinkSync(filePath);
     }
     await EntryTag.findByIdAndDelete(entryTagId);
     return res.status(200).json({ status: true, message: "EntryTag deleted successfully." });

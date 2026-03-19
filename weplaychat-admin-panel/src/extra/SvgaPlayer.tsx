@@ -16,6 +16,7 @@ const SvgaPlayer: React.FC<SvgaPlayerProps> = ({ url, style, className, id = "sv
 
     let player: any = null;
     let cancelled = false;
+    let canvasRetryDone = false;
     let retryTimer: ReturnType<typeof setTimeout> | null = null;
 
     const cleanupPlayer = () => {
@@ -48,6 +49,17 @@ const SvgaPlayer: React.FC<SvgaPlayerProps> = ({ url, style, className, id = "sv
             if (cancelled || !player) return;
             player.setVideoItem(videoItem);
             player.startAnimation();
+
+            // If SVGA loads but canvas never appears (rare timing/layout issue),
+            // do a single retry by re-initializing the player.
+            window.setTimeout(() => {
+              if (cancelled || !containerRef.current) return;
+              const hasCanvas = !!containerRef.current.querySelector("canvas");
+              if (!hasCanvas && withRetry && !canvasRetryDone) {
+                canvasRetryDone = true;
+                retryTimer = window.setTimeout(() => runPlayer(false), 250);
+              }
+            }, 400);
           },
           (err: any) => {
             if (cancelled) return;
@@ -80,13 +92,10 @@ const SvgaPlayer: React.FC<SvgaPlayerProps> = ({ url, style, className, id = "sv
       style={{ 
         width: "100%", 
         height: "100%", 
-        minWidth: 1,
-        minHeight: 1,
+        // Keep layout simple so svgaplayerweb can inject its canvas reliably.
         position: "relative",
         overflow: "hidden",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
+        display: "block",
         ...style 
       }} 
     />

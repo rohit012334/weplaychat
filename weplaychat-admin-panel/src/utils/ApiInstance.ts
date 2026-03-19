@@ -162,6 +162,8 @@ export const apiInstanceFetch: any = {
     fetch(`${baseURL}${url}`, {
       method: "GET",
       headers: { ...getHeaders(), ...config?.headers },
+      // Admin lists should always be fresh; avoids stale rows pointing to 404 media.
+      cache: "no-store",
     }).then(handleErrors),
 
   post: (url: string, data: object | FormData, config?: { headers?: Record<string, string> }) =>

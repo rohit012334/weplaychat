@@ -1,5 +1,6 @@
 const Entry = require("../../models/Entry.model");
 const fs = require("fs");
+const { resolveStorageAbsolutePath } = require("../../util/storagePath");
 
 // CREATE entry
 exports.createEntry = async (req, res) => {
@@ -56,9 +57,9 @@ exports.updateEntry = async (req, res) => {
 
         if (req.file) {
             if (entry.file) {
-                const oldPath = entry.file.split("storage");
-                if (oldPath.length > 1 && fs.existsSync("storage" + oldPath[1])) {
-                    fs.unlinkSync("storage" + oldPath[1]);
+                const oldFilePath = resolveStorageAbsolutePath(entry.file);
+                if (oldFilePath && fs.existsSync(oldFilePath)) {
+                    fs.unlinkSync(oldFilePath);
                 }
             }
             entry.file = req.file.path;
@@ -117,9 +118,9 @@ exports.deleteEntry = async (req, res) => {
         }
 
         if (entry.file) {
-            const parts = entry.file.split("storage");
-            if (parts.length > 1 && fs.existsSync("storage" + parts[1])) {
-                fs.unlinkSync("storage" + parts[1]);
+            const filePath = resolveStorageAbsolutePath(entry.file);
+            if (filePath && fs.existsSync(filePath)) {
+                fs.unlinkSync(filePath);
             }
         }
 
