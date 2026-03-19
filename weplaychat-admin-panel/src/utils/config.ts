@@ -5,12 +5,18 @@ export const baseURL: string =
 export function getStorageUrl(path: string | null | undefined): string {
   if (!path || typeof path !== "string") return "";
   const p = path.replace(/\\/g, "/").trim();
-  if (p.startsWith("http")) return p;
-  const afterStorage = p.split(/\/storage\//i).pop() || "";
-  const filename = (afterStorage || p).replace(/^.*\//, "");
-  const segment = filename ? `/storage/${filename}` : "";
+  if (p.startsWith("http") || p.startsWith("blob:")) return p;
+  
+  // Extract filename if path includes /storage/ (already matches case insensitive via regex)
+  if (!p.toLowerCase().includes("/storage/")) return p;
+  
+  const parts = p.split(/\/storage\//i);
+  const filename = parts.pop()?.replace(/^.*\//, "") || "";
+  if (!filename) return "";
+  
   const base = (baseURL || "").replace(/\/+$/, "");
-  return segment ? (base ? `${base}${segment}` : segment) : "";
+  const segment = `/storage/${filename}`;
+  return base ? `${base}${segment}` : segment;
 }
 
 // NOTE: anything used in the browser must be NEXT_PUBLIC_* (it will be exposed to users).

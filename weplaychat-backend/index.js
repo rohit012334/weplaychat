@@ -64,13 +64,14 @@ async function startServer() {
     res.status(200).json({ ok: true });
   });
 
-  // Normalize storage paths so //storage/... and //app/storage/... match the /storage route (fixes double-slash from frontend)
+  // Normalize storage paths to fix double-slash issues from frontend or different deployment environments
   app.use((req, res, next) => {
-    const u = req.url;
-    if (u.startsWith("//storage/")) {
-      req.url = "/storage/" + u.slice(10);
-    } else if (u.startsWith("//app/storage/")) {
-      req.url = "/storage/" + u.slice(14);
+    if (req.url.includes("/storage/")) {
+      // Remove multiple leading slashes and normalize to exactly one /storage/...
+      const parts = req.url.split(/\/storage\//i);
+      if (parts.length > 1) {
+        req.url = "/storage/" + parts.pop();
+      }
     }
     next();
   });
