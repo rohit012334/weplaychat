@@ -84,25 +84,37 @@ const FrameContent = () => {
     },
     {
       Header: "Preview",
-      Cell: ({ row }: { row: any }) => renderPreview(row),
+      Cell: ({ row }: { row: any }) => (
+        <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+          {renderPreview(row)}
+          {row?.file && (
+            <span style={{ fontSize: "10px", color: "#94a3b8", maxWidth: "70px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              {row.file.split("/").pop() || row.file.split("\\").pop()}
+            </span>
+          )}
+        </div>
+      ),
     },
     {
       Header: "Type",
       Cell: ({ row }: { row: any }) => {
-        const type = row?.type || "-";
-        const styles: Record<string, { bg: string; color: string }> = {
-          gif:  { bg: "#dcfce7", color: "#166534" },
-          mp4:  { bg: "#dbeafe", color: "#1e40af" },
-          svga: { bg: "rgba(99,102,241,0.10)", color: "#6366f1" },
+        const raw = row?.type;
+        const normalized = String(raw || "").toLowerCase().trim();
+        const styles: Record<string, { bg: string; color: string; label: string }> = {
+          gif:  { bg: "#dcfce7", color: "#166534", label: "GIF" },
+          mp4:  { bg: "#dbeafe", color: "#1e40af", label: "MP4" },
+          svga: { bg: "rgba(99,102,241,0.10)", color: "#6366f1", label: "SVGA" },
+          "3":  { bg: "rgba(99,102,241,0.10)", color: "#6366f1", label: "SVGA" },
+          "4":  { bg: "#dbeafe", color: "#1e40af", label: "MP4" },
         };
-        const s = styles[type] || { bg: "#f4f5fb", color: "#64748b" };
+        const s = styles[normalized] || { bg: "#f4f5fb", color: "#64748b", label: normalized.toUpperCase() || "-" };
         return (
           <span style={{
             display: "inline-block", padding: "3px 12px", borderRadius: "20px",
             fontSize: "12px", fontWeight: 700,
-            background: s.bg, color: s.color, textTransform: "uppercase",
+            background: s.bg, color: s.color,
           }}>
-            {type}
+            {s.label}
           </span>
         );
       },

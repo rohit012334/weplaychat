@@ -104,7 +104,8 @@ const FrameDialog = () => {
         dispatch(closeDialog());
     };
 
-    const renderPreview = () => {
+    // The renderPreview function is no longer needed as its logic is inlined.
+     const renderPreview = () => {
         if (!filePreview) return null;
         if (fileType === "mp4") {
             return (
@@ -113,13 +114,13 @@ const FrameDialog = () => {
                     autoPlay
                     loop
                     muted
-                    style={{ maxWidth: "100%", maxHeight: "180px", borderRadius: "8px", objectFit: "cover" }}
+                    style={{ maxWidth: "100%", maxHeight: "250px", borderRadius: "12px", objectFit: "contain" }}
                 />
             );
         }
         if (fileType === "svga") {
             return (
-                <div style={{ width: "100%", height: "180px", display: "flex", justifyContent: "center" }}>
+                <div style={{ width: "100%", height: "250px", display: "flex", justifyContent: "center", alignItems: "center" }}>
                     <SvgaPlayer url={filePreview} id="preview-svga" key={filePreview} />
                 </div>
             );
@@ -129,7 +130,7 @@ const FrameDialog = () => {
             <img
                 src={filePreview}
                 alt="Preview"
-                style={{ maxWidth: "100%", maxHeight: "180px", borderRadius: "8px", objectFit: "cover" }}
+                style={{ maxWidth: "100%", maxHeight: "250px", borderRadius: "12px", objectFit: "contain" }}
             />
         );
     };
@@ -174,17 +175,19 @@ const FrameDialog = () => {
                                             onClick={() => fileInputRef.current?.click()}
                                             style={{
                                                 border: "2px dashed #8F6DFF",
-                                                borderRadius: "12px",
-                                                padding: "12px",
+                                                borderRadius: "16px",
+                                                padding: "20px",
                                                 cursor: "pointer",
                                                 textAlign: "center",
                                                 background: "#faf8ff",
-                                                minHeight: "120px",
+                                                minHeight: "280px",
                                                 display: "flex",
                                                 alignItems: "center",
                                                 justifyContent: "center",
                                                 flexDirection: "column",
                                                 gap: "8px",
+                                                position: "relative",
+                                                overflow: "hidden"
                                             }}
                                         >
                                             {filePreview ? renderPreview() : (

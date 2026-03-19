@@ -96,12 +96,12 @@ const EntryTagDialog = () => {
                                             Entry Tag File
                                             <span style={{ color: "#8F6DFF", fontSize: "12px", fontWeight: 400, marginLeft: "8px" }}>(MP4, SVGA)</span>
                                         </label>
-                                        <div onClick={() => fileInputRef.current?.click()} style={{ border: "2px dashed #8F6DFF", borderRadius: "12px", padding: "12px", cursor: "pointer", textAlign: "center", background: "#faf8ff", minHeight: "150px", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: "8px" }}>
+                                        <div onClick={() => fileInputRef.current?.click()} style={{ border: "2px dashed #8F6DFF", borderRadius: "16px", padding: "20px", cursor: "pointer", textAlign: "center", background: "#faf8ff", minHeight: "280px", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: "8px", position: "relative", overflow: "hidden" }}>
                                             {filePreview ? (
                                                 fileType === "mp4" ? (
-                                                    <video src={filePreview} autoPlay loop muted style={{ maxWidth: "100%", maxHeight: "150px", borderRadius: "8px", objectFit: "cover" }} />
+                                                    <video src={filePreview} autoPlay loop muted style={{ maxWidth: "100%", maxHeight: "250px", borderRadius: "12px", objectFit: "contain" }} />
                                                 ) : (
-                                                    <div style={{ width: "100%", height: "150px", display: "flex", justifyContent: "center" }}>
+                                                    <div style={{ width: "100%", height: "250px", display: "flex", justifyContent: "center", alignItems: "center" }}>
                                                         <SvgaPlayer url={filePreview} id="preview-svga" key={filePreview} />
                                                     </div>
                                                 )

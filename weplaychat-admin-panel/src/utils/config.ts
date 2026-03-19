@@ -7,9 +7,15 @@ export function getStorageUrl(path: string | null | undefined): string {
   const p = path.replace(/\\/g, "/").trim();
   if (p.startsWith("http") || p.startsWith("blob:")) return p;
   
-  // Replicate Gift's exact URL construction: baseURL + path
-  const normalizedPath = p.startsWith("/") ? p : `/${p}`;
-  return `${baseURL}${normalizedPath}`;
+  // Use native URL constructor to correctly join base and path without double-slashes
+  try {
+    const base = baseURL?.endsWith("/") ? baseURL : `${baseURL}/`;
+    const normalizedPath = p.replace(/^\/+/, ""); // remove leading slash
+    return new URL(normalizedPath, base).toString();
+  } catch (e) {
+    // Fallback if URL constructor fails
+    return `${baseURL}/${p.replace(/^\/+/, "")}`;
+  }
 }
 
 // NOTE: anything used in the browser must be NEXT_PUBLIC_* (it will be exposed to users).

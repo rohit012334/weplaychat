@@ -41,16 +41,37 @@ const EntryTagPage = () => {
                 const isSvga = type === "svga" || rawType == 3;
                 const isMp4 = type === "mp4" || rawType == 4;
 
-                if (isMp4) return <video src={src} autoPlay loop muted width="70" height="50" style={{ borderRadius: 8 }} />;
-                if (isSvga) return (
+                const preview = isMp4 ? (
+                    <video src={src} autoPlay loop muted width="70" height="50" style={{ borderRadius: 8 }} />
+                ) : isSvga ? (
                     <div style={{ width: 70, height: 50, borderRadius: 8, overflow: "hidden", background: "#f8f9fa", display: "flex", alignItems: "center", justifyContent: "center" }}>
                         <SvgaPlayer url={src} id={`table-svga-${row._id}`} key={src} />
                     </div>
+                ) : (
+                    <span style={{ color: "#6366f1", fontWeight: 700 }}>{row.type}</span>
                 );
-                return <span style={{ color: "#6366f1", fontWeight: 700 }}>{row.type}</span>;
+
+                return (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                        {preview}
+                        {row?.file && (
+                            <span style={{ fontSize: "10px", color: "#94a3b8", maxWidth: "70px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                {row.file.split("/").pop() || row.file.split("\\").pop()}
+                            </span>
+                        )}
+                    </div>
+                );
             },
         },
-        { Header: "Type", Cell: ({ row }: { row: any }) => <span style={{ textTransform: "uppercase", fontSize: 12, fontWeight: 700 }}>{row.type}</span> },
+        { 
+            Header: "Type", 
+            Cell: ({ row }: { row: any }) => {
+                const raw = row?.type;
+                const normalized = String(raw || "").toLowerCase().trim();
+                const label = (normalized === "svga" || raw == 3) ? "SVGA" : (normalized === "mp4" || raw == 4) ? "MP4" : normalized.toUpperCase();
+                return <span style={{ textTransform: "uppercase", fontSize: 12, fontWeight: 700, color: "#6366f1" }}>{label}</span>;
+            }
+        },
         { Header: "Status", Cell: ({ row }: { row: any }) => <ToggleSwitch value={row.isActive} onClick={() => dispatch(updateEntryTagStatus(row._id))} /> },
         {
             Header: "Actions",

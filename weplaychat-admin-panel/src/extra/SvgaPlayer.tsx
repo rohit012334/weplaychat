@@ -10,50 +10,52 @@ interface SvgaPlayerProps {
 
 const SvgaPlayer: React.FC<SvgaPlayerProps> = ({ url, style, className, id = "svga-player" }) => {
   const containerRef = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
     if (!containerRef.current || !url) return;
 
-    let player: any;
-    const loadPlayer = async () => {
-        try {
-            const { Player, Parser } = await import("svgaplayerweb");
-            const parser = new Parser();
-            player = new Player(containerRef.current!);
-            
-            player.setContentMode("AspectFit");
-            player.loops = 0; // infinite
-            
-            parser.load(url, (videoItem: any) => {
-                if (player) {
-                    player.setVideoItem(videoItem);
-                    player.startAnimation();
-                }
-            }, (err: any) => {
-                console.error("SvgaPlayer: Parser error for", url, err);
-            });
-        } catch (err) {
-            console.error("SvgaPlayer: Init error", err);
-        }
+    let player: any = null;
+    let isMounted = true;
+
+    const initPlayer = async () => {
+      try {
+        const { Player, Parser } = await import("svgaplayerweb");
+        if (!isMounted || !containerRef.current) return;
+
+        // Clean previous
+        containerRef.current.innerHTML = "";
+        
+        player = new Player(containerRef.current);
+        player.setContentMode("AspectFit");
+        player.loops = 0;
+
+        const parser = new Parser();
+        parser.load(url, (videoItem: any) => {
+          if (!isMounted || !player) return;
+          player.setVideoItem(videoItem);
+          player.startAnimation();
+        }, (err: any) => {
+          console.error("SVGA Parser Error:", url, err);
+        });
+      } catch (err) {
+        console.error("SVGA Init Error:", err);
+      }
     };
 
-    if (typeof window !== "undefined") {
-        loadPlayer();
-    }
+    initPlayer();
 
     return () => {
-        if (player) {
-            player.stopAnimation();
-            player.clear();
-        }
+      isMounted = false;
+      if (player) {
+        player.stopAnimation();
+        player.clear();
+      }
     };
   }, [url]);
 
   return (
     <div 
-      id={id} 
       ref={containerRef} 
-      className={className} 
+      className={className}
       style={{ 
         width: "100%", 
         height: "100%", 
