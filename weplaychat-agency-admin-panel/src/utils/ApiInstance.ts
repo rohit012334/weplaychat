@@ -109,16 +109,22 @@ const handleErrors = async (response: Response): Promise<any> => {
       const msg = data?.message ? data.message.toString() : "";
       // only clear token if it's truly an authentication failure (expired/invalid token)
       const normalized = msg.toLowerCase();
+      const currentRole = typeof window !== "undefined" ? sessionStorage.getItem("currentRole") : null;
       if (
         normalized.includes("session expired") ||
         normalized.includes("invalid token") ||
+        normalized.includes("invalid or expired token") ||
         normalized.includes("jwt expired")
       ) {
         console.warn("User session expired/invalid. Clearing token and redirecting.");
         sessionStorage.removeItem("token");
+        sessionStorage.removeItem("uid");
         sessionStorage.removeItem("admin");
         sessionStorage.removeItem("key");
-        window.location.href = "/"; // Redirect to login page
+        sessionStorage.removeItem("currentRole");
+
+        // Redirect to the correct login page for the current role.
+        window.location.href = currentRole === "reseller" ? "/ResellerLogin" : "/";
       } else {
         // don't purge token for other 401s (agency not found, missing header, etc.)
         console.warn("401 received but token retained; message=", msg);

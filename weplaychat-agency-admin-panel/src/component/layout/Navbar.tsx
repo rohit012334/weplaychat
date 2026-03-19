@@ -6,6 +6,7 @@ import { RootStore, useAppDispatch } from "@/store/store";
 import { useSelector } from "react-redux";
 import NotificationDialog from "../user/NotificationDialogue";
 import { agencyProfileGet } from "@/store/adminSlice";
+import { getResellerProfile } from "@/store/resellerSlice";
 import { baseURL } from "@/utils/config";
 import male from "@/assets/images/male.png";
 
@@ -17,7 +18,21 @@ const Navbar = () => {
   const dispatch = useAppDispatch();
   const { dialogueType } = useSelector((state: RootStore) => state.dialogue);
 
-  useEffect(() => { dispatch(agencyProfileGet()); }, [dispatch]);
+  useEffect(() => {
+    const currentRole =
+      typeof window !== "undefined" ? sessionStorage.getItem("currentRole") : null;
+    const token = typeof window !== "undefined" ? sessionStorage.getItem("token") : null;
+    const uid = typeof window !== "undefined" ? sessionStorage.getItem("uid") : null;
+
+    // Don’t fire protected APIs until auth context exists.
+    if (!token || !uid) return;
+
+    if (currentRole === "reseller") {
+      dispatch(getResellerProfile());
+    } else {
+      dispatch(agencyProfileGet());
+    }
+  }, [dispatch]);
 
   useEffect(() => {
     const handleOutside = (e: MouseEvent) => {

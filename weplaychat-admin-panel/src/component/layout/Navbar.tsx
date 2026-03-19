@@ -18,8 +18,19 @@ const Navbar = () => {
   const dispatch = useAppDispatch();
   const { dialogueType } = useSelector((state: RootStore) => state.dialogue);
 
-  useEffect(() => { dispatch(adminProfileGet()); }, [dispatch]);
-  useEffect(() => { dispatch(getAdminById({ id: admin._id })); }, [admin]);
+  useEffect(() => {
+    const token = typeof window !== "undefined" ? sessionStorage.getItem("token") : null;
+    const uid = typeof window !== "undefined" ? sessionStorage.getItem("uid") : null;
+
+    // Avoid firing authenticated APIs before token/uid are present.
+    if (!token || !uid) return;
+    dispatch(adminProfileGet());
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (!admin?._id) return;
+    dispatch(getAdminById({ id: admin._id }));
+  }, [admin?._id, dispatch]);
 
   useEffect(() => {
     const handleOutside = (e: MouseEvent) => {
