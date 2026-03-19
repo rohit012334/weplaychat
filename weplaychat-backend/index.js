@@ -45,6 +45,13 @@ const initializeSettings = require("./util/initializeSettings");
 
 const port = process.env.PORT || 8000;
 
+// Storage directory: same path for serving and for multer uploads (avoids path mismatch on Railway/different cwd)
+const storageDir = path.join(__dirname, "storage");
+if (!fs.existsSync(storageDir)) {
+  fs.mkdirSync(storageDir, { recursive: true });
+  console.log("✅ Created storage directory:", storageDir);
+}
+
 async function startServer() {
   console.log("🔄 Initializing server...");
 
@@ -56,6 +63,9 @@ async function startServer() {
   app.get("/health", (req, res) => {
     res.status(200).json({ ok: true });
   });
+
+  // Serve uploaded files (images, documents, mp4) — register before listen so /storage works from first request
+  app.use("/storage", express.static(storageDir));
 
   // Start Server immediately
   server.listen(port, () => {
@@ -75,8 +85,6 @@ async function startServer() {
   app.use("/api", routes);
 
   require("./socket");
-
-  app.use("/storage", express.static(path.join(__dirname, "storage")));
 
   db.on("error", () => {
     console.log("Connection Error: ");

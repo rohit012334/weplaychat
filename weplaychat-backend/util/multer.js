@@ -15,8 +15,8 @@ module.exports = multer.diskStorage({
   },
 
   destination: (req, file, callback) => {
-    let uploadFolder = "storage";
-
+    // Same path as express.static in index.js so uploads are served at /storage/...
+    const uploadFolder = path.join(__dirname, "..", "storage");
     ensureDirExists(uploadFolder);
     callback(null, uploadFolder);
   },
