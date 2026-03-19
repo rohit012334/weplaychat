@@ -1,4 +1,4 @@
-const admin = require("firebase-admin");
+const getFirebaseAdmin = require("../util/privateKey");
 const Admin = require("../models/admin.model");
 
 const validateAdminFirebaseToken = async (req, res, next) => {
@@ -20,8 +20,12 @@ const validateAdminFirebaseToken = async (req, res, next) => {
   const token = authHeader.split("Bearer ")[1];
 
   try {
+    // Ensure Firebase Admin SDK is initialized before verifyIdToken
+    const firebaseAdmin = await getFirebaseAdmin();
+    firebaseAdmin.app();
+
     // 1. Verify token
-    const decodedToken = await admin.auth().verifyIdToken(token);
+    const decodedToken = await firebaseAdmin.auth().verifyIdToken(token);
     if (!decodedToken || !decodedToken.email) {
       console.warn("⚠️ [AUTH] Invalid token. Email not found.");
       return res.status(401).json({ status: false, message: "Invalid token. Authorization failed." });
