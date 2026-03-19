@@ -21,6 +21,14 @@ const getFileType = (file: File): FileType | null => {
     return null;
 };
 
+const normalizeType = (value: any): FileType | "" => {
+    const type = String(value ?? "").toLowerCase().trim();
+    if (type === "svga" || type === "3") return "svga";
+    if (type === "mp4" || type === "4") return "mp4";
+    if (type === "gif" || type === "2") return "gif";
+    return "";
+};
+
 const FrameDialog = () => {
     const { dialogueData } = useSelector((state: RootStore) => state.dialogue);
     const dispatch = useAppDispatch();
@@ -36,8 +44,9 @@ const FrameDialog = () => {
     useEffect(() => {
         if (dialogueData) {
             setMongoId(dialogueData._id || "");
-            setExistingType(dialogueData.type || "");
-            setFileType(dialogueData.type || "");
+            const normalizedType = normalizeType(dialogueData.type);
+            setExistingType(normalizedType);
+            setFileType(normalizedType);
             if (dialogueData.file) {
                 setFilePreview(getStorageUrl(dialogueData.file));
             }

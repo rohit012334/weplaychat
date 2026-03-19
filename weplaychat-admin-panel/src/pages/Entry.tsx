@@ -14,6 +14,18 @@ import EntryDialog from "@/component/entry/EntryDialog";
 import { baseURL, getStorageUrl } from "@/utils/config";
 import SvgaPlayer from "@/extra/SvgaPlayer";
 
+const inferMediaType = (rawType: any, filePath?: string): "gif" | "mp4" | "svga" | "" => {
+  const normalized = String(rawType ?? "").toLowerCase().trim();
+  if (normalized === "svga" || normalized === "3") return "svga";
+  if (normalized === "mp4" || normalized === "4") return "mp4";
+  if (normalized === "gif" || normalized === "2") return "gif";
+  const ext = (filePath || "").split(".").pop()?.toLowerCase();
+  if (ext === "svga") return "svga";
+  if (ext === "mp4") return "mp4";
+  if (ext === "gif") return "gif";
+  return "";
+};
+
 const EntryContent = () => {
   const dispatch = useDispatch();
 
@@ -50,10 +62,9 @@ const EntryContent = () => {
   const renderPreview = (row: any) => {
     const src = getFileUrl(row.file);
     if (!src) return <span className="ec-no-file">No file</span>;
-    const rawType = row.type;
-    const type = (String(rawType) || "").toLowerCase().trim();
-    const isSvga = type === "svga" || rawType == 3;
-    const isMp4 = type === "mp4" || rawType == 4;
+    const type = inferMediaType(row.type, row.file);
+    const isSvga = type === "svga";
+    const isMp4 = type === "mp4";
 
     if (isMp4) {
       return (
@@ -90,7 +101,7 @@ const EntryContent = () => {
     {
       Header: "Type",
       Cell: ({ row }: { row: any }) => {
-        const type = row?.type || "-";
+        const type = inferMediaType(row?.type, row?.file) || "-";
         const styles: Record<string, { bg: string; color: string }> = {
           gif:  { bg: "#dcfce7", color: "#166534" },
           mp4:  { bg: "#dbeafe", color: "#1e40af" },

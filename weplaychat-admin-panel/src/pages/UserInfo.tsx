@@ -5,7 +5,7 @@ import { ExInput, Textarea } from "@/extra/Input";
 import { useSelector } from "react-redux";
 import { isLoading } from "@/utils/allSelector";
 import { useAppDispatch } from "@/store/store";
-import { baseURL } from "@/utils/config";
+import { getStorageUrl } from "@/utils/config";
 import male from "@/assets/images/male.png";
 import { getUserProfile } from "@/store/userSlice";
 import { useRouter } from "next/router";
@@ -58,7 +58,7 @@ const UserInfo = () => {
 
   const avatarSrc = userProfile?.image
     ? userProfile.image.replace(/\\/g, "/").includes("storage")
-      ? baseURL + userProfile.image.replace(/\\/g, "/")
+      ? getStorageUrl(userProfile.image)
       : userProfile.image.replace(/\\/g, "/")
     : male.src;
 

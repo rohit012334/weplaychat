@@ -17,6 +17,13 @@ const getFileType = (file: File): FileType | null => {
     return null;
 };
 
+const normalizeType = (value: any): FileType | "" => {
+    const type = String(value ?? "").toLowerCase().trim();
+    if (type === "svga" || type === "3") return "svga";
+    if (type === "mp4" || type === "4") return "mp4";
+    return "";
+};
+
 const MAX_MP4_DURATION = 30;
 
 const getMp4Duration = (file: File): Promise<number> =>
@@ -42,7 +49,7 @@ const EntryTagDialog = () => {
     useEffect(() => {
         if (dialogueData) {
             setMongoId(dialogueData._id || "");
-            setFileType(dialogueData.type || "");
+            setFileType(normalizeType(dialogueData.type));
             if (dialogueData.file) {
                 setFilePreview(getStorageUrl(dialogueData.file));
             }

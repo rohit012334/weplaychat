@@ -12,7 +12,7 @@ import moment from "moment";
 import AddIcon from "@mui/icons-material/Add";
 import CloseIcon from "@mui/icons-material/Close";
 import { IconButton } from "@mui/material";
-import { baseURL } from "@/utils/config";
+import { getStorageUrl } from "@/utils/config";
 import { createHost, getImpression, updateHost } from "@/store/hostSlice";
 import Select from "react-select";
 import countriesData from "@/api/countries.json";
@@ -474,8 +474,13 @@ const HostDialog = () => {
         <div style={S.mediaGrid}>
           {files?.map((file: any, idx: number) => {
             const isFile = file instanceof File;
-            const src = isFile ? URL.createObjectURL(file)
-              : file?.url ? baseURL + file.url : file ? baseURL + file : "";
+            const src = isFile
+              ? URL.createObjectURL(file)
+              : file?.url
+              ? getStorageUrl(file.url)
+              : file
+              ? getStorageUrl(file)
+              : "";
             return (
               <div key={idx} style={S.mediaItem}>
                 {isVideo ? (

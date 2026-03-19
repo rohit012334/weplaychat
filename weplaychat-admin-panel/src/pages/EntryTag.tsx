@@ -14,6 +14,16 @@ import EntryTagDialog from "@/component/entryTag/EntryTagDialog";
 import { baseURL, getStorageUrl } from "@/utils/config";
 import SvgaPlayer from "@/extra/SvgaPlayer";
 
+const inferMediaType = (rawType: any, filePath?: string): "mp4" | "svga" | "" => {
+    const normalized = String(rawType ?? "").toLowerCase().trim();
+    if (normalized === "svga" || normalized === "3") return "svga";
+    if (normalized === "mp4" || normalized === "4") return "mp4";
+    const ext = (filePath || "").split(".").pop()?.toLowerCase();
+    if (ext === "svga") return "svga";
+    if (ext === "mp4") return "mp4";
+    return "";
+};
+
 const EntryTagPage = () => {
     const dispatch = useDispatch();
     const { dialogue, dialogueType } = useSelector((state: RootStore) => state.dialogue);
@@ -36,10 +46,9 @@ const EntryTagPage = () => {
             Header: "Preview",
             Cell: ({ row }: { row: any }) => {
                 const src = getFileUrl(row.file);
-                const rawType = row.type;
-                const type = (String(rawType) || "").toLowerCase().trim();
-                const isSvga = type === "svga" || rawType == 3;
-                const isMp4 = type === "mp4" || rawType == 4;
+                const type = inferMediaType(row.type, row.file);
+                const isSvga = type === "svga";
+                const isMp4 = type === "mp4";
 
                 const preview = isMp4 ? (
                     <video src={src} autoPlay loop muted width="70" height="50" style={{ borderRadius: 8 }} />
@@ -66,9 +75,8 @@ const EntryTagPage = () => {
         { 
             Header: "Type", 
             Cell: ({ row }: { row: any }) => {
-                const raw = row?.type;
-                const normalized = String(raw || "").toLowerCase().trim();
-                const label = (normalized === "svga" || raw == 3) ? "SVGA" : (normalized === "mp4" || raw == 4) ? "MP4" : normalized.toUpperCase();
+                const normalized = inferMediaType(row?.type, row?.file);
+                const label = normalized ? normalized.toUpperCase() : "-";
                 return <span style={{ textTransform: "uppercase", fontSize: 12, fontWeight: 700, color: "#6366f1" }}>{label}</span>;
             }
         },
