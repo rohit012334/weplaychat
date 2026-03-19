@@ -16,6 +16,7 @@ const path = require("path");
 
 //fs
 const fs = require("fs");
+const { PRIMARY_STORAGE_DIR, LEGACY_STORAGE_DIR } = require("./util/storagePath");
 
 //dotenv
 require("dotenv").config({ path: path.join(__dirname, ".env") });
@@ -46,7 +47,7 @@ const initializeSettings = require("./util/initializeSettings");
 const port = process.env.PORT || 8000;
 
 // Storage directory: same path for serving and for multer uploads (avoids path mismatch on Railway/different cwd)
-const storageDir = path.join(__dirname, "storage");
+const storageDir = PRIMARY_STORAGE_DIR;
 if (!fs.existsSync(storageDir)) {
   fs.mkdirSync(storageDir, { recursive: true });
   console.log("✅ Created storage directory:", storageDir);
@@ -64,9 +65,13 @@ async function startServer() {
     res.status(200).json({ ok: true });
   });
 
-  // Serve uploaded files (images, documents, mp4, svga)
-  // Mount on both /storage and //storage to handle double-slash issues from frontend
-  app.use(["/storage", "//storage"], express.static(storageDir));
+  // Serve uploaded files from both current and legacy storage dirs.
+  // Legacy fallback avoids 404 for files saved before storage path migration.
+  const staticMiddlewares =
+    LEGACY_STORAGE_DIR !== storageDir
+      ? [express.static(storageDir), express.static(LEGACY_STORAGE_DIR)]
+      : [express.static(storageDir)];
+  app.use(["/storage", "//storage"], ...staticMiddlewares);
 
   // Start Server immediately
   server.listen(port, () => {

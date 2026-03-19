@@ -1,6 +1,6 @@
 const Frame = require("../../models/Frame.model");
 const fs = require("fs");
-const { deleteFiles } = require("../../util/deletefile");
+const { resolveStorageAbsolutePath } = require("../../util/storagePath");
 
 // CREATE frame
 exports.createFrame = async (req, res) => {
@@ -58,9 +58,9 @@ exports.updateFrame = async (req, res) => {
         if (req.file) {
             // Remove old file
             if (frame.file) {
-                const oldPath = frame.file.split("storage");
-                if (oldPath.length > 1 && fs.existsSync("storage" + oldPath[1])) {
-                    fs.unlinkSync("storage" + oldPath[1]);
+                const oldFilePath = resolveStorageAbsolutePath(frame.file);
+                if (oldFilePath && fs.existsSync(oldFilePath)) {
+                    fs.unlinkSync(oldFilePath);
                 }
             }
             frame.file = req.file.path;
@@ -120,9 +120,9 @@ exports.deleteFrame = async (req, res) => {
 
         // Delete file from disk
         if (frame.file) {
-            const parts = frame.file.split("storage");
-            if (parts.length > 1 && fs.existsSync("storage" + parts[1])) {
-                fs.unlinkSync("storage" + parts[1]);
+            const filePath = resolveStorageAbsolutePath(frame.file);
+            if (filePath && fs.existsSync(filePath)) {
+                fs.unlinkSync(filePath);
             }
         }
 
