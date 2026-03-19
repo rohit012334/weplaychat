@@ -46,6 +46,9 @@ export default function ManagerLogin() {
   const loginFirebase = async (identifier: string, password: string) => {
     try {
       let finalEmail = identifier.trim();
+      if (finalEmail.startsWith("@")) {
+        finalEmail = finalEmail.substring(1);
+      }
 
       // Resolve ID to email if needed
       if (!finalEmail.includes("@")) {
@@ -577,7 +580,7 @@ export default function ManagerLogin() {
               <input
                 type="text"
                 value={email}
-                placeholder="Enter your email or ID (e.g. MG123456)"
+                placeholder="Enter your email or ID"
                 onKeyDown={handleKeyPress}
                 onChange={(e: any) => {
                   setEmail(e.target.value);

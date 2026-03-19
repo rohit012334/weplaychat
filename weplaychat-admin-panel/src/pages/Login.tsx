@@ -58,6 +58,9 @@ export default function Login() {
   const loginUser = async (identifier: string, password: string) => {
     try {
       let finalEmail = identifier.trim();
+      if (finalEmail.startsWith("@")) {
+        finalEmail = finalEmail.substring(1);
+      }
 
       // If identifier doesn't look like an email, try to resolve it
       if (!finalEmail.includes("@")) {
@@ -566,7 +569,7 @@ export default function Login() {
               <input
                 type="text"
                 value={email}
-                placeholder="Enter your email or ID (e.g. AD123456)"
+                placeholder="Enter your email or ID"
                 onKeyDown={handleKeyPress}
                 onChange={(e: any) => {
                   setEmail(e.target.value);

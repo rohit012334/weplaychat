@@ -46,6 +46,9 @@ export default function ResellerLogin() {
   const loginUser = async (identifier: string, password: string) => {
     try {
       let finalEmail = identifier.trim();
+      if (finalEmail.startsWith("@")) {
+        finalEmail = finalEmail.substring(1);
+      }
 
       // Resolve ID to email if not an email format
       if (!finalEmail.includes("@")) {
@@ -544,7 +547,7 @@ export default function ResellerLogin() {
               <input
                 type="text"
                 value={email}
-                placeholder="Enter your email or Reseller ID"
+                placeholder="Enter your email or ID"
                 onKeyDown={handleKeyPress}
                 onChange={(e: any) => {
                   setEmail(e.target.value);

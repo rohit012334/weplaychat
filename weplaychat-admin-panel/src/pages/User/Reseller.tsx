@@ -51,7 +51,7 @@ const Reseller = (props: any) => {
                         </div>
                         <div>
                             <p className="rs-uname">{row?.name || "—"}</p>
-                            <p className="rs-uid">@{row?.uniqueId || row?.uid || "—"}</p>
+                            <p className="rs-uid">{row?.uniqueId || row?.uid || "—"}</p>
                         </div>
                     </div>
                 );
