@@ -7,12 +7,14 @@ const EntryController = require("../../controllers/admin/entry.controller");
 const multer = require("multer");
 const storage = require("../../util/multer");
 const upload = multer({ storage });
+const normalizeStoragePath = require("../../util/normalizeStoragePath");
 
 // Create entry
 route.post(
     "/createEntry",
     checkAccessWithSecretKey(),
     upload.single("file"),
+    normalizeStoragePath,
     EntryController.createEntry
 );
 
@@ -21,6 +23,7 @@ route.patch(
     "/updateEntry",
     checkAccessWithSecretKey(),
     upload.single("file"),
+    normalizeStoragePath,
     EntryController.updateEntry
 );
 

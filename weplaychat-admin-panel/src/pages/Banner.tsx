@@ -9,7 +9,7 @@ import TrashIcon from "@/assets/images/delete.svg";
 import EditIcon from "@/assets/images/edit.svg";
 import ToggleSwitch from "@/extra/TogggleSwitch";
 import CommonDialog from "@/utils/CommonDialog";
-import { baseURL } from "@/utils/config";
+import { getStorageUrl } from "@/utils/config";
 import { getBanners, deleteBanner, updateBannerStatus } from "@/store/bannerSlice";
 import BannerDialog from "@/component/banner/BannerDialog";
 
@@ -54,7 +54,7 @@ const BannerContent = () => {
     {
       Header: "Image",
       Cell: ({ row }: { row: any }) => {
-        const src = row?.image ? (row.image.startsWith("http") ? row.image : `${baseURL}${row.image.replace(/\\/g, "/")}`) : "";
+        const src = row?.image ? getStorageUrl(row.image) : "";
         return src ? (
           <img src={src} alt="Banner"
             style={{ width: "90px", height: "50px", objectFit: "cover", borderRadius: "8px", border: "1px solid #e8eaf2" }}

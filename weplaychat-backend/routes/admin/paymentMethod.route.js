@@ -6,6 +6,7 @@ const route = express.Router();
 const multer = require("multer");
 const storage = require("../../util/multer");
 const upload = multer({ storage });
+const normalizeStoragePath = require("../../util/normalizeStoragePath");
 
 //checkAccessWithSecretKey
 const checkAccessWithSecretKey = require("../../checkAccess");
@@ -14,10 +15,10 @@ const checkAccessWithSecretKey = require("../../checkAccess");
 const PaymentMethodController = require("../../controllers/admin/paymentMethod.controller");
 
 //Create Payment Method
-route.post("/addPaymentMethod", checkAccessWithSecretKey(), upload.single("image"), PaymentMethodController.addPaymentMethod);
+route.post("/addPaymentMethod", checkAccessWithSecretKey(), upload.single("image"), normalizeStoragePath, PaymentMethodController.addPaymentMethod);
 
 //Update Payment Method
-route.patch("/modifyPaymentMethod", checkAccessWithSecretKey(), upload.single("image"), PaymentMethodController.modifyPaymentMethod);
+route.patch("/modifyPaymentMethod", checkAccessWithSecretKey(), upload.single("image"), normalizeStoragePath, PaymentMethodController.modifyPaymentMethod);
 
 //handle the isActive status of the payment method
 route.patch("/updatePaymentMethodStatus", checkAccessWithSecretKey(),  PaymentMethodController.updatePaymentMethodStatus);

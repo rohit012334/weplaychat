@@ -12,14 +12,15 @@ const NotificationController = require("../../controllers/admin/notification.con
 const multer = require("multer");
 const storage = require("../../util/multer");
 const upload = multer({ storage });
+const normalizeStoragePath = require("../../util/normalizeStoragePath");
 
 //sending a notification from admin to a specific user
-route.post("/sendNotificationToSingleUserByAdmin", checkAccessWithSecretKey(), upload.single("image"), NotificationController.sendNotificationToSingleUserByAdmin);
+route.post("/sendNotificationToSingleUserByAdmin", checkAccessWithSecretKey(), upload.single("image"), normalizeStoragePath, NotificationController.sendNotificationToSingleUserByAdmin);
 
 //sending a notification from admin to a specific host
-route.post("/sendNotificationToSingleHostByAdmin", checkAccessWithSecretKey(), upload.single("image"), NotificationController.sendNotificationToSingleHostByAdmin);
+route.post("/sendNotificationToSingleHostByAdmin", checkAccessWithSecretKey(), upload.single("image"), normalizeStoragePath, NotificationController.sendNotificationToSingleHostByAdmin);
 
 //sending a notification from admin to user/host/both
-route.post("/sendNotifications", checkAccessWithSecretKey(), upload.single("image"), NotificationController.sendNotifications);
+route.post("/sendNotifications", checkAccessWithSecretKey(), upload.single("image"), normalizeStoragePath, NotificationController.sendNotifications);
 
 module.exports = route;

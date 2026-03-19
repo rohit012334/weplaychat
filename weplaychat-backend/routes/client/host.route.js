@@ -6,6 +6,7 @@ const route = express.Router();
 const multer = require("multer");
 const storage = require("../../util/multer");
 const upload = multer({ storage });
+const normalizeStoragePath = require("../../util/normalizeStoragePath");
 
 //checkAccessWithSecretKey
 const checkAccessWithSecretKey = require("../../checkAccess");
@@ -33,6 +34,7 @@ route.post(
     { name: "photoGallery", maxCount: 10 },
     { name: "profileVideo", maxCount: 10 },
   ]),
+  normalizeStoragePath,
   HostController.initiateHostRequest
 );
 
@@ -61,6 +63,7 @@ route.patch(
     { name: "photoGallery", maxCount: 10 },
     { name: "profileVideo", maxCount: 10 },
   ]),
+  normalizeStoragePath,
   HostController.modifyHostDetails
 );
 

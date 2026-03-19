@@ -12,13 +12,14 @@ const ManagerController = require("../../controllers/admin/manager.controller");
 const multer = require("multer");
 const storage = require("../../util/multer");
 const upload = multer({ storage });
+const normalizeStoragePath = require("../../util/normalizeStoragePath");
 
 //create agency
 route.post("/createManager", checkAccessWithSecretKey(), upload.fields([
   { name: "image", maxCount: 1 },
   { name: "nationalIdFront", maxCount: 1 },
   { name: "nationalIdBack", maxCount: 1 },
-]), ManagerController.createManager);
+]), normalizeStoragePath, ManagerController.createManager);
 
 //validate manager login
 route.post("/validateManagerLogin", ManagerController.validateManagerLogin);

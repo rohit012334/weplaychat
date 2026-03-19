@@ -12,6 +12,7 @@ const ResellerController = require("../../controllers/admin/reseller.controller"
 const multer = require("multer");
 const storage = require("../../util/multer");
 const upload = multer({ storage });
+const normalizeStoragePath = require("../../util/normalizeStoragePath");
 
 const validateResellerFirebaseToken = require("../../middleware/validateResellerToken.middleware");
 
@@ -19,7 +20,7 @@ const validateResellerFirebaseToken = require("../../middleware/validateReseller
 route.post("/loginReseller", checkAccessWithSecretKey(), ResellerController.validateResellerLogin);
 
 //update reseller profile
-route.patch("/modifyReseller", validateResellerFirebaseToken, checkAccessWithSecretKey(), upload.single("image"), ResellerController.modifyReseller);
+route.patch("/modifyReseller", validateResellerFirebaseToken, checkAccessWithSecretKey(), upload.single("image"), normalizeStoragePath, ResellerController.modifyReseller);
 
 //get reseller profile
 route.get("/getResellerProfile", validateResellerFirebaseToken, checkAccessWithSecretKey(), ResellerController.getResellerProfile);

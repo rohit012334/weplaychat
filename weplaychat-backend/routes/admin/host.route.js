@@ -9,6 +9,7 @@ const checkAccessWithSecretKey = require("../../checkAccess");
 const multer = require("multer");
 const storage = require("../../util/multer");
 const upload = multer({ storage });
+const normalizeStoragePath = require("../../util/normalizeStoragePath");
 
 //controller
 const HostController = require("../../controllers/admin/host.controller");
@@ -36,6 +37,7 @@ route.post(
     { name: "liveVideo", maxCount: 20 },
     { name: "profileVideo", maxCount: 20 },
   ]),
+  normalizeStoragePath,
   HostController.createHost
 );
 
@@ -50,6 +52,7 @@ route.patch(
     { name: "liveVideo", maxCount: 20 },
     { name: "profileVideo", maxCount: 20 },
   ]),
+  normalizeStoragePath,
   HostController.updateHost
 );
 

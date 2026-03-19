@@ -7,11 +7,13 @@ const EventController = require("../../controllers/admin/event.controller");
 const multer = require("multer");
 const storage = require("../../util/multer");
 const upload = multer({ storage });
+const normalizeStoragePath = require("../../util/normalizeStoragePath");
 
 route.post(
   "/createEvent",
   checkAccessWithSecretKey(),
   upload.single("image"),
+  normalizeStoragePath,
   EventController.createEvent
 );
 
@@ -19,6 +21,7 @@ route.patch(
   "/updateEvent",
   checkAccessWithSecretKey(),
   upload.single("image"),
+  normalizeStoragePath,
   EventController.updateEvent
 );
 

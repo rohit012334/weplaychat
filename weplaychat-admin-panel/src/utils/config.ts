@@ -1,6 +1,18 @@
 export const baseURL: string =
   process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/";
 
+/** Build full URL for a storage file (image/doc/video). Normalizes paths so /app/.../storage/xxx or storage/xxx becomes /storage/xxx. */
+export function getStorageUrl(path: string | null | undefined): string {
+  if (!path || typeof path !== "string") return "";
+  const p = path.replace(/\\/g, "/").trim();
+  if (p.startsWith("http")) return p;
+  const afterStorage = p.split(/\/storage\//i).pop() || "";
+  const filename = (afterStorage || p).replace(/^.*\//, "");
+  const segment = filename ? `/storage/${filename}` : "";
+  const base = (baseURL || "").replace(/\/+$/, "");
+  return segment ? (base ? `${base}${segment}` : segment) : "";
+}
+
 // NOTE: anything used in the browser must be NEXT_PUBLIC_* (it will be exposed to users).
 // This project currently requires a shared `key` header for API access; moving it to env
 // avoids hardcoding but does NOT make it private.

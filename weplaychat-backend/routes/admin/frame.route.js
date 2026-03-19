@@ -7,12 +7,14 @@ const FrameController = require("../../controllers/admin/frame.controller");
 const multer = require("multer");
 const storage = require("../../util/multer");
 const upload = multer({ storage });
+const normalizeStoragePath = require("../../util/normalizeStoragePath");
 
 // Create frame
 route.post(
     "/createFrame",
     checkAccessWithSecretKey(),
     upload.single("file"),
+    normalizeStoragePath,
     FrameController.createFrame
 );
 
@@ -21,6 +23,7 @@ route.patch(
     "/updateFrame",
     checkAccessWithSecretKey(),
     upload.single("file"),
+    normalizeStoragePath,
     FrameController.updateFrame
 );
 

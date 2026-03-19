@@ -12,6 +12,7 @@ const GiftController = require("../../controllers/admin/gift.controller");
 const multer = require("multer");
 const storage = require("../../util/multer");
 const upload = multer({ storage });
+const normalizeStoragePath = require("../../util/normalizeStoragePath");
 
 //create gift
 route.post(
@@ -23,6 +24,7 @@ route.post(
     { name: "mp4Image", maxCount: 1 },
     { name: "webpImage", maxCount: 1 },
   ]),
+  normalizeStoragePath,
   GiftController.addGift
 );
 
@@ -36,6 +38,7 @@ route.patch(
     { name: "mp4Image", maxCount: 1 },
     { name: "webpImage", maxCount: 1 },
   ]),
+  normalizeStoragePath,
   GiftController.modifyGift
 );
 

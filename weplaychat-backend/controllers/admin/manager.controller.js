@@ -194,10 +194,21 @@ exports.validateManagerLogin = async (req, res) => {
 exports.getList = async (req, res) => {
   try {
     let managers = await Admin.find({ role: "manager" });
-    managers = managers.map((manager) => ({
-      ...manager._doc,
-      password: cryptr.decrypt(manager.password),
-    }));
+    managers = managers.map((manager) => {
+      let decryptedPassword = "";
+      try {
+        if (manager.password) {
+          decryptedPassword = cryptr.decrypt(manager.password);
+        }
+      } catch (e) {
+        console.warn("getList: decrypt failed for manager", manager._id, e.message);
+        decryptedPassword = "[encrypted]";
+      }
+      return {
+        ...manager._doc,
+        password: decryptedPassword,
+      };
+    });
 
     return res.status(200).json({
       status: true,

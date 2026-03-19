@@ -6,6 +6,7 @@ const route = express.Router();
 const multer = require("multer");
 const storage = require("../../util/multer");
 const upload = multer({ storage });
+const normalizeStoragePath = require("../../util/normalizeStoragePath");
 
 //checkAccessWithSecretKey
 const checkAccessWithSecretKey = require("../../checkAccess");
@@ -23,6 +24,7 @@ route.post(
   verifyAdminAuthToken,
   checkAccessWithSecretKey(),
   upload.single("image"),
+  normalizeStoragePath,
   BannerController.createBanner
 );
 
@@ -32,6 +34,7 @@ route.patch(
   verifyAdminAuthToken,
   checkAccessWithSecretKey(),
   upload.single("image"),
+  normalizeStoragePath,
   BannerController.updateBanner
 );
 

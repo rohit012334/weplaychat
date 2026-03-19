@@ -15,13 +15,14 @@ const multer = require("multer");
 const storage = require("../../util/multer");
 const validateResellerFirebaseToken = require("../../middleware/validateResellerToken.middleware");
 const upload = multer({ storage });
+const normalizeStoragePath = require("../../util/normalizeStoragePath");
 
 //create agency
 route.post("/createReseller", validateAdminToken, checkAccessWithSecretKey(), upload.fields([
   { name: "image", maxCount: 1 },
   { name: "nationalIdFront", maxCount: 1 },
   { name: "nationalIdBack", maxCount: 1 },
-]), ResellerController.createReseller);
+]), normalizeStoragePath, ResellerController.createReseller);
 
 route.post("/validateResellerLogin",checkAccessWithSecretKey(), ResellerController.validateResellerLogin);
 

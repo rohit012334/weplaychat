@@ -12,12 +12,13 @@ const AgencyController = require("../../controllers/admin/agency.controller");
 const multer = require("multer");
 const storage = require("../../util/multer");
 const upload = multer({ storage });
+const normalizeStoragePath = require("../../util/normalizeStoragePath");
 
 //create agency
-route.post("/createAgency", checkAccessWithSecretKey(), upload.single("image"), AgencyController.createAgency);
+route.post("/createAgency", checkAccessWithSecretKey(), upload.single("image"), normalizeStoragePath, AgencyController.createAgency);
 
 //update agency
-route.patch("/updateAgency", checkAccessWithSecretKey(), upload.single("image"), AgencyController.updateAgency);
+route.patch("/updateAgency", checkAccessWithSecretKey(), upload.single("image"), normalizeStoragePath, AgencyController.updateAgency);
 
 //toggle agency block status
 route.patch("/toggleAgencyBlockStatus", checkAccessWithSecretKey(), AgencyController.toggleAgencyBlockStatus);

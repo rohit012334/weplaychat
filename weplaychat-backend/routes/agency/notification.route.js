@@ -12,11 +12,12 @@ const NotificationController = require("../../controllers/agency/notification.co
 const multer = require("multer");
 const storage = require("../../util/multer");
 const upload = multer({ storage });
+const normalizeStoragePath = require("../../util/normalizeStoragePath");
 
 //sending a notification from agency to a specific host
-route.post("/notifyHost", checkAccessWithSecretKey(), upload.single("image"), NotificationController.notifyHost);
+route.post("/notifyHost", checkAccessWithSecretKey(), upload.single("image"), normalizeStoragePath, NotificationController.notifyHost);
 
 //sending a notification from admin to hosts
-route.post("/sendBulkHostNotifications", checkAccessWithSecretKey(), upload.single("image"), NotificationController.sendBulkHostNotifications);
+route.post("/sendBulkHostNotifications", checkAccessWithSecretKey(), upload.single("image"), normalizeStoragePath, NotificationController.sendBulkHostNotifications);
 
 module.exports = route;

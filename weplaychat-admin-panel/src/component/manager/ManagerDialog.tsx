@@ -7,7 +7,7 @@ import { createManagerUser, updateManagerUser } from "@/store/userSlice";
 import React, { useEffect, useState } from "react";
 import ReactSelect from "react-select";
 import { useSelector } from "react-redux";
-import { baseURL } from "@/utils/config";
+import { getStorageUrl } from "@/utils/config";
 import countriesData from "@/api/countries.json";
 import male from "@/assets/images/male.png";
 import { toast } from "react-toastify";
@@ -86,16 +86,14 @@ const ManagerDialog = () => {
       setDescription(dialogueData?.description);
       setMobile(String(dialogueData.mobile || ""));
       setCountryCode(dialogueData.countryCode || "");
-      const imgPath = dialogueData.image
-        ? baseURL + dialogueData.image.replace(/\\/g, "/") : "";
-      setImagePath(imgPath);
+      setImagePath(getStorageUrl(dialogueData.image) || "");
 
       // Identity fields for edit
       setNationalId(dialogueData.nationalId || "");
       setNationalIdType(dialogueData.nationalIdType || "other");
       if (dialogueData.nationalIdImage) {
-        setFrontPreview(dialogueData.nationalIdImage.front ? baseURL + dialogueData.nationalIdImage.front.replace(/\\/g, "/") : "");
-        setBackPreview(dialogueData.nationalIdImage.back ? baseURL + dialogueData.nationalIdImage.back.replace(/\\/g, "/") : "");
+        setFrontPreview(getStorageUrl(dialogueData.nationalIdImage.front) || "");
+        setBackPreview(getStorageUrl(dialogueData.nationalIdImage.back) || "");
       }
     }
   }, [dialogueData]);

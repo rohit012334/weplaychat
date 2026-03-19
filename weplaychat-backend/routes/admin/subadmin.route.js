@@ -9,6 +9,7 @@ const checkAccessWithSecretKey = require("../../checkAccess");
 const multer = require("multer");
 const storage = require("../../util/multer");
 const upload = multer({ storage });
+const normalizeStoragePath = require("../../util/normalizeStoragePath");
 
 //controller
 const AdminController = require("../../controllers/admin/admin.controller");
@@ -29,6 +30,7 @@ route.post(
     { name: "nationalIdFront", maxCount: 1 },
     { name: "nationalIdBack", maxCount: 1 },
   ]),
+  normalizeStoragePath,
   AdminController.addAdmin
 );
 route.put("/update/:id", checkAccessWithSecretKey(), AdminController.updatePasswordById);
