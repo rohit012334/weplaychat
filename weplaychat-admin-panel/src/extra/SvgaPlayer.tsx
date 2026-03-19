@@ -60,6 +60,18 @@ const SvgaPlayer: React.FC<SvgaPlayerProps> = ({ url, style, className, id = "sv
                 retryTimer = window.setTimeout(() => runPlayer(false), 250);
               }
             }, 400);
+
+            // Ensure injected canvas fits container (prevents covering the row text below).
+            window.setTimeout(() => {
+              if (cancelled || !containerRef.current) return;
+              const canvas = containerRef.current.querySelector("canvas") as HTMLCanvasElement | null;
+              if (!canvas) return;
+              canvas.style.display = "block";
+              canvas.style.width = "100%";
+              canvas.style.height = "100%";
+              canvas.style.maxWidth = "100%";
+              canvas.style.maxHeight = "100%";
+            }, 250);
           },
           (err: any) => {
             if (cancelled) return;
@@ -95,6 +107,7 @@ const SvgaPlayer: React.FC<SvgaPlayerProps> = ({ url, style, className, id = "sv
         // Keep layout simple so svgaplayerweb can inject its canvas reliably.
         position: "relative",
         overflow: "hidden",
+        lineHeight: 0,
         display: "block",
         ...style 
       }} 
