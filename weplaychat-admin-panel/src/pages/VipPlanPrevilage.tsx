@@ -7,7 +7,7 @@ import { RootStore } from "@/store/store";
 import { useEffect, useState } from "react";
 import TrashIcon from "@/assets/images/delete.svg";
 import EditIcon from "@/assets/images/edit.svg";
-import { baseURL } from "@/utils/config";
+import { baseURL, getStorageUrl } from "@/utils/config";
 import { getVipPlanBeneFits } from "@/store/vipPlanSlice";
 import VipPlanBenefitDialog from "@/component/VipPlanBenefitDialog";
 import React from "react";
@@ -15,81 +15,126 @@ import React from "react";
 const VipPlanPrevilage = () => {
     const dispatch = useDispatch();
     const { dialogue, dialogueType } = useSelector((state: RootStore) => state.dialogue);
-    const { vipPlanBenefits: vipPrivileges, total } = useSelector((state: RootStore) => state.vipPlan);
-
-    const [rowsPerPage, setRowsPerPage] = useState<number>(10);
-    const [page, setPage] = useState<number>(1);
+    const { vipPlanBenefits: vipPrivileges } = useSelector((state: RootStore) => state.vipPlan);
 
     useEffect(() => {
         dispatch(getVipPlanBeneFits());
     }, [dispatch]);
 
-    const vipPrivilegeTable = [
-        { Header: "No", Cell: ({ index }: { index: any }) => <span className="ec-cell-num">{(page - 1) * rowsPerPage + parseInt(index) + 1}</span> },
-        {
-            Header: "Level",
-            Cell: ({ row }: { row: any }) => {
-                const levels = ["VIP", "VVIP", "SVIP"];
-                return <span className={`ec-topbar-count bg-light text-dark border-0`}>{levels[row.level - 1] || `Level ${row.level}`}</span>;
-            },
-        },
-        { Header: "Duration", Cell: ({ row }: { row: any }) => <span>{row.duration} Days</span> },
-        { Header: "Price", Cell: ({ row }: { row: any }) => <span>{row.price} Coins</span> },
-        {
-            Header: "Actions",
-            Cell: ({ row }: { row: any }) => (
-                <div className="ec-actions">
-                    <button className="ec-btn-edit" onClick={() => dispatch(openDialog({ type: "vipPrivilege", data: row }))}><img src={EditIcon.src} width={18} height={18} /></button>
-                </div>
-            ),
-        },
+    const renderPowerLabel = (label: string, active: boolean) => (
+        <div style={{ 
+            display: "flex", 
+            alignItems: "center", 
+            justifyContent: "space-between", 
+            padding: "8px 12px", 
+            borderRadius: "10px", 
+            background: active ? "rgba(99,102,241,0.08)" : "#f8fafc",
+            border: active ? "1px solid rgba(99,102,241,0.2)" : "1px solid #f1f5f9",
+            opacity: active ? 1 : 0.5,
+            transition: "0.2s"
+        }}>
+            <span style={{ fontSize: "12px", fontWeight: 700, color: active ? "#6366f1" : "#64748b" }}>{label}</span>
+            {active ? (
+                <svg width="14" height="14" fill="none" stroke="#6366f1" strokeWidth="3" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
+            ) : (
+                <svg width="14" height="14" fill="none" stroke="#cbd5e1" strokeWidth="3" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            )}
+        </div>
+    );
+
+    const levels = [
+        { id: 1, name: "VIP", color: "#6366f1", bg: "linear-gradient(135deg, #6366f1 0%, #818cf8 100%)" },
+        { id: 2, name: "VVIP", color: "#a855f7", bg: "linear-gradient(135deg, #a855f7 0%, #c084fc 100%)" },
+        { id: 3, name: "SVIP", color: "#1e293b", bg: "linear-gradient(135deg, #0f172a 0%, #334155 100%)" }
     ];
 
     return (
         <>
             <style>{`
-                .ec-wrap { padding: 20px 24px 32px; }
-                .ec-topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
-                .ec-topbar-left { display: flex; align-items: center; gap: 10px; }
-                .ec-topbar-pill { width: 3px; height: 22px; border-radius: 3px; background: linear-gradient(180deg, #6366f1, #a855f7); }
-                .ec-topbar-title { font-family: 'Rajdhani', sans-serif; font-size: 18px; font-weight: 700; color: #1e2235; margin: 0; }
-                .ec-topbar-count { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; background: rgba(99,102,241,0.09); color: #6366f1; border: 1px solid rgba(99,102,241,0.18); }
-                .ec-add-btn { display: inline-flex; align-items: center; gap: 7px; padding: 10px 20px; border-radius: 10px; background: linear-gradient(135deg, #6366f1, #a855f7); color: #fff; border: none; cursor: pointer; font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 600; box-shadow: 0 4px 16px rgba(99,102,241,0.30); transition: box-shadow .18s, transform .12s; }
-                .ec-add-btn:hover { box-shadow: 0 6px 22px rgba(99,102,241,0.40); transform: translateY(-1px); }
-                .ec-table-card { background: #fff; border: 1px solid #e8eaf2; border-radius: 14px; overflow: hidden; box-shadow: 0 1px 10px rgba(99,102,241,0.05); }
-                .ec-cell-num { font-weight: 700; color: #6366f1; }
-                .ec-actions { display: flex; align-items: center; justify-content: center; gap: 8px; }
-                .ec-btn-edit, .ec-btn-delete { width: 36px; height: 36px; border-radius: 9px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform .12s, box-shadow .15s; }
-                .ec-btn-edit { background: rgba(99,102,241,0.10); border: 1px solid rgba(99,102,241,0.18); }
-                .ec-btn-edit:hover { background: rgba(99,102,241,0.18); transform: translateY(-1px); box-shadow: 0 3px 10px rgba(99,102,241,0.15); }
+                .vip-wrap { padding: 40px; background: #f1f5f9; min-height: 100vh; font-family: 'Outfit', sans-serif; }
+                .vip-header { margin-bottom: 40px; text-align: center; }
+                .vip-header h1 { font-family: 'Rajdhani', sans-serif; font-size: 36px; font-weight: 800; color: #0f172a; margin: 0; text-transform: uppercase; letter-spacing: 1px; }
+                .vip-header p { color: #64748b; font-size: 16px; margin-top: 5px; }
+                
+                .vip-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; max-width: 1200px; margin: 0 auto; }
+                .vip-card { background: #fff; border-radius: 24px; overflow: hidden; position: relative; border: 1px solid #e2e8f0; box-shadow: 0 10px 40px rgba(0,0,0,0.05); transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+                .vip-card:hover { transform: translateY(-8px); box-shadow: 0 20px 60px rgba(0,0,0,0.1); }
+                
+                .vip-card-header { padding: 30px 24px; color: #fff; text-align: center; position: relative; }
+                .vip-badge-box { width: 70px; height: 70px; background: rgba(255,255,255,0.2); backdrop-filter: blur(10px); border-radius: 20px; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px; border: 1px solid rgba(255,255,255,0.3); }
+                .level-title { font-size: 24px; font-weight: 800; font-family: 'Rajdhani', sans-serif; letter-spacing: 2px; }
+                
+                .vip-card-body { padding: 24px; background: #fff; }
+                .vip-stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+                .vip-stat-item { background: #f8fafc; padding: 12px; border-radius: 12px; border: 1px solid #f1f5f9; }
+                .stat-label { font-size: 10px; color: #94a3b8; font-weight: 800; text-transform: uppercase; margin-bottom: 4px; }
+                .stat-val { font-size: 16px; font-weight: 800; color: #1e293b; }
+                
+                .powers-section { margin-top: 20px; display: grid; grid-template-columns: 1fr; gap: 8px; }
+                .edit-priv-btn { width: 100%; padding: 14px; border-radius: 14px; background: #0f172a; color: #fff; border: none; cursor: pointer; font-weight: 700; margin-top: 24px; transition: 0.2s; box-shadow: 0 10px 15px -3px rgba(15,23,42,0.1); }
+                .edit-priv-btn:hover { background: #1e293b; letter-spacing: 0.5px; }
             `}</style>
-            <div className="ec-wrap">
+            
+            <div className="vip-wrap">
                 {dialogue && dialogueType === "vipPrivilege" && <VipPlanBenefitDialog />}
-                <div className="ec-topbar">
-                    <div className="ec-topbar-left">
-                        <div className="ec-topbar-pill" />
-                        <h4 className="ec-topbar-title">VIP Privileges</h4>
-                        <span className="ec-topbar-count">{vipPrivileges.length} total</span>
-                    </div>
-                    <button className="ec-add-btn" onClick={() => dispatch(openDialog({ type: "vipPrivilege" }))}>
-                        <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" viewBox="0 0 24 24">
-                            <line x1="12" y1="5" x2="12" y2="19" />
-                            <line x1="5" y1="12" x2="19" y2="12" />
-                        </svg>
-                        Add Privilege
-                    </button>
+                
+                <div className="vip-header">
+                    <h1>VIP PRIVILEGE MANAGEMENT</h1>
+                    <p>Customize specific benefits and discount tiers for all club levels</p>
                 </div>
-                <div className="ec-table-card">
-                    <Table data={vipPrivileges} mapData={vipPrivilegeTable} PerPage={rowsPerPage} Page={page} type="server" />
-                    <Pagination 
-                        type="server" 
-                        serverPage={page} 
-                        setServerPage={setPage} 
-                        serverPerPage={rowsPerPage} 
-                        totalData={total} 
-                        onPageChange={(_e: any, newPage: any) => setPage(newPage)}
-                        onRowsPerPageChange={(val: any) => { setRowsPerPage(parseInt(val)); setPage(1); }}
-                    />
+
+                <div className="vip-grid">
+                    {levels.map((lvl) => {
+                        const data = vipPrivileges?.find((v: any) => v.level === lvl.id) || {};
+                        return (
+                            <div key={lvl.id} className="vip-card">
+                                <div className="vip-card-header" style={{ background: lvl.bg }}>
+                                    <div className="vip-badge-box">
+                                        {data.vipFrameBadge ? (
+                                            <img src={getStorageUrl(data.vipFrameBadge)} style={{ width: "80%", height: "80%", objectFit: "contain" }} alt="Badge" />
+                                        ) : (
+                                            <svg width="32" height="32" fill="#fff" viewBox="0 0 16 16"><path d="M7.646 6.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1-.708.708L8 7.707 2.354 13.354a.5.5 0 1 1-.708-.708l6-6z"/></svg>
+                                        )}
+                                    </div>
+                                    <div className="level-title" style={{ color: lvl.id === 3 ? "#fbbf24" : "#fff" }}>{lvl.name}</div>
+                                    <div style={{ fontSize: "12px", opacity: 0.8 }}>{data.name || lvl.name} Privilege</div>
+                                </div>
+
+                                <div className="vip-card-body">
+                                    <div className="vip-stat-grid">
+                                        <div className="vip-stat-item">
+                                            <div className="stat-label">Audio Discount</div>
+                                            <div className="stat-val" style={{ color: "#059669" }}>{data.audioCallDiscount || 0}%</div>
+                                        </div>
+                                        <div className="vip-stat-item">
+                                            <div className="stat-label">Video Discount</div>
+                                            <div className="stat-val" style={{ color: lvl.color }}>{data.videoCallDiscount || 0}%</div>
+                                        </div>
+                                        <div className="vip-stat-item">
+                                            <div className="stat-label">Coin Bonus</div>
+                                            <div className="stat-val" style={{ color: "#d97706" }}>+{data.topUpCoinBonus || 0}%</div>
+                                        </div>
+                                        <div className="vip-stat-item">
+                                            <div className="stat-label">Free Msgs</div>
+                                            <div className="stat-val">{data.freeMessages || 0}</div>
+                                        </div>
+                                    </div>
+
+                                    <div className="vip-section-title" style={{ fontSize: "11px", fontWeight: 800, color: "#94a3b8", textTransform: "uppercase", marginBottom: "12px" }}>Specific Powers</div>
+                                    <div className="powers-section">
+                                        {renderPowerLabel("Golden Name", data.specialName)}
+                                        {renderPowerLabel("Kick Privilege", data.kick)}
+                                        {renderPowerLabel("Stealth Mode", data.hide)}
+                                        {renderPowerLabel("Mute Immunity", data.muteAvailability)}
+                                    </div>
+
+                                    <button className="edit-priv-btn" onClick={() => dispatch(openDialog({ type: "vipPrivilege", data: data }))}>
+                                        Manage {lvl.name} Options
+                                    </button>
+                                </div>
+                            </div>
+                        );
+                    })}
                 </div>
             </div>
         </>
