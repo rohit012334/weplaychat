@@ -70,24 +70,25 @@ export default function Table(props: any) {
                       <th
                         className={`text-uppercase ${res?.thClass} text-nowrap`}
                         key={i}
-                        // width={res.width}
                         onClick={res?.thClick}
                       >
-                        {`${" "}${res?.Header}`}
-                        {res?.sorting?.type === "server" && (
-                          <i
-                            className="ri-expand-up-down-fill deg90 ms-1"
-                            style={{ cursor: "pointer" }}
-                            onClick={() => handleClick(res.body)}
-                          ></i>
-                        )}
-                        {res?.sorting?.type === "client" && (
-                          <i
-                            className="ri-expand-up-down-fill deg90 ms-1"
-                            style={{ cursor: "pointer" }}
-                            onClick={() => handleColumnClick(res.body)}
-                          ></i>
-                        )}
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: res?.align || "center", gap: "6px" }}>
+                          {res?.Header}
+                          {res?.sorting?.type === "server" && (
+                            <i
+                              className="ri-expand-up-down-fill deg90 ms-1"
+                              style={{ cursor: "pointer" }}
+                              onClick={() => handleClick(res.body)}
+                            ></i>
+                          )}
+                          {res?.sorting?.type === "client" && (
+                            <i
+                              className="ri-expand-up-down-fill deg90 ms-1"
+                              style={{ cursor: "pointer" }}
+                              onClick={() => handleColumnClick(res.body)}
+                            ></i>
+                          )}
+                        </div>
                       </th>
                     );
                   })}
@@ -110,7 +111,7 @@ export default function Table(props: any) {
                               <tr key={k}>
                                 {mapData?.map((res: any, ind: number) => {
                                   return (
-                                    <td key={ind} className={res?.tdClass}>
+                                    <td key={ind} className={res?.tdClass} style={{ textAlign: res?.align || "center" }}>
                                       {res?.Cell ? (
                                         <res.Cell row={i} index={k} />
                                       ) : (
@@ -134,7 +135,7 @@ export default function Table(props: any) {
                               <tr key={k}>
                                 {mapData?.map((res: any, ind: number) => {
                                   return (
-                                    <td key={ind} className={res.tdClass}>
+                                    <td key={ind} className={res.tdClass} style={{ textAlign: res?.align || "center" }}>
                                       {res.Cell ? (
                                         <res.Cell row={i} index={k} />
                                       ) : (

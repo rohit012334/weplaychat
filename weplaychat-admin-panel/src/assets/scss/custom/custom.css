@@ -938,6 +938,7 @@ tr {
   border-color: rgba(216, 216, 216, 0.5);
   padding: 12px;
   font-size: 14px;
+  vertical-align: middle;
 }
 @media screen and (max-width: 768px) {
   tbody,
@@ -955,16 +956,11 @@ thead {
 }
 
 tbody td {
-  text-align: center !important;
-}
-tbody td:first-child {
   text-align: center;
-  width: 70px;
 }
+/* Removed redundant alignment for first column */
 
-thead th:first-child > div {
-  justify-content: center;
-}
+/* Removed redundant alignment for first header div */
 
 /* ======== Sub Table CSS ======== */
 .subTable tbody,
@@ -1015,12 +1011,11 @@ thead th:first-child > div {
   background-color: #fff;
   position: sticky;
   top: 0;
-  text-align: center !important;
+  text-align: center;
   z-index: 2;
   font-weight: 700 !important;
-  /* color: #312838; */
   color: #505050;
-  padding: 14px !important;
+  padding: 16px 12px;
   font-size: 14px;
 }
 .mainTable .primeTable.text-capitalized-normal {

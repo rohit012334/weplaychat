@@ -40,57 +40,7 @@ const EntryTagPage = () => {
 
     const getFileUrl = (filePath: string) => getStorageUrl(filePath);
 
-    const entryTagTable = [
-        { Header: "No", Cell: ({ index }: { index: any }) => <span className="ec-cell-num">{(page - 1) * rowsPerPage + parseInt(index) + 1}</span> },
-        {
-            Header: "Preview",
-            Cell: ({ row }: { row: any }) => {
-                const src = getFileUrl(row.file);
-                const type = inferMediaType(row.type, row.file);
-                const isSvga = type === "svga";
-                const isMp4 = type === "mp4";
-
-                const preview = isMp4 ? (
-                    <video src={src} autoPlay loop muted width="70" height="50" style={{ borderRadius: 8 }} />
-                ) : isSvga ? (
-                    <div style={{ width: 70, height: 50, borderRadius: 8, overflow: "hidden", background: "#f8f9fa", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                        <SvgaPlayer url={src} id={`table-svga-${row._id}`} key={src} />
-                    </div>
-                ) : (
-                    <span style={{ color: "#6366f1", fontWeight: 700 }}>{row.type}</span>
-                );
-
-                return (
-                    <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                        {preview}
-                        {row?.file && (
-                            <span style={{ fontSize: "10px", color: "#94a3b8", maxWidth: "70px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                                {row.file.split("/").pop() || row.file.split("\\").pop()}
-                            </span>
-                        )}
-                    </div>
-                );
-            },
-        },
-        { 
-            Header: "Type", 
-            Cell: ({ row }: { row: any }) => {
-                const normalized = inferMediaType(row?.type, row?.file);
-                const label = normalized ? normalized.toUpperCase() : "-";
-                return <span style={{ textTransform: "uppercase", fontSize: 12, fontWeight: 700, color: "#6366f1" }}>{label}</span>;
-            }
-        },
-        { Header: "Status", Cell: ({ row }: { row: any }) => <ToggleSwitch value={row.isActive} onClick={() => dispatch(updateEntryTagStatus(row._id))} /> },
-        {
-            Header: "Actions",
-            Cell: ({ row }: { row: any }) => (
-                <div className="ec-actions">
-                    <button className="ec-btn-edit" onClick={() => dispatch(openDialog({ type: "entryTag", data: row }))}><img src={EditIcon.src} width={18} height={18} /></button>
-                    <button className="ec-btn-delete" onClick={() => { setSelectedId(row._id); setShowDeleteDialog(true); }}><img src={TrashIcon.src} width={18} height={18} /></button>
-                </div>
-            ),
-        },
-    ];
+    // Manual table implementation used below
 
     return (
         <>
@@ -130,7 +80,81 @@ const EntryTagPage = () => {
                     </button>
                 </div>
                 <div className="ec-table-card">
-                    <Table data={entryTags} mapData={entryTagTable} PerPage={rowsPerPage} Page={page} type="server" />
+                    <div className="mainTable">
+                        <table width="100%" className="primeTable">
+                            <thead>
+                                <tr>
+                                    <th style={{ textAlign: "center", verticalAlign: "middle", padding: "16px 12px" }}>NO</th>
+                                    <th style={{ textAlign: "center", verticalAlign: "middle", padding: "16px 12px" }}>PREVIEW</th>
+                                    <th style={{ textAlign: "center", verticalAlign: "middle", padding: "16px 12px" }}>TYPE</th>
+                                    <th style={{ textAlign: "center", verticalAlign: "middle", padding: "16px 12px" }}>STATUS</th>
+                                    <th style={{ textAlign: "center", verticalAlign: "middle", padding: "16px 12px" }}>ACTIONS</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {entryTags.length > 0 ? (
+                                    entryTags.map((row: any, index: number) => {
+                                        const src = getFileUrl(row.file);
+                                        const type = inferMediaType(row.type, row.file);
+                                        const isSvga = type === "svga";
+                                        const isMp4 = type === "mp4";
+
+                                        const preview = isMp4 ? (
+                                            <video src={src} autoPlay loop muted width="70" height="50" style={{ borderRadius: 8, objectFit: "cover", border: "1px solid #e8eaf2" }} />
+                                        ) : isSvga ? (
+                                            <div style={{ width: 70, height: 50, borderRadius: 8, overflow: "hidden", background: "#f8f9fa", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                                <SvgaPlayer url={src} id={`table-svga-${row._id}`} key={src} />
+                                            </div>
+                                        ) : (
+                                            <span style={{ color: "#6366f1", fontWeight: 700 }}>{row.type}</span>
+                                        );
+
+                                        return (
+                                            <tr key={row._id}>
+                                                <td style={{ textAlign: "center", verticalAlign: "middle" }}>
+                                                    <span className="ec-cell-num">{(page - 1) * rowsPerPage + index + 1}</span>
+                                                </td>
+                                                <td style={{ textAlign: "center", verticalAlign: "middle" }}>
+                                                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px" }}>
+                                                        {preview}
+                                                        {row?.file && (
+                                                            <span style={{ fontSize: "10px", color: "#94a3b8", maxWidth: "80px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                                                {row.file.split("/").pop() || row.file.split("\\").pop()}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                                <td style={{ textAlign: "center", verticalAlign: "middle" }}>
+                                                    <span style={{ textTransform: "uppercase", fontSize: 12, fontWeight: 700, color: "#6366f1", background: "rgba(99,102,241,0.09)", padding: "4px 14px", borderRadius: "20px" }}>
+                                                        {type ? type.toUpperCase() : "-"}
+                                                    </span>
+                                                </td>
+                                                <td style={{ textAlign: "center", verticalAlign: "middle" }}>
+                                                    <ToggleSwitch value={row.isActive} onClick={() => dispatch(updateEntryTagStatus(row._id))} />
+                                                </td>
+                                                <td style={{ textAlign: "center", verticalAlign: "middle" }}>
+                                                    <div className="ec-actions">
+                                                        <button className="ec-btn-edit" onClick={() => dispatch(openDialog({ type: "entryTag", data: row }))}>
+                                                            <img src={EditIcon.src} width={18} height={18} />
+                                                        </button>
+                                                        <button className="ec-btn-delete" onClick={() => { setSelectedId(row._id); setShowDeleteDialog(true); }}>
+                                                            <img src={TrashIcon.src} width={18} height={18} />
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })
+                                ) : (
+                                    <tr>
+                                        <td colSpan={5} style={{ textAlign: "center", padding: "40px", color: "#64748b" }}>
+                                            No Data Found!
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
                     <Pagination 
                         type="server" 
                         serverPage={page} 

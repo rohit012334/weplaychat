@@ -32,8 +32,8 @@ exports.modifyVipPrivilege = async (req, res) => {
     
     // Dynamic fields from request body
     const fields = [
-      "audioCallDiscount", "videoCallDiscount", "randomMatchCallDiscount", 
-      "topUpCoinBonus", "freeMessages", "muteAvailability", "specialName", 
+      "videoCallDiscount", "randomMatchCallDiscount", 
+      "topUpCoinBonus", "muteAvailability", "specialName", 
       "freeEntry", "roomAuthority", "unlimitedChat", "memberTag", 
       "profileEdit", "kick", "backgroundAdd", "hide", "canMuteOthers"
     ];

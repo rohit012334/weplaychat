@@ -22,12 +22,12 @@ const VipPlanPrevilage = () => {
     }, [dispatch]);
 
     const renderPowerLabel = (label: string, active: boolean) => (
-        <div style={{ 
-            display: "flex", 
-            alignItems: "center", 
-            justifyContent: "space-between", 
-            padding: "8px 12px", 
-            borderRadius: "10px", 
+        <div style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            padding: "8px 12px",
+            borderRadius: "10px",
             background: active ? "rgba(99,102,241,0.08)" : "#f8fafc",
             border: active ? "1px solid rgba(99,102,241,0.2)" : "1px solid #f1f5f9",
             opacity: active ? 1 : 0.5,
@@ -35,9 +35,9 @@ const VipPlanPrevilage = () => {
         }}>
             <span style={{ fontSize: "12px", fontWeight: 700, color: active ? "#6366f1" : "#64748b" }}>{label}</span>
             {active ? (
-                <svg width="14" height="14" fill="none" stroke="#6366f1" strokeWidth="3" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
+                <svg width="14" height="14" fill="none" stroke="#6366f1" strokeWidth="3" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" /></svg>
             ) : (
-                <svg width="14" height="14" fill="none" stroke="#cbd5e1" strokeWidth="3" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                <svg width="14" height="14" fill="none" stroke="#cbd5e1" strokeWidth="3" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12" /></svg>
             )}
         </div>
     );
@@ -74,10 +74,10 @@ const VipPlanPrevilage = () => {
                 .edit-priv-btn { width: 100%; padding: 14px; border-radius: 14px; background: #0f172a; color: #fff; border: none; cursor: pointer; font-weight: 700; margin-top: 24px; transition: 0.2s; box-shadow: 0 10px 15px -3px rgba(15,23,42,0.1); }
                 .edit-priv-btn:hover { background: #1e293b; letter-spacing: 0.5px; }
             `}</style>
-            
+
             <div className="vip-wrap">
                 {dialogue && dialogueType === "vipPrivilege" && <VipPlanBenefitDialog />}
-                
+
                 <div className="vip-header">
                     <h1>VIP PRIVILEGE MANAGEMENT</h1>
                     <p>Customize specific benefits and discount tiers for all club levels</p>
@@ -93,7 +93,7 @@ const VipPlanPrevilage = () => {
                                         {data.vipFrameBadge ? (
                                             <img src={getStorageUrl(data.vipFrameBadge)} style={{ width: "80%", height: "80%", objectFit: "contain" }} alt="Badge" />
                                         ) : (
-                                            <svg width="32" height="32" fill="#fff" viewBox="0 0 16 16"><path d="M7.646 6.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1-.708.708L8 7.707 2.354 13.354a.5.5 0 1 1-.708-.708l6-6z"/></svg>
+                                            <svg width="32" height="32" fill="#fff" viewBox="0 0 16 16"><path d="M7.646 6.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1-.708.708L8 7.707 2.354 13.354a.5.5 0 1 1-.708-.708l6-6z" /></svg>
                                         )}
                                     </div>
                                     <div className="level-title" style={{ color: lvl.id === 3 ? "#fbbf24" : "#fff" }}>{lvl.name}</div>
@@ -101,31 +101,33 @@ const VipPlanPrevilage = () => {
                                 </div>
 
                                 <div className="vip-card-body">
-                                    <div className="vip-stat-grid">
-                                        <div className="vip-stat-item">
-                                            <div className="stat-label">Audio Discount</div>
-                                            <div className="stat-val" style={{ color: "#059669" }}>{data.audioCallDiscount || 0}%</div>
-                                        </div>
+                                    <div className="vip-stat-grid" style={{ gridTemplateColumns: "repeat(3, 1fr)" }}>
                                         <div className="vip-stat-item">
                                             <div className="stat-label">Video Discount</div>
                                             <div className="stat-val" style={{ color: lvl.color }}>{data.videoCallDiscount || 0}%</div>
                                         </div>
                                         <div className="vip-stat-item">
-                                            <div className="stat-label">Coin Bonus</div>
-                                            <div className="stat-val" style={{ color: "#d97706" }}>+{data.topUpCoinBonus || 0}%</div>
+                                            <div className="stat-label">Random Match</div>
+                                            <div className="stat-val" style={{ color: "#8b5cf6" }}>{data.randomMatchCallDiscount || 0}%</div>
                                         </div>
                                         <div className="vip-stat-item">
-                                            <div className="stat-label">Free Msgs</div>
-                                            <div className="stat-val">{data.freeMessages || 0}</div>
+                                            <div className="stat-label">Coin Bonus</div>
+                                            <div className="stat-val" style={{ color: "#d97706" }}>+{data.topUpCoinBonus || 0}%</div>
                                         </div>
                                     </div>
 
                                     <div className="vip-section-title" style={{ fontSize: "11px", fontWeight: 800, color: "#94a3b8", textTransform: "uppercase", marginBottom: "12px" }}>Specific Powers</div>
-                                    <div className="powers-section">
-                                        {renderPowerLabel("Golden Name", data.specialName)}
-                                        {renderPowerLabel("Kick Privilege", data.kick)}
-                                        {renderPowerLabel("Stealth Mode", data.hide)}
-                                        {renderPowerLabel("Mute Immunity", data.muteAvailability)}
+                                    <div className="powers-section" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+                                        {renderPowerLabel("Special Name", data.specialName)}
+                                        {renderPowerLabel("Member Tag", data.memberTag)}
+                                        {renderPowerLabel("Room Authority", data.roomAuthority)}
+                                        {renderPowerLabel("Kick Users", data.kick)}
+                                        {renderPowerLabel("Mute VIP/VVIP", data.canMuteOthers)}
+                                        {renderPowerLabel("Hide Entry", data.hide)}
+                                        {renderPowerLabel("Unlimited Chat", data.unlimitedChat)}
+                                        {renderPowerLabel("Free Entry", data.freeEntry)}
+                                        {renderPowerLabel("Mute Availability", data.muteAvailability)}
+                                        {renderPowerLabel("Profile Edit", data.profileEdit)}
                                     </div>
 
                                     <button className="edit-priv-btn" onClick={() => dispatch(openDialog({ type: "vipPrivilege", data: data }))}>

@@ -86,71 +86,7 @@ const FrameContent = () => {
     );
   };
 
-  const frameTable = [
-    {
-      Header: "No",
-      Cell: ({ index }: { index: any }) => (
-        <span className="fc-cell-num">{(page - 1) * rowsPerPage + parseInt(index) + 1}</span>
-      ),
-    },
-    {
-      Header: "Preview",
-      Cell: ({ row }: { row: any }) => (
-        <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-          {renderPreview(row)}
-          {row?.file && (
-            <span style={{ fontSize: "10px", color: "#94a3b8", maxWidth: "70px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-              {row.file.split("/").pop() || row.file.split("\\").pop()}
-            </span>
-          )}
-        </div>
-      ),
-    },
-    {
-      Header: "Type",
-      Cell: ({ row }: { row: any }) => {
-        const normalized = inferMediaType(row?.type, row?.file);
-        const styles: Record<string, { bg: string; color: string; label: string }> = {
-          gif:  { bg: "#dcfce7", color: "#166534", label: "GIF" },
-          mp4:  { bg: "#dbeafe", color: "#1e40af", label: "MP4" },
-          svga: { bg: "rgba(99,102,241,0.10)", color: "#6366f1", label: "SVGA" },
-        };
-        const s = styles[normalized] || { bg: "#f4f5fb", color: "#64748b", label: normalized.toUpperCase() || "-" };
-        return (
-          <span style={{
-            display: "inline-block", padding: "3px 12px", borderRadius: "20px",
-            fontSize: "12px", fontWeight: 700,
-            background: s.bg, color: s.color,
-          }}>
-            {s.label}
-          </span>
-        );
-      },
-    },
-    {
-      Header: "Status",
-      Cell: ({ row }: { row: any }) => (
-        <ToggleSwitch
-          value={row?.isActive}
-          onClick={() => dispatch(updateFrameStatus(row?._id))}
-        />
-      ),
-    },
-    {
-      Header: "Actions",
-      Cell: ({ row }: { row: any }) => (
-        <div className="fc-actions">
-          <button className="fc-btn-edit"
-            onClick={() => dispatch(openDialog({ type: "frame", data: row }))}>
-            <img src={EditIcon.src} alt="Edit" width={18} height={18} />
-          </button>
-          <button className="fc-btn-delete" onClick={() => handleDelete(row?._id)}>
-            <img src={TrashIcon.src} alt="Delete" width={18} height={18} />
-          </button>
-        </div>
-      ),
-    },
-  ];
+  // Manual table implementation used below
 
   return (
     <>
@@ -256,13 +192,82 @@ const FrameContent = () => {
         </div>
 
         <div className="fc-table-card">
-          <Table
-            data={frames}
-            mapData={frameTable}
-            PerPage={rowsPerPage}
-            Page={page}
-            type="server"
-          />
+          <div className="mainTable">
+            <table width="100%" className="primeTable">
+              <thead>
+                <tr>
+                  <th style={{ textAlign: "center", verticalAlign: "middle", padding: "16px 12px" }}>NO</th>
+                  <th style={{ textAlign: "center", verticalAlign: "middle", padding: "16px 12px" }}>PREVIEW</th>
+                  <th style={{ textAlign: "center", verticalAlign: "middle", padding: "16px 12px" }}>TYPE</th>
+                  <th style={{ textAlign: "center", verticalAlign: "middle", padding: "16px 12px" }}>STATUS</th>
+                  <th style={{ textAlign: "center", verticalAlign: "middle", padding: "16px 12px" }}>ACTIONS</th>
+                </tr>
+              </thead>
+              <tbody>
+                {frames.length > 0 ? (
+                  frames.map((row: any, index: number) => {
+                    const mediaType = inferMediaType(row?.type, row?.file) || "-";
+                    const styles: Record<string, { bg: string; color: string }> = {
+                      gif:  { bg: "#dcfce7", color: "#166534" },
+                      mp4:  { bg: "#dbeafe", color: "#1e40af" },
+                      svga: { bg: "rgba(99,102,241,0.10)", color: "#6366f1" },
+                    };
+                    const s = styles[mediaType] || { bg: "#f4f5fb", color: "#64748b" };
+
+                    return (
+                      <tr key={row._id}>
+                        <td style={{ textAlign: "center", verticalAlign: "middle" }}>
+                          <span className="fc-cell-num">{(page - 1) * rowsPerPage + index + 1}</span>
+                        </td>
+                        <td style={{ textAlign: "center", verticalAlign: "middle" }}>
+                          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px" }}>
+                            {renderPreview(row)}
+                            {row?.file && (
+                              <span style={{ fontSize: "10px", color: "#94a3b8", maxWidth: "80px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                {row.file.split("/").pop() || row.file.split("\\").pop()}
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td style={{ textAlign: "center", verticalAlign: "middle" }}>
+                           <span style={{
+                            display: "inline-block", padding: "4px 14px", borderRadius: "20px",
+                            fontSize: "12px", fontWeight: 700,
+                            background: s.bg, color: s.color, textTransform: "uppercase",
+                          }}>
+                            {mediaType}
+                          </span>
+                        </td>
+                        <td style={{ textAlign: "center", verticalAlign: "middle" }}>
+                           <ToggleSwitch
+                            value={row?.isActive}
+                            onClick={() => dispatch(updateFrameStatus(row?._id))}
+                          />
+                        </td>
+                        <td style={{ textAlign: "center", verticalAlign: "middle" }}>
+                          <div className="fc-actions">
+                            <button className="fc-btn-edit"
+                              onClick={() => dispatch(openDialog({ type: "frame", data: row }))}>
+                              <img src={EditIcon.src} alt="Edit" width={18} height={18} />
+                            </button>
+                            <button className="fc-btn-delete" onClick={() => handleDelete(row?._id)}>
+                              <img src={TrashIcon.src} alt="Delete" width={18} height={18} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                ) : (
+                  <tr>
+                    <td colSpan={5} style={{ textAlign: "center", padding: "40px", color: "#64748b" }}>
+                      No Data Found!
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
           <Pagination
             type="server"
             serverPage={page}

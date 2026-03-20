@@ -87,62 +87,7 @@ const EntryContent = () => {
     );
   };
 
-  const entryTable = [
-    {
-      Header: "No",
-      Cell: ({ index }: { index: any }) => (
-        <span className="ec-cell-num">{(page - 1) * rowsPerPage + parseInt(index) + 1}</span>
-      ),
-    },
-    {
-      Header: "Preview",
-      Cell: ({ row }: { row: any }) => renderPreview(row),
-    },
-    {
-      Header: "Type",
-      Cell: ({ row }: { row: any }) => {
-        const type = inferMediaType(row?.type, row?.file) || "-";
-        const styles: Record<string, { bg: string; color: string }> = {
-          gif:  { bg: "#dcfce7", color: "#166534" },
-          mp4:  { bg: "#dbeafe", color: "#1e40af" },
-          svga: { bg: "rgba(99,102,241,0.10)", color: "#6366f1" },
-        };
-        const s = styles[type] || { bg: "#f4f5fb", color: "#64748b" };
-        return (
-          <span style={{
-            display: "inline-block", padding: "3px 12px", borderRadius: "20px",
-            fontSize: "12px", fontWeight: 700,
-            background: s.bg, color: s.color, textTransform: "uppercase",
-          }}>
-            {type}
-          </span>
-        );
-      },
-    },
-    {
-      Header: "Status",
-      Cell: ({ row }: { row: any }) => (
-        <ToggleSwitch
-          value={row?.isActive}
-          onClick={() => dispatch(updateEntryStatus(row?._id))}
-        />
-      ),
-    },
-    {
-      Header: "Actions",
-      Cell: ({ row }: { row: any }) => (
-        <div className="ec-actions">
-          <button className="ec-btn-edit"
-            onClick={() => dispatch(openDialog({ type: "entry", data: row }))}>
-            <img src={EditIcon.src} alt="Edit" width={18} height={18} />
-          </button>
-          <button className="ec-btn-delete" onClick={() => handleDelete(row?._id)}>
-            <img src={TrashIcon.src} alt="Delete" width={18} height={18} />
-          </button>
-        </div>
-      ),
-    },
-  ];
+  // Manual table used below instead of entryTable constant
 
   return (
     <>
@@ -248,13 +193,77 @@ const EntryContent = () => {
         </div>
 
         <div className="ec-table-card">
-          <Table
-            data={entries}
-            mapData={entryTable}
-            PerPage={rowsPerPage}
-            Page={page}
-            type="server"
-          />
+          <div className="mainTable">
+            <table width="100%" className="primeTable">
+              <thead>
+                <tr>
+                  <th style={{ textAlign: "center", verticalAlign: "middle", padding: "16px 12px" }}>NO</th>
+                  <th style={{ textAlign: "center", verticalAlign: "middle", padding: "16px 12px" }}>PREVIEW</th>
+                  <th style={{ textAlign: "center", verticalAlign: "middle", padding: "16px 12px" }}>TYPE</th>
+                  <th style={{ textAlign: "center", verticalAlign: "middle", padding: "16px 12px" }}>STATUS</th>
+                  <th style={{ textAlign: "center", verticalAlign: "middle", padding: "16px 12px" }}>ACTIONS</th>
+                </tr>
+              </thead>
+              <tbody>
+                {entries.length > 0 ? (
+                  entries.map((row: any, index: number) => {
+                    const mediaType = inferMediaType(row?.type, row?.file) || "-";
+                    const styles: Record<string, { bg: string; color: string }> = {
+                      gif:  { bg: "#dcfce7", color: "#166534" },
+                      mp4:  { bg: "#dbeafe", color: "#1e40af" },
+                      svga: { bg: "rgba(99,102,241,0.10)", color: "#6366f1" },
+                    };
+                    const s = styles[mediaType] || { bg: "#f4f5fb", color: "#64748b" };
+
+                    return (
+                      <tr key={row._id}>
+                        <td style={{ textAlign: "center", verticalAlign: "middle" }}>
+                          <span className="ec-cell-num">{(page - 1) * rowsPerPage + index + 1}</span>
+                        </td>
+                        <td style={{ textAlign: "center", verticalAlign: "middle" }}>
+                          <div style={{ display: "flex", justifyContent: "center" }}>
+                            {renderPreview(row)}
+                          </div>
+                        </td>
+                        <td style={{ textAlign: "center", verticalAlign: "middle" }}>
+                           <span style={{
+                            display: "inline-block", padding: "4px 14px", borderRadius: "20px",
+                            fontSize: "12px", fontWeight: 700,
+                            background: s.bg, color: s.color, textTransform: "uppercase",
+                          }}>
+                            {mediaType}
+                          </span>
+                        </td>
+                        <td style={{ textAlign: "center", verticalAlign: "middle" }}>
+                           <ToggleSwitch
+                            value={row?.isActive}
+                            onClick={() => dispatch(updateEntryStatus(row?._id))}
+                          />
+                        </td>
+                        <td style={{ textAlign: "center", verticalAlign: "middle" }}>
+                          <div className="ec-actions">
+                            <button className="ec-btn-edit"
+                              onClick={() => dispatch(openDialog({ type: "entry", data: row }))}>
+                              <img src={EditIcon.src} alt="Edit" width={18} height={18} />
+                            </button>
+                            <button className="ec-btn-delete" onClick={() => handleDelete(row?._id)}>
+                              <img src={TrashIcon.src} alt="Delete" width={18} height={18} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                ) : (
+                  <tr>
+                    <td colSpan={5} style={{ textAlign: "center", padding: "40px", color: "#64748b" }}>
+                      No Data Found!
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
           <Pagination
             type="server"
             serverPage={page}

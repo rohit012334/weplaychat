@@ -15,14 +15,12 @@ const VipPlanBenefitDialog = () => {
   const [mongoId, setMongoId] = useState("");
   const [level, setLevel] = useState(1);
   const [name, setName] = useState("");
-  
+
   // Numerical Fields
   const [numericalFields, setNumericalFields] = useState({
-    audioCallDiscount: 0,
     videoCallDiscount: 0,
     randomMatchCallDiscount: 0,
     topUpCoinBonus: 0,
-    freeMessages: 0,
   });
 
   // Boolean Fields (Toggles)
@@ -48,13 +46,11 @@ const VipPlanBenefitDialog = () => {
       setMongoId(dialogueData._id || "");
       setLevel(dialogueData.level || 1);
       setName(dialogueData.name || "");
-      
+
       setNumericalFields({
-        audioCallDiscount: dialogueData.audioCallDiscount || 0,
         videoCallDiscount: dialogueData.videoCallDiscount || 0,
         randomMatchCallDiscount: dialogueData.randomMatchCallDiscount || 0,
         topUpCoinBonus: dialogueData.topUpCoinBonus || 0,
-        freeMessages: dialogueData.freeMessages || 0,
       });
 
       setBooleanFields({
@@ -87,7 +83,7 @@ const VipPlanBenefitDialog = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const formData = new FormData();
     formData.append("level", level.toString());
     formData.append("name", name || (level === 1 ? "VIP" : level === 2 ? "VVIP" : "SVIP"));
@@ -117,17 +113,17 @@ const VipPlanBenefitDialog = () => {
   };
 
   const toggleLabels: Record<string, string> = {
-    muteAvailability: "Mute Immunity",
-    specialName: "Golden Name",
-    freeEntry: "Free Room Entry",
+    muteAvailability: "Mute Availability",
+    specialName: "Special Name",
+    freeEntry: "Free Entry",
     roomAuthority: "Room Authority",
     unlimitedChat: "Unlimited Chat",
     memberTag: "Member Tag",
     profileEdit: "Profile Customization",
-    kick: "Kick Privilege",
-    backgroundAdd: "Custom Backgrounds",
-    hide: "Stealth Mode",
-    canMuteOthers: "Punish Others",
+    kick: "Kick",
+    backgroundAdd: "Backgrounds",
+    hide: "Hide",
+    canMuteOthers: "Mute VIP or VVIP Users",
   };
 
   return (
@@ -188,7 +184,7 @@ const VipPlanBenefitDialog = () => {
                     <img src={badgePreview} className="vpb-badge-img" alt="Badge" />
                   ) : (
                     <div style={{ textAlign: "center", color: "#94a3b8" }}>
-                      <svg width="32" height="32" fill="currentColor" viewBox="0 0 16 16"><path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/></svg>
+                      <svg width="32" height="32" fill="currentColor" viewBox="0 0 16 16"><path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z" /></svg>
                       <div style={{ fontSize: 12, marginTop: 4 }}>Upload Icon</div>
                     </div>
                   )}

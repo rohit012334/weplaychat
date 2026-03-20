@@ -2402,8 +2402,8 @@ io.on("connection", async (socket) => {
     }
 
     let isHidden = false;
-    if (user?.isVip && user?.vipLevel === 3) {
-      const vipPrivilege = await VipPlanPrivilege.findOne({ level: 3 }).lean();
+    if (user?.isVip) {
+      const vipPrivilege = await VipPlanPrivilege.findOne({ level: user.vipLevel || 1 }).lean();
       if (vipPrivilege?.hide) {
         isHidden = true;
       }
@@ -2904,6 +2904,11 @@ io.on("connection", async (socket) => {
       // Rule: level must be higher.
       if (senderLevel <= targetLevel && targetLevel > 0) {
         return io.to("globalRoom:" + senderId).emit("roomActionError", `You cannot ${action} a user with an equal or higher level.`);
+      }
+
+      // Check for specific 'Mute VIP/VVIP' permission if target is a VIP
+      if (action === "mute" && targetLevel > 0 && !senderPrivilege.canMuteOthers) {
+        return io.to("globalRoom:" + senderId).emit("roomActionError", "You don't have authority to mute other VIP members.");
       }
 
       // Execute Action
