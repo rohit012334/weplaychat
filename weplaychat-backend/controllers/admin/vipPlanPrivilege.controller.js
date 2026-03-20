@@ -8,7 +8,9 @@ exports.modifyVipPrivilege = async (req, res) => {
     const { level, name } = req.body;
     
     if (!level) {
-      if (req.file) deleteFile(req.file);
+      if (req.files && Array.isArray(req.files)) {
+        req.files.forEach((file) => deleteFile(file));
+      }
       return res.status(400).json({ status: false, message: "Level is required (1, 2, or 3)." });
     }
 
@@ -18,14 +20,30 @@ exports.modifyVipPrivilege = async (req, res) => {
       privilege = new VipPlanPrivilege({ level: parseInt(level), name: name || (level == 1 ? "VIP" : level == 2 ? "VVIP" : "SVIP") });
     }
 
-    if (req.file) {
-      if (privilege.vipFrameBadge) {
-        const oldBadgePath = privilege.vipFrameBadge.split("storage");
-        if (oldBadgePath.length > 1 && fs.existsSync("storage" + oldBadgePath[1])) {
-          fs.unlinkSync("storage" + oldBadgePath[1]);
+    // Handle multiple file uploads (from upload.any())
+    if (req.files && Array.isArray(req.files)) {
+      const badgeFile = req.files.find(f => f.fieldname === "vipFrameBadge");
+      const freeEntryFile = req.files.find(f => f.fieldname === "freeEntryImage");
+
+      if (badgeFile) {
+        if (privilege.vipFrameBadge) {
+          const oldBadgePath = privilege.vipFrameBadge.split("storage");
+          if (oldBadgePath.length > 1 && fs.existsSync("storage" + oldBadgePath[1])) {
+            fs.unlinkSync("storage" + oldBadgePath[1]);
+          }
         }
+        privilege.vipFrameBadge = badgeFile.path;
       }
-      privilege.vipFrameBadge = req.file.path;
+
+      if (freeEntryFile) {
+        if (privilege.freeEntryImage) {
+          const oldFreeEntryPath = privilege.freeEntryImage.split("storage");
+          if (oldFreeEntryPath.length > 1 && fs.existsSync("storage" + oldFreeEntryPath[1])) {
+            fs.unlinkSync("storage" + oldFreeEntryPath[1]);
+          }
+        }
+        privilege.freeEntryImage = freeEntryFile.path;
+      }
     }
 
     if (name) privilege.name = name;
@@ -55,7 +73,9 @@ exports.modifyVipPrivilege = async (req, res) => {
       data: privilege,
     });
   } catch (error) {
-    if (req.file) deleteFile(req.file);
+    if (req.files && Array.isArray(req.files)) {
+      req.files.forEach((file) => deleteFile(file));
+    }
     console.error(error);
     return res.status(500).json({ status: false, message: error.message || "Internal Server Error" });
   }

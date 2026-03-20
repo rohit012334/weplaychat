@@ -11,6 +11,7 @@ import { baseURL, getStorageUrl } from "@/utils/config";
 import { getVipPlanBeneFits } from "@/store/vipPlanSlice";
 import VipPlanBenefitDialog from "@/component/VipPlanBenefitDialog";
 import React from "react";
+import SvgaPlayer from "@/extra/SvgaPlayer";
 
 const VipPlanPrevilage = () => {
     const dispatch = useDispatch();
@@ -89,15 +90,37 @@ const VipPlanPrevilage = () => {
                         return (
                             <div key={lvl.id} className="vip-card">
                                 <div className="vip-card-header" style={{ background: lvl.bg }}>
-                                    <div className="vip-badge-box">
-                                        {data.vipFrameBadge ? (
-                                            <img src={getStorageUrl(data.vipFrameBadge)} style={{ width: "80%", height: "80%", objectFit: "contain" }} alt="Badge" />
-                                        ) : (
-                                            <svg width="32" height="32" fill="#fff" viewBox="0 0 16 16"><path d="M7.646 6.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1-.708.708L8 7.707 2.354 13.354a.5.5 0 1 1-.708-.708l6-6z" /></svg>
-                                        )}
+                                    <div style={{ display: "flex", justifyContent: "center", gap: "12px", marginBottom: "15px" }}>
+                                        <div className="vip-badge-box" style={{ margin: 0 }}>
+                                            {data.vipFrameBadge ? (
+                                                data.vipFrameBadge.toLowerCase().endsWith(".svga") ? (
+                                                    <SvgaPlayer url={getStorageUrl(data.vipFrameBadge)} style={{ width: "80%", height: "80%" }} />
+                                                ) : data.vipFrameBadge.toLowerCase().endsWith(".mp4") ? (
+                                                    <video src={getStorageUrl(data.vipFrameBadge)} style={{ width: "80%", height: "80%", objectFit: "contain" }} autoPlay loop muted />
+                                                ) : (
+                                                    <img src={getStorageUrl(data.vipFrameBadge)} style={{ width: "80%", height: "80%", objectFit: "contain" }} alt="Badge" />
+                                                )
+                                            ) : (
+                                                <svg width="32" height="32" fill="#fff" viewBox="0 0 16 16"><path d="M7.646 6.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1-.708.708L8 7.707 2.354 13.354a.5.5 0 1 1-.708-.708l6-6z" /></svg>
+                                            )}
+                                        </div>
                                     </div>
                                     <div className="level-title" style={{ color: lvl.id === 3 ? "#fbbf24" : "#fff" }}>{lvl.name}</div>
                                     <div style={{ fontSize: "12px", opacity: 0.8 }}>{data.name || lvl.name} Privilege</div>
+                                    {data.freeEntryImage && (
+                                        <div style={{ marginTop: "20px", display: "flex", flexDirection: "column", alignItems: "center" }}>
+                                            <div className="vip-badge-box" style={{ margin: "0 0 8px 0", background: "rgba(255,255,255,0.1)" }}>
+                                                {data.freeEntryImage.toLowerCase().endsWith(".svga") ? (
+                                                    <SvgaPlayer url={getStorageUrl(data.freeEntryImage)} style={{ width: "80%", height: "80%" }} />
+                                                ) : data.freeEntryImage.toLowerCase().endsWith(".mp4") ? (
+                                                    <video src={getStorageUrl(data.freeEntryImage)} style={{ width: "80%", height: "80%", objectFit: "contain" }} autoPlay loop muted />
+                                                ) : (
+                                                    <img src={getStorageUrl(data.freeEntryImage)} style={{ width: "80%", height: "80%", objectFit: "contain" }} alt="Free Entry" />
+                                                )}
+                                            </div>
+                                            <div style={{ fontSize: "10px", fontWeight: 800, textTransform: "uppercase", letterSpacing: "1px", opacity: 0.9 }}>Free Entry</div>
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div className="vip-card-body">

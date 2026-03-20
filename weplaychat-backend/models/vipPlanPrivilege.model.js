@@ -15,6 +15,7 @@ const VipPlanPrivilegeSchema = new mongoose.Schema(
     muteAvailability: { type: Boolean, default: false },
     specialName: { type: Boolean, default: false },
     freeEntry: { type: Boolean, default: false },
+    freeEntryImage: { type: String, default: "" },
     roomAuthority: { type: Boolean, default: false },
     unlimitedChat: { type: Boolean, default: false },
     memberTag: { type: Boolean, default: false },
