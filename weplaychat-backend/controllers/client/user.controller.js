@@ -372,7 +372,8 @@ exports.sendOtp = async (req, res) => {
 
     // Generate 6 digit OTP
     // const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const otp = 1234;
+    const otp = "1234";
+    console.log("🔹 [OTP] Generated OTP:", otp, "for mobile:", mobileNumber);
 
     // Delete previous OTP for this number
     await Otp.deleteMany({ mobileNumber });
@@ -408,20 +409,25 @@ exports.verifyOtp = async (req, res) => {
     const { uid, provider } = req.user;
 
     if (!mobileNumber || !otp) {
+      console.warn("⚠️ [OTP] Missing mobileNumber or OTP in request body:", req.body);
       return res.status(400).json({
         status: false,
         message: "Mobile number and OTP are required",
       });
     }
 
+    console.log(`🔹 [OTP] Verifying OTP: ${otp} for mobile: ${mobileNumber}`);
+
     // ✅ Check OTP
     const otpData = await Otp.findOne({ mobileNumber, otp });
     if (!otpData) {
+      console.warn(`❌ [OTP] Verification failed. No matching OTP found in DB for ${mobileNumber} with OTP ${otp}`);
       return res.status(400).json({
         status: false,
         message: "Invalid or expired OTP",
       });
     }
+    console.log("✅ [OTP] OTP successfully matched.");
 
     // ✅ Delete OTP after verification
     await Otp.deleteMany({ mobileNumber });
