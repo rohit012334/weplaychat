@@ -372,7 +372,7 @@ exports.sendOtp = async (req, res) => {
 
     // Generate 6 digit OTP
     // const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const otp = 123456;
+    const otp = 1234;
 
     // Delete previous OTP for this number
     await Otp.deleteMany({ mobileNumber });
