@@ -23,7 +23,7 @@ const UserController = require("../../controllers/client/user.controller");
 //check the user is exists or not with loginType 3 quick (identity)
 route.post("/send-otp", checkAccessWithSecretKey(), UserController.sendOtp);
 
-route.post("/verify-otp", validateAuthToken, checkAccessWithSecretKey(), UserController.verifyOtp);
+route.post("/verify-otp", checkAccessWithSecretKey(), UserController.verifyOtp);
 
 route.post("/quickUserVerification", checkAccessWithSecretKey(), UserController.quickUserVerification);
 
