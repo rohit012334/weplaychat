@@ -78,15 +78,292 @@ exports.quickUserVerification = async (req, res) => {
 };
 
 //user login and sign up
+// exports.signInOrSignUpUser = async (req, res) => {
+//   try {
+//     const { identity, loginType, fcmToken, email, name, image, dob } = req.body;
+
+//     if (!identity || loginType === undefined || !fcmToken) {
+//       if (req.file) deleteFile(req.file);
+//       return res
+//         .status(200)
+//         .json({ status: false, message: "Oops! Invalid details!!" });
+//     }
+
+//     const { uid, provider } = req.user;
+
+//     let userQuery;
+
+//     switch (loginType) {
+//       case 1:
+//         if (!email)
+//           return res
+//             .status(200)
+//             .json({ status: false, message: "email is required." });
+//         userQuery = { email, loginType: 1 };
+//         break;
+//       case 2:
+//         if (!email)
+//           return res
+//             .status(200)
+//             .json({ status: false, message: "email is required." });
+//         userQuery = { email, loginType: 2 };
+//         break;
+//       case 3:
+//         if (!identity && !email) {
+//           return res
+//             .status(200)
+//             .json({
+//               status: false,
+//               message: "Either identity or email is required.",
+//             });
+//         }
+//         userQuery = {};
+//         break;
+//       default:
+//         if (req.file) deleteFile(req.file);
+//         return res
+//           .status(200)
+//           .json({ status: false, message: "Invalid loginType." });
+//     }
+
+//     let user = null;
+//     if (Object.keys(userQuery).length > 0) {
+//       user = await User.findOne(userQuery).select(
+//         "_id loginType name image fcmToken lastlogin isBlock isHost hostId",
+//       );
+//     }
+
+//     if (user) {
+//       console.log("✅ User already exists, logging in...");
+
+//       if (user.isBlock) {
+//         return res
+//           .status(403)
+//           .json({ status: false, message: "🚷 User is blocked by the admin." });
+//       }
+
+//       if (user.isHost && user.hostId) {
+//         const host = await Host.findById(user.hostId).select(
+//           "isBlock fcmToken",
+//         );
+
+//         if (!host) {
+//           console.warn(`⚠️ No Host found with ID: ${user.hostId}`);
+//         } else {
+//           if (host.isBlock) {
+//             return res
+//               .status(403)
+//               .json({
+//                 status: false,
+//                 message: "🚷 Host account is blocked by the admin.",
+//               });
+//           }
+
+//           host.fcmToken = fcmToken || host.fcmToken;
+//           await host.save();
+//         }
+//       }
+
+//       user.name = name ? name?.trim() : user.name;
+//       user.dob = dob ? dob?.trim() : user.dob;
+//       user.image = req.file ? req.file.path : image ? image : user.image;
+//       user.fcmToken = fcmToken ? fcmToken : user.fcmToken;
+//       user.lastlogin = new Date().toLocaleString("en-US", {
+//         timeZone: "Asia/Kolkata",
+//       });
+//       await user.save();
+
+//       return res
+//         .status(200)
+//         .json({
+//           status: true,
+//           message: "User logged in.",
+//           user: user,
+//           signUp: false,
+//         });
+//     } else {
+//       console.log("🆕 Registering new user...");
+
+//       const bonusCoins = settingJSON.isFreeCallEnabled ? 0 : (settingJSON.loginBonus ? settingJSON.loginBonus : 5000);
+
+//       const newUser = new User();
+//       newUser.firebaseUid = uid;
+//       newUser.provider = provider;
+//       newUser.coin = bonusCoins;
+//       newUser.freeCallCount = settingJSON.isFreeCallEnabled ? (settingJSON.freeCallLimit || 5) : 0;
+//       newUser.date = new Date().toLocaleString("en-US", {
+//         timeZone: "Asia/Kolkata",
+//       });
+
+//       const user = await userFunction(newUser, req);
+
+//       res.status(200).json({
+//         status: true,
+//         message: "A new user has registered an account.",
+//         signUp: true,
+//         user: {
+//           _id: user._id,
+//           loginType: user.loginType,
+//           name: user.name,
+//           image: user.image,
+//           fcmToken: user.fcmToken,
+//           lastlogin: user.lastlogin,
+//         },
+//       });
+
+//       const uniqueId = await generateHistoryUniqueId();
+
+//       await Promise.all([
+//         History.create({
+//           uniqueId: uniqueId,
+//           userId: newUser._id,
+//           userCoin: bonusCoins,
+//           type: 1,
+//           date: new Date().toLocaleString("en-US", {
+//             timeZone: "Asia/Kolkata",
+//           }),
+//         }),
+//       ]);
+
+//       if (user && user.fcmToken && user.fcmToken !== null) {
+//         const payload = {
+//           token: user.fcmToken,
+//           data: {
+//             title: "🚀 Instant Bonus Activated! 🎁",
+//             body: "🎊 Hooray! You've unlocked a special welcome reward just for joining us. Enjoy your bonus! 💰",
+//             type: "LOGINBONUS",
+//           },
+//         };
+
+//         const adminPromise = await admin;
+//         adminPromise
+//           .messaging()
+//           .send(payload)
+//           .then((response) => {
+//             console.log("Successfully sent with response: ", response);
+//           })
+//           .catch((error) => {
+//             console.log("Error sending message: ", error);
+//           });
+//       }
+
+//       //✅ Send random messages from 4 hosts
+//       const [hosts, latestMessageDoc] = await Promise.all([
+//         Host.find({ video: { $ne: [] } })
+//           .sort({ createdAt: -1 })
+//           .limit(5),
+//         Message.findOne().sort({ createdAt: -1 }).lean(),
+//       ]);
+
+//       const fallbackMessages = [
+//         "Hey there! 👋",
+//         "How's your day going? 😊",
+//         "Wanna chat? 💬",
+//         "You look amazing today! ✨",
+//         "Let's talk! 💖",
+//         "Hope you're having a great time! 🌟",
+//         "What's your favorite movie? 🎬",
+//         "I’d love to get to know you better! 😄",
+//       ];
+
+//       for (const host of hosts) {
+//         const chatTopic = await ChatTopic.findOne({
+//           $or: [
+//             { senderId: host._id, receiverId: user._id },
+//             { senderId: user._id, receiverId: host._id },
+//           ],
+//         });
+
+//         const messages =
+//           latestMessageDoc?.message?.length > 0
+//             ? latestMessageDoc.message
+//             : fallbackMessages;
+//         const randomMessage =
+//           messages[Math.floor(Math.random() * messages.length)];
+//         const messageType = Math.random() < 0.5 ? 1 : 2;
+
+//         let imageUrl = "";
+//         if (messageType === 2) {
+//           const images = Array.isArray(host.image) ? host.image : [host.image];
+//           if (images.length > 0) {
+//             const index = Math.floor(Math.random() * images.length);
+//             imageUrl = images[index];
+//           }
+//         }
+
+//         let chat;
+//         if (chatTopic) {
+//           chat = new Chat({
+//             chatTopicId: chatTopic._id,
+//             senderId: host._id,
+//             messageType,
+//             message: messageType === 2 ? "📸 Image" : randomMessage,
+//             image: messageType === 2 ? imageUrl : "",
+//             date: new Date().toLocaleString("en-US", {
+//               timeZone: "Asia/Kolkata",
+//             }),
+//           });
+//           chatTopic.chatId = chat._id;
+//           await Promise.all([chat.save(), chatTopic.save()]);
+//         } else {
+//           const newChatTopic = new ChatTopic({
+//             senderId: host._id,
+//             receiverId: user._id,
+//           });
+
+//           chat = new Chat({
+//             chatTopicId: newChatTopic._id,
+//             senderId: host._id,
+//             messageType,
+//             message: messageType === 2 ? "📸 Image" : randomMessage,
+//             image: messageType === 2 ? imageUrl : "",
+//             date: new Date().toLocaleString("en-US", {
+//               timeZone: "Asia/Kolkata",
+//             }),
+//           });
+
+//           newChatTopic.chatId = chat._id;
+//           await Promise.all([newChatTopic.save(), chat.save()]);
+//         }
+
+//         if (user && user.fcmToken && user.fcmToken !== null) {
+//           const payload = {
+//             token: user.fcmToken,
+//             data: {
+//               title: `${host.name} sent you a message 📩`,
+//               body: `🗨️ ${chat.message}`,
+//               type: "CHAT",
+//               senderId: String(host._id),
+//               isFake: String(host.isFake),
+//               receiverId: String(user._id),
+//               userName: String(host.name),
+//               hostName: String(user.name),
+//               userImage: String(host.image || ""),
+//               hostImage: String(user.image || ""),
+//               senderRole: "host",
+//               isFakeSender: String(host.isFake || "false"),
+//             },
+//           };
+
+//           const adminInstance = await admin;
+//           adminInstance.messaging().send(payload).catch(console.error);
+//         }
+//       }
+//     }
+//   } catch (error) {
+//     if (req.file) deleteFile(req.file);
+//     console.error("Error:", error);
+//     res.status(500).json({ status: false, message: "Internal Server Error" });
+//   }
+// };
+
 exports.signInOrSignUpUser = async (req, res) => {
   try {
     const { identity, loginType, fcmToken, email, name, image, dob } = req.body;
 
     if (!identity || loginType === undefined || !fcmToken) {
       if (req.file) deleteFile(req.file);
-      return res
-        .status(200)
-        .json({ status: false, message: "Oops! Invalid details!!" });
+      return res.status(200).json({ status: false, message: "Oops! Invalid details!!" });
     }
 
     const { uid, provider } = req.user;
@@ -95,41 +372,35 @@ exports.signInOrSignUpUser = async (req, res) => {
 
     switch (loginType) {
       case 1:
-        if (!email)
-          return res
-            .status(200)
-            .json({ status: false, message: "email is required." });
+        if (!email) return res.status(200).json({ status: false, message: "email is required." });
         userQuery = { email, loginType: 1 };
         break;
       case 2:
-        if (!email)
-          return res
-            .status(200)
-            .json({ status: false, message: "email is required." });
+        if (!email) return res.status(200).json({ status: false, message: "email is required." });
         userQuery = { email, loginType: 2 };
         break;
       case 3:
         if (!identity && !email) {
-          return res
-            .status(200)
-            .json({
-              status: false,
-              message: "Either identity or email is required.",
-            });
+          return res.status(200).json({ status: false, message: "Either identity or email is required." });
         }
         userQuery = {};
         break;
       default:
         if (req.file) deleteFile(req.file);
-        return res
-          .status(200)
-          .json({ status: false, message: "Invalid loginType." });
+        return res.status(200).json({ status: false, message: "Invalid loginType." });
     }
 
     let user = null;
     if (Object.keys(userQuery).length > 0) {
       user = await User.findOne(userQuery).select(
-        "_id loginType name image fcmToken lastlogin isBlock isHost hostId",
+        "_id loginType name image fcmToken lastlogin isBlock isHost hostId"
+      );
+    }
+
+    // ✅ Fallback: firebaseUid se check karo (loginType 3 + duplicate fix)
+    if (!user && uid) {
+      user = await User.findOne({ firebaseUid: uid }).select(
+        "_id loginType name image fcmToken lastlogin isBlock isHost hostId"
       );
     }
 
@@ -137,28 +408,18 @@ exports.signInOrSignUpUser = async (req, res) => {
       console.log("✅ User already exists, logging in...");
 
       if (user.isBlock) {
-        return res
-          .status(403)
-          .json({ status: false, message: "🚷 User is blocked by the admin." });
+        return res.status(403).json({ status: false, message: "🚷 User is blocked by the admin." });
       }
 
       if (user.isHost && user.hostId) {
-        const host = await Host.findById(user.hostId).select(
-          "isBlock fcmToken",
-        );
+        const host = await Host.findById(user.hostId).select("isBlock fcmToken");
 
         if (!host) {
           console.warn(`⚠️ No Host found with ID: ${user.hostId}`);
         } else {
           if (host.isBlock) {
-            return res
-              .status(403)
-              .json({
-                status: false,
-                message: "🚷 Host account is blocked by the admin.",
-              });
+            return res.status(403).json({ status: false, message: "🚷 Host account is blocked by the admin." });
           }
-
           host.fcmToken = fcmToken || host.fcmToken;
           await host.save();
         }
@@ -168,19 +429,16 @@ exports.signInOrSignUpUser = async (req, res) => {
       user.dob = dob ? dob?.trim() : user.dob;
       user.image = req.file ? req.file.path : image ? image : user.image;
       user.fcmToken = fcmToken ? fcmToken : user.fcmToken;
-      user.lastlogin = new Date().toLocaleString("en-US", {
-        timeZone: "Asia/Kolkata",
-      });
+      user.lastlogin = new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" });
       await user.save();
 
-      return res
-        .status(200)
-        .json({
-          status: true,
-          message: "User logged in.",
-          user: user,
-          signUp: false,
-        });
+      return res.status(200).json({
+        status: true,
+        message: "User logged in.",
+        user: user,
+        signUp: false,
+      });
+
     } else {
       console.log("🆕 Registering new user...");
 
@@ -191,12 +449,11 @@ exports.signInOrSignUpUser = async (req, res) => {
       newUser.provider = provider;
       newUser.coin = bonusCoins;
       newUser.freeCallCount = settingJSON.isFreeCallEnabled ? (settingJSON.freeCallLimit || 5) : 0;
-      newUser.date = new Date().toLocaleString("en-US", {
-        timeZone: "Asia/Kolkata",
-      });
+      newUser.date = new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" });
 
       const user = await userFunction(newUser, req);
 
+      // ✅ Pehle response bhejo
       res.status(200).json({
         status: true,
         message: "A new user has registered an account.",
@@ -211,145 +468,129 @@ exports.signInOrSignUpUser = async (req, res) => {
         },
       });
 
-      const uniqueId = await generateHistoryUniqueId();
+      // ✅ Baaki sab background mein — alag try-catch
+      try {
+        const firebaseAdmin = await getFirebaseAdmin();
 
-      await Promise.all([
-        History.create({
+        const uniqueId = await generateHistoryUniqueId();
+        await History.create({
           uniqueId: uniqueId,
           userId: newUser._id,
           userCoin: bonusCoins,
           type: 1,
-          date: new Date().toLocaleString("en-US", {
-            timeZone: "Asia/Kolkata",
-          }),
-        }),
-      ]);
-
-      if (user && user.fcmToken && user.fcmToken !== null) {
-        const payload = {
-          token: user.fcmToken,
-          data: {
-            title: "🚀 Instant Bonus Activated! 🎁",
-            body: "🎊 Hooray! You've unlocked a special welcome reward just for joining us. Enjoy your bonus! 💰",
-            type: "LOGINBONUS",
-          },
-        };
-
-        const adminPromise = await admin;
-        adminPromise
-          .messaging()
-          .send(payload)
-          .then((response) => {
-            console.log("Successfully sent with response: ", response);
-          })
-          .catch((error) => {
-            console.log("Error sending message: ", error);
-          });
-      }
-
-      //✅ Send random messages from 4 hosts
-      const [hosts, latestMessageDoc] = await Promise.all([
-        Host.find({ video: { $ne: [] } })
-          .sort({ createdAt: -1 })
-          .limit(5),
-        Message.findOne().sort({ createdAt: -1 }).lean(),
-      ]);
-
-      const fallbackMessages = [
-        "Hey there! 👋",
-        "How's your day going? 😊",
-        "Wanna chat? 💬",
-        "You look amazing today! ✨",
-        "Let's talk! 💖",
-        "Hope you're having a great time! 🌟",
-        "What's your favorite movie? 🎬",
-        "I’d love to get to know you better! 😄",
-      ];
-
-      for (const host of hosts) {
-        const chatTopic = await ChatTopic.findOne({
-          $or: [
-            { senderId: host._id, receiverId: user._id },
-            { senderId: user._id, receiverId: host._id },
-          ],
+          date: new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }),
         });
 
-        const messages =
-          latestMessageDoc?.message?.length > 0
-            ? latestMessageDoc.message
-            : fallbackMessages;
-        const randomMessage =
-          messages[Math.floor(Math.random() * messages.length)];
-        const messageType = Math.random() < 0.5 ? 1 : 2;
-
-        let imageUrl = "";
-        if (messageType === 2) {
-          const images = Array.isArray(host.image) ? host.image : [host.image];
-          if (images.length > 0) {
-            const index = Math.floor(Math.random() * images.length);
-            imageUrl = images[index];
-          }
-        }
-
-        let chat;
-        if (chatTopic) {
-          chat = new Chat({
-            chatTopicId: chatTopic._id,
-            senderId: host._id,
-            messageType,
-            message: messageType === 2 ? "📸 Image" : randomMessage,
-            image: messageType === 2 ? imageUrl : "",
-            date: new Date().toLocaleString("en-US", {
-              timeZone: "Asia/Kolkata",
-            }),
-          });
-          chatTopic.chatId = chat._id;
-          await Promise.all([chat.save(), chatTopic.save()]);
-        } else {
-          const newChatTopic = new ChatTopic({
-            senderId: host._id,
-            receiverId: user._id,
-          });
-
-          chat = new Chat({
-            chatTopicId: newChatTopic._id,
-            senderId: host._id,
-            messageType,
-            message: messageType === 2 ? "📸 Image" : randomMessage,
-            image: messageType === 2 ? imageUrl : "",
-            date: new Date().toLocaleString("en-US", {
-              timeZone: "Asia/Kolkata",
-            }),
-          });
-
-          newChatTopic.chatId = chat._id;
-          await Promise.all([newChatTopic.save(), chat.save()]);
-        }
-
-        if (user && user.fcmToken && user.fcmToken !== null) {
+        // ✅ Login bonus FCM
+        if (user?.fcmToken) {
           const payload = {
             token: user.fcmToken,
             data: {
-              title: `${host.name} sent you a message 📩`,
-              body: `🗨️ ${chat.message}`,
-              type: "CHAT",
-              senderId: String(host._id),
-              isFake: String(host.isFake),
-              receiverId: String(user._id),
-              userName: String(host.name),
-              hostName: String(user.name),
-              userImage: String(host.image || ""),
-              hostImage: String(user.image || ""),
-              senderRole: "host",
-              isFakeSender: String(host.isFake || "false"),
+              title: "🚀 Instant Bonus Activated! 🎁",
+              body: "🎊 Hooray! You've unlocked a special welcome reward just for joining us. Enjoy your bonus! 💰",
+              type: "LOGINBONUS",
             },
           };
-
-          const adminInstance = await admin;
-          adminInstance.messaging().send(payload).catch(console.error);
+          firebaseAdmin.messaging().send(payload)
+            .then((r) => console.log("FCM sent:", r))
+            .catch((e) => console.log("FCM error:", e));
         }
+
+        // ✅ Host fake messages
+        const [hosts, latestMessageDoc] = await Promise.all([
+          Host.find({ video: { $ne: [] } }).sort({ createdAt: -1 }).limit(5),
+          Message.findOne().sort({ createdAt: -1 }).lean(),
+        ]);
+
+        const fallbackMessages = [
+          "Hey there! 👋",
+          "How's your day going? 😊",
+          "Wanna chat? 💬",
+          "You look amazing today! ✨",
+          "Let's talk! 💖",
+          "Hope you're having a great time! 🌟",
+          "What's your favorite movie? 🎬",
+          "I'd love to get to know you better! 😄",
+        ];
+
+        for (const host of hosts) {
+          const chatTopic = await ChatTopic.findOne({
+            $or: [
+              { senderId: host._id, receiverId: user._id },
+              { senderId: user._id, receiverId: host._id },
+            ],
+          });
+
+          const messages = latestMessageDoc?.message?.length > 0 ? latestMessageDoc.message : fallbackMessages;
+          const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+          const messageType = Math.random() < 0.5 ? 1 : 2;
+
+          let imageUrl = "";
+          if (messageType === 2) {
+            const images = Array.isArray(host.image) ? host.image : [host.image];
+            if (images.length > 0) {
+              imageUrl = images[Math.floor(Math.random() * images.length)];
+            }
+          }
+
+          let chat;
+          if (chatTopic) {
+            chat = new Chat({
+              chatTopicId: chatTopic._id,
+              senderId: host._id,
+              messageType,
+              message: messageType === 2 ? "📸 Image" : randomMessage,
+              image: messageType === 2 ? imageUrl : "",
+              date: new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }),
+            });
+            chatTopic.chatId = chat._id;
+            await Promise.all([chat.save(), chatTopic.save()]);
+          } else {
+            const newChatTopic = new ChatTopic({
+              senderId: host._id,
+              receiverId: user._id,
+            });
+            chat = new Chat({
+              chatTopicId: newChatTopic._id,
+              senderId: host._id,
+              messageType,
+              message: messageType === 2 ? "📸 Image" : randomMessage,
+              image: messageType === 2 ? imageUrl : "",
+              date: new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }),
+            });
+            newChatTopic.chatId = chat._id;
+            await Promise.all([newChatTopic.save(), chat.save()]);
+          }
+
+          // ✅ Host chat FCM
+          if (user?.fcmToken) {
+            const payload = {
+              token: user.fcmToken,
+              data: {
+                title: `${host.name} sent you a message 📩`,
+                body: `🗨️ ${chat.message}`,
+                type: "CHAT",
+                senderId: String(host._id),
+                isFake: String(host.isFake),
+                receiverId: String(user._id),
+                userName: String(host.name),
+                hostName: String(user.name),
+                userImage: String(host.image || ""),
+                hostImage: String(user.image || ""),
+                senderRole: "host",
+                isFakeSender: String(host.isFake || "false"),
+              },
+            };
+            firebaseAdmin.messaging().send(payload).catch(console.error);
+          }
+        }
+
+      } catch (bgError) {
+        // ✅ Response already sent hai — yahan res mat use karo
+        console.error("Background task error:", bgError);
       }
     }
+
   } catch (error) {
     if (req.file) deleteFile(req.file);
     console.error("Error:", error);
