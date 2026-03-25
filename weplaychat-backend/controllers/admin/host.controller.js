@@ -15,7 +15,7 @@ const fs = require("fs");
 const { deleteFiles } = require("../../util/deletefile");
 
 //generateUniqueId
-const generateUniqueId = require("../../util/generateUniqueId");
+const { generateUniqueId } = require("../../util/generateUniqueId");
 
 //retrive host requests
 exports.fetchHostRequest = async (req, res) => {

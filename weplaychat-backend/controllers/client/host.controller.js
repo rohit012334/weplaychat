@@ -16,7 +16,7 @@ const LiveBroadcastHistory = require("../../models/liveBroadcastHistory.model");
 const { deleteFile, deleteFiles } = require("../../util/deletefile");
 
 //generateUniqueId
-const generateUniqueId = require("../../util/generateUniqueId");
+const { generateUniqueId } = require("../../util/generateUniqueId");
 
 //private key
 const admin = require("../../util/privateKey");
