@@ -6,6 +6,8 @@ import { createVipPlan, updateVipPlan } from "@/store/vipPlanSlice";
 import { getDefaultCurrency } from "@/store/settingSlice";
 
 interface ErrorState {
+  name: string;
+  level: string;
   coin: string;
   price: string;
   validity: string;
@@ -19,11 +21,19 @@ const validityOptions = [
   { name: "years",  value: "Years"  },
 ];
 
+const levelOptions = [
+  { name: "VIP",  value: 1 },
+  { name: "VVIP", value: 2 },
+  { name: "SVIP", value: 3 },
+];
+
 const VipPlanDialog = () => {
   const { dialogueData } = useSelector((state: RootStore) => state.dialogue);
   const { defaultCurrency } = useSelector((state: RootStore) => state.setting);
   const dispatch = useAppDispatch();
 
+  const [name,         setName]         = useState<string>("");
+  const [level,        setLevel]        = useState<any>("");
   const [coin,         setCoin]         = useState<any>("");
   const [price,        setPrice]        = useState<any>("");
   const [validity,     setValidity]     = useState<any>("");
@@ -31,13 +41,15 @@ const VipPlanDialog = () => {
   const [productId,    setProductId]    = useState<any>("");
 
   const [error, setError] = useState<ErrorState>({
-    coin: "", price: "", validity: "", validityType: "", productId: "",
+    name: "", level: "", coin: "", price: "", validity: "", validityType: "", productId: "",
   });
 
   useEffect(() => { dispatch(getDefaultCurrency()); }, [dispatch]);
 
   useEffect(() => {
     if (dialogueData) {
+      setName(dialogueData?.name || "");
+      setLevel(dialogueData?.level || "");
       setCoin(dialogueData?.coin);
       setPrice(dialogueData?.price);
       setValidity(dialogueData?.validity);
@@ -48,10 +60,12 @@ const VipPlanDialog = () => {
 
   const validate = () => {
     const err = {} as ErrorState;
+    if (!name)            err.name         = "Name is required";
+    if (!level)           err.level        = "Level is required";
     if (!coin)            err.coin         = "Coin is required";
-    else if (coin <= 0)   err.coin         = "Coin must be greater than 0";
+    else if (Number(coin) <= 0)   err.coin         = "Coin must be greater than 0";
     if (!price)           err.price        = "Price is required";
-    else if (price <= 0)  err.price        = "Price must be greater than 0";
+    else if (Number(price) <= 0)  err.price        = "Price must be greater than 0";
     if (!validity)        err.validity     = "Validity is required";
     if (!validityType)    err.validityType = "Validity type is required";
     if (!productId)       err.productId    = "Product Id is required";
@@ -63,7 +77,7 @@ const VipPlanDialog = () => {
     const err = validate();
     if (Object.keys(err).length) return setError(err);
 
-    const payload: any = { coin, price, validity, validityType, productId };
+    const payload: any = { name, level, coin, price, validity, validityType, productId };
     if (dialogueData) {
       payload.vipPlanId = dialogueData?._id;
       dispatch(updateVipPlan(payload));
@@ -76,6 +90,22 @@ const VipPlanDialog = () => {
   const isEdit = !!dialogueData;
 
   const inputFields = [
+    {
+      id: "name", label: "Plan Name", type: "text",
+      value: name, placeholder: "e.g. VIP Plan",
+      error: error.name,
+      icon: (
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+          <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+      ),
+      onChange: (e: any) => {
+        setName(e.target.value);
+        setError((p) => ({ ...p, name: !e.target.value ? "Name is required" : "" }));
+      },
+    },
     {
       id: "validity", label: "Validity", type: "number",
       value: validity, placeholder: "e.g. 30",
@@ -221,7 +251,7 @@ const VipPlanDialog = () => {
         }
 
         /* ── Body ── */
-        .vpd-box .vpd-body { padding: 22px 24px; display: flex; flex-direction: column; gap: 16px; }
+        .vpd-box .vpd-body { padding: 22px 24px; display: flex; flex-direction: column; gap: 16px; max-height: 480px; overflow-y: auto; }
 
         /* ── Field ── */
         .vpd-box .vpd-field { display: flex; flex-direction: column; gap: 6px; }
@@ -348,8 +378,84 @@ const VipPlanDialog = () => {
           <form onSubmit={handleSubmit}>
             <div className="vpd-body">
 
-              {/* Validity + Validity Type side by side */}
+              {/* Name field */}
+              <div className="vpd-field">
+                <label className="vpd-label" htmlFor="name">
+                  <span className="vpd-label-icon">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                      stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                      <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                      <line x1="9" y1="9" x2="15" y2="9"/>
+                      <line x1="9" y1="13" x2="15" y2="13"/>
+                      <line x1="9" y1="17" x2="13" y2="17"/>
+                    </svg>
+                  </span>
+                  Plan Name
+                </label>
+                <input
+                  id="name"
+                  className={`vpd-input${error.name ? " has-error" : ""}`}
+                  type="text"
+                  value={name}
+                  placeholder="e.g. VIP Plan"
+                  onChange={(e) => {
+                    setName(e.target.value);
+                    setError((p) => ({ ...p, name: !e.target.value ? "Required" : "" }));
+                  }}
+                />
+                {error.name && (
+                  <span className="vpd-error">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
+                      stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                      <circle cx="12" cy="12" r="10"/>
+                      <line x1="12" y1="8" x2="12" y2="12"/>
+                      <line x1="12" y1="16" x2="12.01" y2="16"/>
+                    </svg>
+                    {error.name}
+                  </span>
+                )}
+              </div>
+
+              {/* Level + Validity side by side */}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
+                {/* Level */}
+                <div className="vpd-field">
+                  <label className="vpd-label" htmlFor="level">
+                    <span className="vpd-label-icon">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                      </svg>
+                    </span>
+                    Level
+                  </label>
+                  <select
+                    id="level"
+                    className={`vpd-select${error.level ? " has-error" : ""}`}
+                    value={level}
+                    onChange={(e) => {
+                      setLevel(e.target.value);
+                      setError((p) => ({ ...p, level: !e.target.value ? "Required" : "" }));
+                    }}
+                  >
+                    <option value="">Select</option>
+                    {levelOptions.map((opt) => (
+                      <option key={opt.value} value={opt.value}>{opt.name}</option>
+                    ))}
+                  </select>
+                  {error.level && (
+                    <span className="vpd-error">
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="12" y1="8" x2="12" y2="12"/>
+                        <line x1="12" y1="16" x2="12.01" y2="16"/>
+                      </svg>
+                      {error.level}
+                    </span>
+                  )}
+                </div>
+
                 {/* Validity */}
                 <div className="vpd-field">
                   <label className="vpd-label" htmlFor="validity">
@@ -385,7 +491,10 @@ const VipPlanDialog = () => {
                     </span>
                   )}
                 </div>
+              </div>
 
+              {/* Validity Type + Price side by side */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
                 {/* Validity Type */}
                 <div className="vpd-field">
                   <label className="vpd-label" htmlFor="validityType">
@@ -423,24 +532,31 @@ const VipPlanDialog = () => {
                     </span>
                   )}
                 </div>
-              </div>
 
-              {/* Remaining fields */}
-              {inputFields.slice(1).map((f) => (
-                <div className="vpd-field" key={f.id}>
-                  <label className="vpd-label" htmlFor={f.id}>
-                    <span className="vpd-label-icon">{f.icon}</span>
-                    {f.label}
+                {/* Price */}
+                <div className="vpd-field">
+                  <label className="vpd-label" htmlFor="price">
+                    <span className="vpd-label-icon">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                        <line x1="12" y1="1" x2="12" y2="23"/>
+                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                      </svg>
+                    </span>
+                    Price ({defaultCurrency?.symbol || "$"})
                   </label>
                   <input
-                    id={f.id}
-                    className={`vpd-input${f.error ? " has-error" : ""}`}
-                    type={f.type}
-                    value={f.value}
-                    placeholder={f.placeholder}
-                    onChange={f.onChange}
+                    id="price"
+                    className={`vpd-input${error.price ? " has-error" : ""}`}
+                    type="number"
+                    value={price}
+                    placeholder="e.g. 9.99"
+                    onChange={(e) => {
+                      setPrice(e.target.value);
+                      setError((p) => ({ ...p, price: !e.target.value ? "Required" : Number(e.target.value) <= 0 ? "Must be > 0" : "" }));
+                    }}
                   />
-                  {f.error && (
+                  {error.price && (
                     <span className="vpd-error">
                       <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
@@ -448,11 +564,86 @@ const VipPlanDialog = () => {
                         <line x1="12" y1="8" x2="12" y2="12"/>
                         <line x1="12" y1="16" x2="12.01" y2="16"/>
                       </svg>
-                      {f.error}
+                      {error.price}
                     </span>
                   )}
                 </div>
-              ))}
+              </div>
+
+              {/* Coin + ProductId side by side */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
+                {/* Coin */}
+                <div className="vpd-field">
+                  <label className="vpd-label" htmlFor="coin">
+                    <span className="vpd-label-icon">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M12 6v12M9 9h4.5a1.5 1.5 0 0 1 0 3H9m0 0h4.5a1.5 1.5 0 0 1 0 3H9"/>
+                      </svg>
+                    </span>
+                    Coin
+                  </label>
+                  <input
+                    id="coin"
+                    className={`vpd-input${error.coin ? " has-error" : ""}`}
+                    type="number"
+                    value={coin}
+                    placeholder="e.g. 500"
+                    onChange={(e) => {
+                      setCoin(e.target.value);
+                      setError((p) => ({ ...p, coin: !e.target.value ? "Required" : Number(e.target.value) <= 0 ? "Must be > 0" : "" }));
+                    }}
+                  />
+                  {error.coin && (
+                    <span className="vpd-error">
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="12" y1="8" x2="12" y2="12"/>
+                        <line x1="12" y1="16" x2="12.01" y2="16"/>
+                      </svg>
+                      {error.coin}
+                    </span>
+                  )}
+                </div>
+
+                {/* Product Id */}
+                <div className="vpd-field">
+                  <label className="vpd-label" htmlFor="productId">
+                    <span className="vpd-label-icon">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                        <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+                        <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+                      </svg>
+                    </span>
+                    Product Id
+                  </label>
+                  <input
+                    id="productId"
+                    className={`vpd-input${error.productId ? " has-error" : ""}`}
+                    type="text"
+                    value={productId}
+                    placeholder="e.g. com.app.vip30"
+                    onChange={(e) => {
+                      setProductId(e.target.value);
+                      setError((p) => ({ ...p, productId: !e.target.value ? "Required" : "" }));
+                    }}
+                  />
+                  {error.productId && (
+                    <span className="vpd-error">
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="12" y1="8" x2="12" y2="12"/>
+                        <line x1="12" y1="16" x2="12.01" y2="16"/>
+                      </svg>
+                      {error.productId}
+                    </span>
+                  )}
+                </div>
+              </div>
             </div>
 
             {/* ── Footer ── */}

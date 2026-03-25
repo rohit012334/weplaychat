@@ -53,6 +53,26 @@ const VipPlan = ({ type }: any) => {
       ),
     },
     {
+      Header: "Name",
+      Cell: ({ row }: { row: any }) => (
+        <span className="vp-badge vp-badge-purple" style={{ background: "rgba(99,102,241,0.1)", color: "#6366f1" }}>
+          {row?.name || "—"}
+        </span>
+      ),
+    },
+    {
+      Header: "Level",
+      Cell: ({ row }: { row: any }) => (
+        <span className="vp-badge" style={{ 
+          background: row?.level === 1 ? "rgba(34,197,94,0.1)" : row?.level === 2 ? "rgba(59,130,246,0.1)" : "rgba(234,179,8,0.1)", 
+          color: row?.level === 1 ? "#22c55e" : row?.level === 2 ? "#3b82f6" : "#eab308",
+          fontWeight: 700
+        }}>
+          {row?.level === 1 ? "VIP" : row?.level === 2 ? "VVIP" : row?.level === 3 ? "SVIP" : "—"}
+        </span>
+      ),
+    },
+    {
       Header: "Validity",
       Cell: ({ row }: { row: any }) => (
         <div className="vp-validity-cell">

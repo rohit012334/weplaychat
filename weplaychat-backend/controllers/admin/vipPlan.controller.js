@@ -3,12 +3,12 @@ const VipPlan = require("../../models/vipPlan.model");
 //create a new VIP plan
 exports.createVipPlan = async (req, res) => {
   try {
-    const { validity, validityType, productId, coin, price } = req.body;
-    if (!validity || !validityType || !coin || !price || !productId) {
-      return res.status(200).json({ status: false, message: "Invalid details provided." });
+    const { validity, validityType, productId, coin, price, level, name } = req.body;
+    if (!validity || !validityType || !coin || !price || !productId || !level) {
+      return res.status(200).json({ status: false, message: "Invalid details provided. level is required." });
     }
 
-    const vipPlan = new VipPlan({ validity, validityType, coin, price, productId });
+    const vipPlan = new VipPlan({ validity, validityType, coin, price, productId, level, name });
     await vipPlan.save();
 
     return res.status(200).json({ status: true, message: "VIP plan created successfully.", data: vipPlan });
@@ -37,6 +37,8 @@ exports.updateVipPlan = async (req, res) => {
       validityType: req.body.validityType || vipPlan.validityType,
       coin: req.body.coin !== undefined ? Number(req.body.coin) : vipPlan.coin,
       price: req.body.price !== undefined ? Number(req.body.price) : vipPlan.price,
+      level: req.body.level !== undefined ? Number(req.body.level) : vipPlan.level,
+      name: req.body.name || vipPlan.name,
     };
 
     const updatedVipPlan = await VipPlan.findByIdAndUpdate(vipPlanId, updateFields, { new: true, lean: true });
@@ -96,8 +98,8 @@ exports.getVipPlans = async (req, res) => {
     const limit = req.query.limit ? parseInt(req.query.limit) : 20;
 
     const vipPlans = await VipPlan.find()
-      .select("validity validityType coin price isActive productId")
-      .sort({ coin: 1, price: 1 })
+      .select("name level validity validityType coin price isActive productId")
+      .sort({ level: 1, price: 1 })
       .skip((start - 1) * limit)
       .limit(limit)
       .lean();
