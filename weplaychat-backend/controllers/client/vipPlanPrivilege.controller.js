@@ -4,7 +4,7 @@ const VipPlanPrivilege = require("../../models/vipPlanPrivilege.model");
 exports.retrieveVipPrivilege = async (req, res) => {
   try {
     const { level } = req.query;
-    let query = {};
+    let query = { level: { $in: [1, 2, 3] } }; // Only fetch valid VIP levels
     if (level) {
       query.level = parseInt(level);
     }
