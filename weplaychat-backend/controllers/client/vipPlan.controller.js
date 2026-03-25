@@ -47,7 +47,7 @@ exports.purchaseVipPlan = async (req, res) => {
     const [uniqueId, user, vipPlan] = await Promise.all([
       generateHistoryUniqueId(),
       User.findById(userId).select("_id isVip vipPlanStartDate vipPlanEndDate vipPlan").lean(),
-      VipPlan.findById(vipPlanId).select("_id validity validityType price coin").lean(),
+      VipPlan.findById(vipPlanId).select("_id validity validityType price coin level").lean(),
     ]);
 
     if (!user) {
@@ -88,12 +88,13 @@ exports.purchaseVipPlan = async (req, res) => {
         {
           $set: {
             isVip: true,
+            vipLevel: vipPlan.level || 1, // Store the level of the purchased plan
             vipPlanStartDate,
             vipPlanId: vipPlan._id,
             vipPlanEndDate: planEndDate.toISOString(),
             "vipPlan.validity": vipPlan.validity,
             "vipPlan.validityType": vipPlan.validityType,
-            "vipPlan.amount": vipPlan.amount,
+            "vipPlan.price": vipPlan.price,
           },
           $inc: {
             coin: totalCoins,

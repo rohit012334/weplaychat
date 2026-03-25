@@ -3,6 +3,7 @@ const CoinPlan = require("../../models/coinPlan.model");
 //import model
 const User = require("../../models/user.model");
 const History = require("../../models/history.model");
+const VipPlanPrivilege = require("../../models/vipPlanPrivilege.model");
 
 //mongoose
 const mongoose = require("mongoose");
@@ -46,7 +47,7 @@ exports.recordCoinPlanPurchase = async (req, res) => {
 
     const [uniqueId, user, coinPlan] = await Promise.all([
       generateHistoryUniqueId(),
-      User.findById(userObjectId).select("_id isVip").lean(),
+      User.findById(userObjectId).select("_id isVip vipLevel vipPlanEndDate").lean(),
       CoinPlan.findById(coinPlanObjectId).select("_id coins bonusCoins price").lean(),
     ]);
 
@@ -58,7 +59,16 @@ exports.recordCoinPlanPurchase = async (req, res) => {
       return res.status(200).json({ status: false, message: "CoinPlan does not found." });
     }
 
-    const totalCoins = user.isVip ? coinPlan.coins + coinPlan.bonusCoins : coinPlan.coins;
+    let extraVipBonus = 0;
+    if (user.isVip && user.vipPlanEndDate && new Date(user.vipPlanEndDate) > new Date()) {
+      const privilege = await VipPlanPrivilege.findOne({ level: user.vipLevel }).lean();
+      if (privilege && privilege.topUpCoinBonus) {
+        // privilege.topUpCoinBonus is assumed to be a percentage
+        extraVipBonus = Math.floor((coinPlan.coins * privilege.topUpCoinBonus) / 100);
+      }
+    }
+
+    const totalCoins = user.isVip ? coinPlan.coins + coinPlan.bonusCoins + extraVipBonus : coinPlan.coins;
     const spinsToAdd = spinsForPurchaseAmount(coinPlan?.coins);
 
     res.status(200).json({

@@ -6,6 +6,7 @@ const User = require("../../models/user.model");
 const Host = require("../../models/host.model");
 const History = require("../../models/history.model");
 const Agency = require("../../models/agency.model");
+const VipPlanPrivilege = require("../../models/vipPlanPrivilege.model");
 
 //mongoose
 const mongoose = require("mongoose");
@@ -38,7 +39,7 @@ exports.pushChatMessage = async (req, res) => {
 
     const [uniqueId, sender, receiver, chatTopic] = await Promise.all([
       generateHistoryUniqueId(),
-      User.findById(senderId).lean().select("name image coin"),
+      User.findById(senderId).lean().select("name image coin isVip vipLevel vipPlanEndDate"),
       Host.findOne({ _id: receiverId, isBlock: false }).lean().select("name image fcmToken chatRate agencyId"),
       ChatTopic.findOne({ _id: chatTopicId }).lean().select("_id chatId messageCount"),
     ]);
@@ -58,10 +59,19 @@ exports.pushChatMessage = async (req, res) => {
       return res.status(200).json({ status: false, message: "ChatTopic dose not found." });
     }
 
-    const maxFreeChatMessages = settingJSON.maxFreeChatMessages || 10;
-    const adminCommissionRate = settingJSON.adminCommissionRate || 10; // 10% commission
-    const isWithinFreeLimit = chatTopic.messageCount < maxFreeChatMessages;
+    const maxFreeChatMessages = global.settingJSON ? global.settingJSON.maxFreeChatMessages : 10;
+    const adminCommissionRate = global.settingJSON ? global.settingJSON.adminCommissionRate : 10; // 10% commission
     const chatRate = receiver.chatRate || 10;
+
+    let hasUnlimitedChat = false;
+    if (sender.isVip && sender.vipPlanEndDate && new Date(sender.vipPlanEndDate) > new Date()) {
+      const privilege = await VipPlanPrivilege.findOne({ level: sender.vipLevel }).lean();
+      if (privilege && privilege.unlimitedChat) {
+        hasUnlimitedChat = true;
+      }
+    }
+
+    const isWithinFreeLimit = hasUnlimitedChat || chatTopic.messageCount < maxFreeChatMessages;
 
     let deductedCoins = 0;
     let adminShare = 0;

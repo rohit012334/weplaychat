@@ -70,7 +70,7 @@ io.on("connection", async (socket) => {
     let senderPromise, receiverPromise;
 
     if (parseData?.senderRole === "user") {
-      senderPromise = User.findById(parseData?.senderId).lean().select("_id name image coin isVip vipLevel");
+      senderPromise = User.findById(parseData?.senderId).lean().select("_id name image coin isVip vipLevel vipPlanEndDate");
     } else if (parseData?.senderRole === "host") {
       senderPromise = Host.findById(parseData?.senderId).lean().select("_id name image isFake coin");
     }
@@ -477,7 +477,7 @@ io.on("connection", async (socket) => {
     const [callUniqueId, token, caller, receiver] = await Promise.all([
       generateHistoryUniqueId(),
       RtcTokenBuilder.buildTokenWithUid(settingJSON?.agoraAppId, settingJSON?.agoraAppCertificate, channel, uid, role, privilegeExpiredTs),
-      callerModel.findById(callerId).select("_id name image isBlock isBusy callId isOnline uniqueId freeCallCount freeCallHosts coin").lean(),
+      callerModel.findById(callerId).select("_id name image isBlock isBusy callId isOnline uniqueId freeCallCount freeCallHosts coin isVip vipLevel vipPlanEndDate").lean(),
       receiverModel.findById(receiverId).select("_id name image isBlock isBusy callId isOnline uniqueId fcmToken isLive privateCallRate audioCallRate").lean(),
     ]);
 
@@ -546,7 +546,19 @@ io.on("connection", async (socket) => {
         isFreeCall = true;
         console.log("🆓 This is a FREE call!");
       } else {
-        const callRate = callType.trim().toLowerCase() === "audio" ? receiver.audioCallRate : receiver.privateCallRate;
+        let callRate = callType.trim().toLowerCase() === "audio" ? receiver.audioCallRate : receiver.privateCallRate;
+        
+        // VIP Discount Logic
+        if (caller.isVip && caller.vipPlanEndDate && new Date(caller.vipPlanEndDate) > new Date()) {
+          const privilege = await VipPlanPrivilege.findOne({ level: caller.vipLevel }).lean();
+          if (privilege) {
+            const discount = (callType.trim().toLowerCase() === "audio" ? 0 : privilege.videoCallDiscount) || 0; 
+             // Note: You can add audioCallDiscount to model later if needed
+            callRate = Math.floor(callRate * (1 - discount / 100));
+            console.log(`🎁 VIP Discount Applied: ${discount}% | Original: ${receiver.privateCallRate} | Final: ${callRate}`);
+          }
+        }
+
         if (caller.coin < callRate) {
           io.in("globalRoom:" + callerId.toString()).emit("callRinging", {
             message: "Insufficient coins. Please recharge to call.",

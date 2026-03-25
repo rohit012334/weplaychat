@@ -18,6 +18,7 @@ const CheckIn = require("../../models/checkIn.model");
 const HostMatchHistory = require("../../models/hostMatchHistory.model");
 const LiveBroadcastView = require("../../models/liveBroadcastView.model");
 const LiveBroadcaster = require("../../models/liveBroadcaster.model");
+const VipPlanPrivilege = require("../../models/vipPlanPrivilege.model");
 
 //deletefile
 const { deleteFile } = require("../../util/deletefile");
@@ -1043,10 +1044,15 @@ exports.retrieveUserProfile = async (req, res) => {
       0,
     );
 
+    let privileges = null;
+    if (user.isVip && user.vipPlanEndDate && new Date(user.vipPlanEndDate) > new Date()) {
+      privileges = await VipPlanPrivilege.findOne({ level: user.vipLevel }).lean();
+    }
+
     res.status(200).json({
       status: true,
       message: "The user has retrieved their profile.",
-      user,
+      user: { ...user, privileges }, 
       hasHostRequest,
       topUpTotal,
       balanceTotal,
