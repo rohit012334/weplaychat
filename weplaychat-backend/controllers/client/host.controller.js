@@ -361,7 +361,11 @@ exports.retrieveHosts = async (req, res) => {
               {
                 $match: {
                   $expr: {
-                    $and: [{ $eq: ["$followerId", userId] }, { $eq: ["$followingId", "$$hostId"] }],
+                    $and: [
+                      { $eq: ["$followerId", userId] },
+                      { $eq: ["$followingId", "$$hostId"] },
+                      { $eq: ["$followingModel", "Host"] },
+                    ],
                   },
                 },
               },
@@ -565,10 +569,14 @@ exports.retrieveHostDetails = async (req, res) => {
       return res.status(200).json({ status: false, message: "Valid userId is required." });
     }
 
+    // Smart follow count: 
+    // In our system, the host could have been followed as a User (via userId) 
+    // or as a Host (via hostId). We should sum both or find by correctly resolved ID.
+    // For now, let's just use the hostId as provided, but ensures we check across followingModel context.
     const [host, receivedGifts, isFollowing, totalFollower] = await Promise.all([
       Host.findOne({ _id: hostId, isBlock: false })
         .select(
-          "name email gender bio uniqueId countryFlagImage country impression language image photoGallery profileVideo randomCallRate randomCallFemaleRate randomCallMaleRate privateCallRate audioCallRate chatRate coin isFake video liveVideo"
+          "name email gender bio uniqueId countryFlagImage country impression language image photoGallery profileVideo randomCallRate randomCallFemaleRate randomCallMaleRate privateCallRate audioCallRate chatRate coin isFake video liveVideo userId"
         )
         .lean(),
       History.aggregate([
@@ -596,8 +604,8 @@ exports.retrieveHostDetails = async (req, res) => {
           },
         },
       ]),
-      FollowerFollowing.exists({ followerId: userId, followingId: hostId }),
-      FollowerFollowing.countDocuments({ followingId: hostId }),
+      FollowerFollowing.exists({ followerId: userId, followingId: hostId, followingModel: "Host" }),
+      FollowerFollowing.countDocuments({ followingId: hostId, followingModel: "Host" }),
     ]);
 
     if (!host) {

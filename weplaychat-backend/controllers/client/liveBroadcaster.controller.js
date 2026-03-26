@@ -97,7 +97,7 @@ exports.HostStreaming = async (req, res) => {
       data: liveBroadcaster,
     });
 
-    const followers = await FollowerFollowing.find({ followingId: hostObjectId }).distinct("followerId");
+    const followers = await FollowerFollowing.find({ followingId: hostObjectId, followingModel: "Host" }).distinct("followerId");
 
     if (followers.length > 0) {
       const followerTokens = await User.find({

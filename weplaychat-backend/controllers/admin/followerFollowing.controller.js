@@ -7,22 +7,42 @@ const Host = require("../../models/host.model");
 //mongoose
 const mongoose = require("mongoose");
 
-//get list of following
+/**
+ * 🕵️ SMART ID RESOLVER (Internal)
+ */
+const resolveTarget = async (id) => {
+  if (!mongoose.Types.ObjectId.isValid(id)) return null;
+
+  const objectId = new mongoose.Types.ObjectId(id);
+
+  const user = await User.findById(objectId).select("_id").lean();
+  if (user) return { id: user._id, type: "User" };
+
+  const host = await Host.findById(objectId).select("_id").lean();
+  if (host) return { id: host._id, type: "Host" };
+
+  return null;
+};
+
+// ─────────────────────────────────────────────
+// FETCH FOLLOWING (Admin Panel)
+// Query: id (User ID ya Host ID), start, limit
+// ─────────────────────────────────────────────
 exports.fetchFollowing = async (req, res) => {
   try {
-    if (!req.query.userId) {
-      return res.status(200).json({ status: false, message: "userId must be requried." });
-    }
+    const { id } = req.query;
+
+    if (!id) return res.status(200).json({ status: false, message: "id is required." });
 
     const start = req.query.start ? parseInt(req.query.start) : 1;
     const limit = req.query.limit ? parseInt(req.query.limit) : 20;
 
-    const userId = new mongoose.Types.ObjectId(req.query.userId);
+    const resolved = await resolveTarget(id);
+    if (!resolved) return res.status(200).json({ status: false, message: "Target not found." });
 
-    const [user, total, followingList] = await Promise.all([
-      User.findById(userId).select("_id").lean(),
-      FollowerFollowing.countDocuments({ followerId: userId }),
-      FollowerFollowing.find({ followerId: userId })
+    const [total, followingList] = await Promise.all([
+      FollowerFollowing.countDocuments({ followerId: resolved.id }),
+      FollowerFollowing.find({ followerId: resolved.id })
         .populate("followingId", "_id name image uniqueId coin countryFlagImage country")
         .sort({ createdAt: -1 })
         .skip((start - 1) * limit)
@@ -30,11 +50,9 @@ exports.fetchFollowing = async (req, res) => {
         .lean(),
     ]);
 
-    if (!user) return res.status(200).json({ status: false, message: "User not found." });
-
     return res.status(200).json({
       status: true,
-      message: `Retrieved following users successfully.`,
+      message: "Retrieved following list successfully.",
       total,
       followingList,
     });
@@ -44,22 +62,25 @@ exports.fetchFollowing = async (req, res) => {
   }
 };
 
-//get list of followers
+// ─────────────────────────────────────────────
+// FETCH FOLLOWERS (Admin Panel)
+// Query: id (User ID ya Host ID), start, limit
+// ─────────────────────────────────────────────
 exports.fetchFollowers = async (req, res) => {
   try {
-    if (!req.query.hostId) {
-      return res.status(200).json({ status: false, message: "hostId is required." });
-    }
+    const { id } = req.query;
+
+    if (!id) return res.status(200).json({ status: false, message: "id is required." });
 
     const start = req.query.start ? parseInt(req.query.start) : 1;
     const limit = req.query.limit ? parseInt(req.query.limit) : 20;
 
-    const hostId = new mongoose.Types.ObjectId(req.query.hostId);
+    const resolved = await resolveTarget(id);
+    if (!resolved) return res.status(200).json({ status: false, message: "Target not found." });
 
-    const [host, total, followerList] = await Promise.all([
-      Host.findById(hostId).select("_id isBlock").lean(),
-      FollowerFollowing.countDocuments({ followingId: hostId }),
-      FollowerFollowing.find({ followingId: hostId })
+    const [total, followerList] = await Promise.all([
+      FollowerFollowing.countDocuments({ followingId: resolved.id }),
+      FollowerFollowing.find({ followingId: resolved.id })
         .populate("followerId", "_id name image uniqueId coin countryFlagImage country")
         .sort({ createdAt: -1 })
         .skip((start - 1) * limit)
@@ -67,11 +88,9 @@ exports.fetchFollowers = async (req, res) => {
         .lean(),
     ]);
 
-    if (!host) return res.status(200).json({ status: false, message: "Host not found." });
-
     res.status(200).json({
       status: true,
-      message: `Retrieved followers successfully.`,
+      message: "Retrieved follower list successfully.",
       total,
       followerList,
     });

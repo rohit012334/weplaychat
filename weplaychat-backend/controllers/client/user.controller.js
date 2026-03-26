@@ -19,6 +19,7 @@ const HostMatchHistory = require("../../models/hostMatchHistory.model");
 const LiveBroadcastView = require("../../models/liveBroadcastView.model");
 const LiveBroadcaster = require("../../models/liveBroadcaster.model");
 const VipPlanPrivilege = require("../../models/vipPlanPrivilege.model");
+const FollowerFollowing = require("../../models/followerFollowing.model");
 
 //deletefile
 const { deleteFile } = require("../../util/deletefile");
@@ -1019,9 +1020,11 @@ exports.retrieveUserProfile = async (req, res) => {
 
     const userId = new mongoose.Types.ObjectId(req.user.userId);
 
-    const [user, hostRequest] = await Promise.all([
+    const [user, hostRequest, totalFollowers, totalFollowing] = await Promise.all([
       User.findOne({ _id: userId }).lean(),
       Host.findOne({ userId }).select("status").lean(),
+      FollowerFollowing.countDocuments({ followingId: userId }),   // kitne log mujhe follow karte hain
+      FollowerFollowing.countDocuments({ followerId: userId }),    // main kitno ko follow karta hoon
     ]);
 
     const hasHostRequest = !!hostRequest;
@@ -1052,10 +1055,12 @@ exports.retrieveUserProfile = async (req, res) => {
     res.status(200).json({
       status: true,
       message: "The user has retrieved their profile.",
-      user: { ...user, privileges }, 
+      user: { ...user, privileges },
       hasHostRequest,
       topUpTotal,
       balanceTotal,
+      totalFollowers,   // kitne log mujhe follow karte hain
+      totalFollowing,   // main kitno ko follow karta hoon
     });
 
     if (
