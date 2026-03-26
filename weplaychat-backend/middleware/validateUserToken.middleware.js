@@ -24,24 +24,8 @@ const validateUserAccessToken = async (req, res, next) => {
 
   try {
     console.log("🔹 [AUTH] Verifying Firebase token...");
-    try {
-      const parts = token.split(".");
-      if (parts.length === 3) {
-        const header = JSON.parse(Buffer.from(parts[0], "base64").toString());
-        const payload = JSON.parse(Buffer.from(parts[1], "base64").toString());
-        console.log("🔹 [AUTH] Token Header:", header);
-        console.log("🔹 [AUTH] Token Project ID (aud):", payload.aud);
-        console.log("🔹 [AUTH] Token Issuer (iss):", payload.iss);
-      }
-    } catch (e) {
-      console.warn("⚠️ [AUTH] Failed to decode token parts for logging:", e.message);
-    }
-
     const firebaseAdmin = await getFirebaseAdmin();
     const currentApp = firebaseAdmin.app();
-    
-    // Log the Project ID being used for verification to detect mismatch
-    console.log("🔹 [AUTH] Using Project ID for verification:", currentApp.options.credential?.projectId || "Default");
 
     const [decodedToken, mongoUser] = await Promise.all([
       currentApp.auth().verifyIdToken(token),
@@ -59,7 +43,6 @@ const validateUserAccessToken = async (req, res, next) => {
     }
 
     if (mongoUser.isBlock) {
-      console.warn(`⚠️ [AUTH] User is blocked by admin: ${decodedToken.uid}`);
       return res.status(403).json({ status: false, message: "🚷 User are blocked by the admin." });
     }
 
@@ -68,7 +51,6 @@ const validateUserAccessToken = async (req, res, next) => {
       userId: mongoUser._id,
     };
 
-    console.log(`✅ [AUTH] User authentication successful. MongoID: ${mongoUser._id}`);
     next();
   } catch (error) {
     console.error("❌ [AUTH ERROR] Token verification failed:", error.message);

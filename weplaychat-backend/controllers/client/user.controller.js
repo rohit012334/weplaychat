@@ -48,8 +48,10 @@ const generateHistoryUniqueId = require("../../util/generateHistoryUniqueId");
 //validatePlanExpiration
 const validatePlanExpiration = require("../../util/validatePlanExpiration");
 
-//private key
-const admin = require("../../util/privateKey");
+const path = require("path");
+
+//getFirebaseAdmin
+const getFirebaseAdmin = require("../../util/privateKey");
 
 //check the user is exists or not with loginType 3 quick (identity)
 exports.quickUserVerification = async (req, res) => {
@@ -774,7 +776,7 @@ exports.verifyOtp = async (req, res) => {
       newUser.uniqueId = uniqueId;
       await newUser.save();
 
-      if (user && user.fcmToken && user.fcmToken !== null) {
+      if (user?.fcmToken) {
         const payload = {
           token: user.fcmToken,
           data: {
@@ -784,8 +786,8 @@ exports.verifyOtp = async (req, res) => {
           },
         };
 
-        const adminPromise = await admin;
-        adminPromise
+        const firebaseAdmin = await getFirebaseAdmin();
+        firebaseAdmin
           .messaging()
           .send(payload)
           .then((response) => {
