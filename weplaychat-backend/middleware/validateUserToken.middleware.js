@@ -24,12 +24,27 @@ const validateUserAccessToken = async (req, res, next) => {
 
   try {
     console.log("🔹 [AUTH] Verifying Firebase token...");
+    try {
+      const parts = token.split(".");
+      if (parts.length === 3) {
+        const header = JSON.parse(Buffer.from(parts[0], "base64").toString());
+        const payload = JSON.parse(Buffer.from(parts[1], "base64").toString());
+        console.log("🔹 [AUTH] Token Header:", header);
+        console.log("🔹 [AUTH] Token Project ID (aud):", payload.aud);
+        console.log("🔹 [AUTH] Token Issuer (iss):", payload.iss);
+      }
+    } catch (e) {
+      console.warn("⚠️ [AUTH] Failed to decode token parts for logging:", e.message);
+    }
 
     const firebaseAdmin = await getFirebaseAdmin();
-    firebaseAdmin.app();
+    const currentApp = firebaseAdmin.app();
+    
+    // Log the Project ID being used for verification to detect mismatch
+    console.log("🔹 [AUTH] Using Project ID for verification:", currentApp.options.credential?.projectId || "Default");
 
     const [decodedToken, mongoUser] = await Promise.all([
-      firebaseAdmin.auth().verifyIdToken(token),
+      currentApp.auth().verifyIdToken(token),
       User.findOne({ firebaseUid: userUid }).select("_id isBlock").lean(),
     ]);
 

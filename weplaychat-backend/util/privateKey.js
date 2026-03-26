@@ -17,8 +17,7 @@ const initFirebase = async () => {
       if (!validation.valid) throw new Error(validation.error);
 
       const serviceAccount = validation.privateKey;
-
-      console.log("🔹 [FirebaseInit] privateKey loaded:", Boolean(privateKey), "admin apps:", admin.apps?.length ?? 0);
+      console.log("🔹 [FirebaseInit] privateKey loaded:", Boolean(privateKey), "Project ID:", serviceAccount.project_id, "admin apps:", admin.apps?.length ?? 0);
 
       // Firebase Admin throws "The default Firebase app does not exist" if no default app is registered.
       // Even if admin.apps is non-empty (named apps exist), we must ensure the default app exists.
