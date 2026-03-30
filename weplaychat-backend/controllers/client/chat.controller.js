@@ -139,6 +139,7 @@ exports.pushChatMessage = async (req, res) => {
       }, { upsert: true }),
     ]);
 
+    // --- Real-time Socket Emit ---
     const eventData = {
       data: {
         senderId: String(senderId),
@@ -154,19 +155,17 @@ exports.pushChatMessage = async (req, res) => {
       messageId: String(chat._id)
     };
 
-    // Emit via Socket for real-time update
     if (global.io) {
       global.io.in("globalRoom:" + senderId.toString()).emit("chatMessageSent", eventData);
       global.io.in("globalRoom:" + receiverUserId.toString()).emit("chatMessageSent", eventData);
     }
 
-    res.status(200).json({ status: true, message: "Success", chat });
-
     // --- Post-send coin deduction logic ---
     if (!isWithinFreeLimit && hostReceiver) {
-        const adminCommissionRate = global.settingJSON ? global.settingJSON.adminCommissionRate : 10;
-        const adminShare = (chatRate * adminCommissionRate) / 100;
-        const hostEarnings = chatRate - adminShare;
+        const adminCommissionRate = (global.settingJSON && global.settingJSON.adminCommissionRate) ? global.settingJSON.adminCommissionRate : 10;
+        const finalChatRate = chatRate || 10; // Ensure it's never undefined
+        const adminShare = (finalChatRate * adminCommissionRate) / 100;
+        const hostEarnings = finalChatRate - adminShare;
 
         let agencyShare = 0;
         let agencyUpdate = null;
@@ -186,7 +185,7 @@ exports.pushChatMessage = async (req, res) => {
         }
 
         await Promise.all([
-          User.updateOne({ _id: senderId, coin: { $gte: chatRate } }, { $inc: { coin: -chatRate, spentCoins: chatRate } }),
+          User.updateOne({ _id: senderId, coin: { $gte: finalChatRate } }, { $inc: { coin: -finalChatRate, spentCoins: finalChatRate } }),
           Host.updateOne({ _id: hostReceiver._id }, { $inc: { coin: hostEarnings } }),
           History.create({
             uniqueId: uniqueId,
@@ -194,7 +193,7 @@ exports.pushChatMessage = async (req, res) => {
             userId: senderId,
             hostId: hostReceiver._id,
             agencyId: hostReceiver?.agencyId,
-            userCoin: chatRate,
+            userCoin: finalChatRate,
             hostCoin: hostEarnings,
             adminCoin: adminShare,
             date: chat.date
@@ -203,25 +202,31 @@ exports.pushChatMessage = async (req, res) => {
         ]);
     }
 
-    // --- FCM Notification ---
-    if (receiverUser.fcmToken || (hostReceiver && hostReceiver.fcmToken)) {
-      const payload = {
-        token: receiverUser.fcmToken || hostReceiver.fcmToken,
-        data: {
-          title: `${sender.name} sent you a message 📩`,
-          body: `🗨️ ${chat.message}`,
-          type: "CHAT",
-          senderId: String(senderId),
-          receiverId: String(receiverUserId),
-          userName: String(sender.name),
-          userImage: String(sender.image || ""),
-          senderRole: sender.isHost ? "host" : "user",
-          chatTopicId: String(chatTopic._id)
-        },
-      };
+    // Final Success Response
+    res.status(200).json({ status: true, message: "Success", chat });
 
-      const adminPromise = await admin;
-      adminPromise.messaging().send(payload).catch(err => console.error("FCM Error:", err));
+    // --- FCM Notification (Non-blocking) ---
+    if (receiverUser.fcmToken || (hostReceiver && hostReceiver.fcmToken)) {
+      try {
+        const payload = {
+          token: receiverUser.fcmToken || hostReceiver.fcmToken,
+          data: {
+            title: `${sender.name} sent you a message 📩`,
+            body: `🗨️ ${chat.message}`,
+            type: "CHAT",
+            senderId: String(senderId),
+            receiverId: String(receiverUserId),
+            userName: String(sender.name),
+            userImage: String(sender.image || ""),
+            senderRole: sender.isHost ? "host" : "user",
+            chatTopicId: String(chatTopic._id)
+          },
+        };
+        const adminInstance = await admin();
+        await adminInstance.messaging().send(payload);
+      } catch (err) {
+        console.error("FCM Error ignored to prevent crash:", err);
+      }
     }
   } catch (error) {
     if (req.files) deleteFiles(req.files);

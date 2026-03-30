@@ -197,7 +197,7 @@ io.on("connection", async (socket) => {
           },
         };
 
-        const adminInstance = await admin;
+        const adminInstance = await admin();
         adminInstance.messaging().send(payload).catch(err => console.error("FCM Error via Socket:", err));
       }
     } catch (error) {
@@ -317,7 +317,7 @@ io.on("connection", async (socket) => {
             type: "GIFT",
           },
         };
-        const adminInstance = await admin;
+        const adminInstance = await admin();
         adminInstance.messaging().send(payload).catch(err => console.error("Gift FCM error:", err));
       }
     } catch (error) {
