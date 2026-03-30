@@ -100,6 +100,11 @@ exports.pushChatMessage = async (req, res) => {
         }
     }
 
+    if (!chatTopic.senderId) {
+        chatTopic.senderId = senderId;
+        chatTopic.receiverId = receiverUserId;
+    }
+
     const chat = new Chat();
     chat.senderId = senderId;
     chat.chatTopicId = chatTopic._id;
@@ -125,7 +130,11 @@ exports.pushChatMessage = async (req, res) => {
     await Promise.all([
       chat.save(),
       ChatTopic.updateOne({ _id: chatTopic._id }, {
-          $set: { chatId: chat._id },
+          $set: { 
+            chatId: chat._id, 
+            senderId: chatTopic.senderId, 
+            receiverId: chatTopic.receiverId 
+          },
           $inc: { messageCount: 1 },
       }, { upsert: true }),
     ]);
