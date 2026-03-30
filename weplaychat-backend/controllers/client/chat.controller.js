@@ -139,6 +139,27 @@ exports.pushChatMessage = async (req, res) => {
       }, { upsert: true }),
     ]);
 
+    const eventData = {
+      data: {
+        senderId: String(senderId),
+        receiverId: String(receiverUserId),
+        chatTopicId: String(chatTopic._id),
+        messageId: String(chat._id),
+        messageType: chat.messageType,
+        message: chat.message,
+        image: chat.image,
+        audio: chat.audio,
+        date: chat.date
+      },
+      messageId: String(chat._id)
+    };
+
+    // Emit via Socket for real-time update
+    if (global.io) {
+      global.io.in("globalRoom:" + senderId.toString()).emit("chatMessageSent", eventData);
+      global.io.in("globalRoom:" + receiverUserId.toString()).emit("chatMessageSent", eventData);
+    }
+
     res.status(200).json({ status: true, message: "Success", chat });
 
     // --- Post-send coin deduction logic ---
