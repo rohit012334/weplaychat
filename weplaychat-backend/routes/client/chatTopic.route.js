@@ -10,10 +10,10 @@ const validateUserToken = require("../../middleware/validateUserToken.middleware
 //checkAccessWithSecretKey
 const checkAccessWithSecretKey = require("../../checkAccess");
 
-//get chat thumb list ( user )
+//get chat thumb list ( unified for all roles )
 route.get("/fetchChatList", validateUserToken, checkAccessWithSecretKey(), chatTopicController.fetchChatList);
 
-//get chat thumb list ( host )
-route.get("/retrieveChatList", checkAccessWithSecretKey(), chatTopicController.retrieveChatList);
+// Legacy alias
+route.get("/retrieveChatList", validateUserToken, checkAccessWithSecretKey(), chatTopicController.fetchChatList);
 
 module.exports = route;

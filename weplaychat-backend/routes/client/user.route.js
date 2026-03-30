@@ -39,6 +39,9 @@ route.get("/retrieveUserProfile", validateUserToken, checkAccessWithSecretKey(),
 //delete user
 route.delete("/deactivateMyAccount", validateUserToken, checkAccessWithSecretKey(), UserController.deactivateMyAccount);
 
+//common profile retrieval
+route.get("/retrieveProfileDetails", validateUserToken, checkAccessWithSecretKey(), UserController.retrieveProfileDetails);
+
 
 
 module.exports = route;

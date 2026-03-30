@@ -20,72 +20,99 @@ const { deleteFiles } = require("../../util/deletefile");
 //generateHistoryUniqueId
 const generateHistoryUniqueId = require("../../util/generateHistoryUniqueId");
 
-//send message ( image or audio ) ( user )
+// Unified message sending ( User to User, User to Host, Host to User )
 exports.pushChatMessage = async (req, res) => {
   try {
     if (!req.user || !req.user.userId) {
       return res.status(401).json({ status: false, message: "Unauthorized access. Invalid token." });
     }
 
-    if (!req.body.chatTopicId || !req.body.receiverId || !req.body.messageType || !req.files) {
+    if (!req.body.receiverId || !req.body.messageType || !req.files) {
       if (req.files) deleteFiles(req.files);
       return res.status(200).json({ status: false, message: "Oops ! Invalid details." });
     }
 
-    const messageType = Number(req.body.messageType);
     const senderId = new mongoose.Types.ObjectId(req.user.userId);
     const receiverId = new mongoose.Types.ObjectId(req.body.receiverId);
-    const chatTopicId = new mongoose.Types.ObjectId(req.body.chatTopicId);
+    const receiverModel = req.body.receiverModel || "Host"; // "User" or "Host"
+    const chatTopicId = req.body.chatTopicId ? new mongoose.Types.ObjectId(req.body.chatTopicId) : null;
 
-    const [uniqueId, sender, receiver, chatTopic] = await Promise.all([
+    const [uniqueId, sender, receiver] = await Promise.all([
       generateHistoryUniqueId(),
-      User.findById(senderId).lean().select("name image coin isVip vipLevel vipPlanEndDate"),
-      Host.findOne({ _id: receiverId, isBlock: false }).lean().select("name image fcmToken chatRate agencyId"),
-      ChatTopic.findOne({ _id: chatTopicId }).lean().select("_id chatId messageCount"),
+      User.findById(senderId).lean().select("name image coin isVip vipLevel vipPlanEndDate isHost hostId"),
+      receiverModel === "Host"
+        ? Host.findOne({ _id: receiverId, isBlock: false }).lean().select("_id name image fcmToken chatRate agencyId")
+        : User.findOne({ _id: receiverId, isBlock: false }).lean().select("_id name image fcmToken"),
     ]);
 
     if (!sender) {
       if (req.files) deleteFiles(req.files);
-      return res.status(200).json({ status: false, message: "Sender does not found." });
+      return res.status(200).json({ status: false, message: "Sender not found." });
     }
 
     if (!receiver) {
       if (req.files) deleteFiles(req.files);
-      return res.status(200).json({ status: false, message: "Receiver dose not found." });
+      return res.status(200).json({ status: false, message: "Receiver not found." });
     }
 
-    if (!chatTopic) {
-      if (req.files) deleteFiles(req.files);
-      return res.status(200).json({ status: false, message: "ChatTopic dose not found." });
-    }
+    let chatTopic;
+    if (chatTopicId) {
+      chatTopic = await ChatTopic.findById(chatTopicId);
+    } else {
+      chatTopic = await ChatTopic.findOne({
+        $or: [
+          { senderId, receiverId },
+          { senderId: receiverId, receiverId: senderId },
+        ],
+      });
 
-    const maxFreeChatMessages = global.settingJSON ? global.settingJSON.maxFreeChatMessages : 10;
-    const adminCommissionRate = global.settingJSON ? global.settingJSON.adminCommissionRate : 10; // 10% commission
-    const chatRate = receiver.chatRate || 10;
-
-    let hasUnlimitedChat = false;
-    if (sender.isVip && sender.vipPlanEndDate && new Date(sender.vipPlanEndDate) > new Date()) {
-      const privilege = await VipPlanPrivilege.findOne({ level: sender.vipLevel }).lean();
-      if (privilege && privilege.unlimitedChat) {
-        hasUnlimitedChat = true;
+      if (!chatTopic) {
+        chatTopic = new ChatTopic({
+          senderId: senderId,
+          senderModel: sender.isHost ? "Host" : "User",
+          receiverId: receiverId,
+          receiverModel: receiverModel,
+        });
       }
     }
 
-    const isWithinFreeLimit = hasUnlimitedChat || chatTopic.messageCount < maxFreeChatMessages;
+    if (!chatTopic) {
+       if (req.files) deleteFiles(req.files);
+       return res.status(200).json({ status: false, message: "Chat Topic not found." });
+    }
 
-    let deductedCoins = 0;
-    let adminShare = 0;
-    let hostEarnings = 0;
-    let agencyShare = 0;
+    // --- COIN DEDUCTION LOGIC (Only for User to Host) ---
+    let isWithinFreeLimit = true;
+    const chatRate = receiverModel === "Host" ? (receiver.chatRate || 10) : 0;
+    
+    // Only deduct if User is sending to a Host and NOT a Host himself sending to Host
+    if (receiverModel === "Host" && !sender.isHost) {
+      const maxFreeChatMessages = global.settingJSON ? global.settingJSON.maxFreeChatMessages : 10;
+      
+      let hasUnlimitedChat = false;
+      if (sender.isVip && sender.vipPlanEndDate && new Date(sender.vipPlanEndDate) > new Date()) {
+        const privilege = await VipPlanPrivilege.findOne({ level: sender.vipLevel }).lean();
+        if (privilege && privilege.unlimitedChat) {
+          hasUnlimitedChat = true;
+        }
+      }
+      
+      isWithinFreeLimit = hasUnlimitedChat || chatTopic.messageCount < maxFreeChatMessages;
 
-    if (!isWithinFreeLimit && sender.coin < chatRate) {
-      if (req.files) deleteFiles(req.files);
-      return res.status(200).json({ status: false, message: "Insufficient coins to send message." });
+      if (!isWithinFreeLimit && sender.coin < chatRate) {
+        if (req.files) deleteFiles(req.files);
+        return res.status(200).json({ status: false, message: "Insufficient coins to send message." });
+      }
+    } else {
+       isWithinFreeLimit = true; // FREE for User-User or Host-User
     }
 
     const chat = new Chat();
-    chat.senderId = sender._id;
+    chat.senderId = senderId;
+    chat.chatTopicId = chatTopic._id;
+    chat.date = new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" });
 
+    const messageType = Number(req.body.messageType);
     if (messageType == 2) {
       chat.messageType = 2;
       chat.message = "📸 Image";
@@ -96,119 +123,97 @@ exports.pushChatMessage = async (req, res) => {
       chat.audio = req?.files?.audio ? req?.files?.audio[0].path : "";
     } else {
       if (req.files) deleteFiles(req.files);
-      return res.status(200).json({ status: false, message: "messageType must be passed valid." });
+      return res.status(200).json({ status: false, message: "Invalid messageType." });
     }
-
-    chat.chatTopicId = chatTopic._id;
-    chat.date = new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" });
 
     await Promise.all([
       chat.save(),
       ChatTopic.updateOne(
         { _id: chatTopic._id },
         {
-          $set: { chatId: chat._id },
+          $set: { 
+             chatId: chat._id, 
+             senderModel: chatTopic.senderModel || "User", 
+             receiverModel: chatTopic.receiverModel || receiverModel 
+          },
           $inc: { messageCount: 1 },
         }
       ),
     ]);
 
-    res.status(200).json({
-      status: true,
-      message: "Message sent successfully.",
-      chat: chat,
-    });
+    res.status(200).json({ status: true, message: "Success", chat });
 
-    if (!isWithinFreeLimit) {
-      deductedCoins = chatRate;
-      adminShare = (chatRate * adminCommissionRate) / 100;
-      hostEarnings = chatRate - adminShare;
+    // --- Post-send Processing ---
+    if (!isWithinFreeLimit && receiverModel === "Host") {
+        // Business logic for host earnings, agency commission, and histories
+        const adminCommissionRate = global.settingJSON ? global.settingJSON.adminCommissionRate : 10;
+        const deductedCoins = chatRate;
+        const adminShare = (chatRate * adminCommissionRate) / 100;
+        const hostEarnings = chatRate - adminShare;
 
-      let agencyUpdate = null;
-      if (receiver.agencyId) {
-        const agency = await Agency.findById(receiver.agencyId).lean().select("_id commissionType commission");
-
-        if (agency) {
-          if (agency.commissionType === 1) {
-            // Percentage commission
-            agencyShare = (hostEarnings * agency.commission) / 100;
-          } else {
-            // Fixed salary, ignore earnings share
-            agencyShare = 0;
-          }
-
-          agencyUpdate = Agency.updateOne({ _id: agency._id }, [
-            {
-              $set: {
-                hostCoins: { $add: ["$hostCoins", hostEarnings] },
-                totalEarnings: { $add: ["$totalEarnings", Math.floor(agencyShare)] },
-                totalEarningsWithCommissionAndHostCoin: {
-                  $add: [{ $add: ["$hostCoins", hostEarnings] }, { $add: ["$totalEarnings", Math.floor(agencyShare)] }],
-                },
-                netAvailableEarnings: {
-                  $add: [{ $add: ["$hostCoins", hostEarnings] }, { $add: ["$totalEarnings", Math.floor(agencyShare)] }],
-                },
-              },
-            },
-          ]);
+        let agencyShare = 0;
+        let agencyUpdate = null;
+        if (receiver.agencyId) {
+           const agency = await Agency.findById(receiver.agencyId).lean().select("_id commissionType commission");
+           if (agency) {
+              agencyShare = agency.commissionType === 1 ? (hostEarnings * agency.commission) / 100 : 0;
+              agencyUpdate = Agency.updateOne({ _id: agency._id }, {
+                 $inc: {
+                   hostCoins: hostEarnings,
+                   totalEarnings: Math.floor(agencyShare),
+                   totalEarningsWithCommissionAndHostCoin: hostEarnings + Math.floor(agencyShare),
+                   netAvailableEarnings: hostEarnings + Math.floor(agencyShare)
+                 }
+              });
+           }
         }
-      }
 
-      await Promise.all([
-        User.updateOne({ _id: sender._id, coin: { $gte: deductedCoins } }, { $inc: { coin: -deductedCoins, spentCoins: deductedCoins } }),
-        Host.updateOne({ _id: receiver._id }, { $inc: { coin: hostEarnings } }),
-        History.create({
-          uniqueId: uniqueId,
-          type: 9,
-          userId: senderId,
-          hostId: receiverId,
-          agencyId: receiver?.agencyId,
-          userCoin: chatRate,
-          hostCoin: hostEarnings,
-          adminCoin: adminShare,
-          date: new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }),
-        }),
-        agencyUpdate,
-      ]);
+        await Promise.all([
+          User.updateOne({ _id: senderId, coin: { $gte: deductedCoins } }, { $inc: { coin: -deductedCoins, spentCoins: deductedCoins } }),
+          Host.updateOne({ _id: receiver._id }, { $inc: { coin: hostEarnings } }),
+          History.create({
+            uniqueId: uniqueId,
+            type: 9, // CHAT type
+            userId: senderId,
+            hostId: receiverId,
+            agencyId: receiver?.agencyId,
+            userCoin: chatRate,
+            hostCoin: hostEarnings,
+            adminCoin: adminShare,
+            date: chat.date
+          }),
+          agencyUpdate
+        ]);
     }
 
-    if (receiver.fcmToken !== null) {
+    // --- FCM Notification ---
+    if (receiver.fcmToken) {
       const payload = {
         token: receiver.fcmToken,
         data: {
           title: `${sender.name} sent you a message 📩`,
           body: `🗨️ ${chat.message}`,
           type: "CHAT",
-          senderId: String(chatTopic?.senderId || ""),
-          receiverId: String(chatTopic?.receiverId || ""),
-          userName: String(sender?.name || ""),
-          hostName: String(receiver?.name || ""),
-          userImage: String(sender?.image || ""),
-          hostImage: String(receiver?.image || ""),
-          senderRole: "user",
-          isFakeSender: "false",
+          senderId: String(senderId),
+          receiverId: String(receiverId),
+          userName: String(sender.name),
+          userImage: String(sender.image || ""),
+          senderRole: sender.isHost ? "host" : "user",
+          chatTopicId: String(chatTopic._id)
         },
       };
 
       const adminPromise = await admin;
-      adminPromise
-        .messaging()
-        .send(payload)
-        .then((response) => {
-          console.log("Successfully sent with response: ", response);
-        })
-        .catch((error) => {
-          console.error("Error sending FCM message:", error); // Log only
-        });
+      adminPromise.messaging().send(payload).catch(err => console.error("FCM Error:", err));
     }
   } catch (error) {
     if (req.files) deleteFiles(req.files);
-    console.log(error);
+    console.error(error);
     return res.status(500).json({ status: false, message: error.message || "Internal Server Error" });
   }
 };
 
-//get old chat ( user )
+// Unified chat history retrieval
 exports.fetchChatHistory = async (req, res) => {
   try {
     if (!req.user || !req.user.userId) {
@@ -216,58 +221,50 @@ exports.fetchChatHistory = async (req, res) => {
     }
 
     if (!req.query.receiverId) {
-      return res.status(200).json({ status: false, message: "Oops ! Invalid details." });
+      return res.status(200).json({ status: false, message: "receiverId is required." });
     }
 
     const start = req.query.start ? parseInt(req.query.start) : 1;
     const limit = req.query.limit ? parseInt(req.query.limit) : 20;
     const senderId = new mongoose.Types.ObjectId(req.user.userId);
     const receiverId = new mongoose.Types.ObjectId(req.query.receiverId);
+    const receiverModel = req.query.receiverModel || "Host";
 
-    let chatTopic;
-    const [receiver, foundChatTopic] = await Promise.all([
-      Host.findOne({ _id: receiverId, isBlock: false }).lean().select("_id audioCallRate privateCallRate"),
-      ChatTopic.findOne({
-        $or: [
-          { senderId, receiverId },
-          { senderId: receiverId, receiverId: senderId },
-        ],
-      }).select("_id"),
-    ]);
+    const chatTopic = await ChatTopic.findOne({
+      $or: [
+        { senderId, receiverId },
+        { senderId: receiverId, receiverId: senderId },
+      ],
+    });
 
-    if (!receiver) {
-      return res.status(200).json({ status: false, message: "Receiver not found." });
-    }
-
-    chatTopic = foundChatTopic;
     if (!chatTopic) {
-      chatTopic = new ChatTopic();
-      chatTopic.senderId = senderId;
-      chatTopic.receiverId = receiver._id;
+      return res.status(200).json({ status: true, message: "No history found.", chat: [] });
     }
 
-    const [savedChatTopic, updatedReadStatus, chatHistory] = await Promise.all([
-      chatTopic.save(),
-      Chat.updateMany({ chatTopicId: chatTopic._id, isRead: false }, { $set: { isRead: true } }),
+    const [updatedReadStatus, chatHistory, receiverDetails] = await Promise.all([
+      Chat.updateMany({ chatTopicId: chatTopic._id, senderId: { $ne: senderId }, isRead: false }, { $set: { isRead: true } }),
       Chat.find({ chatTopicId: chatTopic._id })
         .sort({ createdAt: -1 })
         .skip((start - 1) * limit)
         .limit(limit)
         .lean(),
+      receiverModel === "Host" 
+         ? Host.findById(receiverId).select("audioCallRate privateCallRate").lean()
+         : User.findById(receiverId).select("name").lean()
     ]);
 
     return res.status(200).json({
       status: true,
-      message: "Chat history retrieved successfully.",
+      message: "Success",
       chatTopic: chatTopic._id,
       chat: chatHistory,
-      callRate: {
-        privateCallRate: receiver.privateCallRate || 0,
-        audioCallRate: receiver.audioCallRate || 0,
-      },
+      callRate: receiverModel === "Host" ? {
+        privateCallRate: receiverDetails?.privateCallRate || 0,
+        audioCallRate: receiverDetails?.audioCallRate || 0,
+      } : null
     });
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return res.status(500).json({ status: false, error: error.message || "Internal Server Error" });
   }
 };

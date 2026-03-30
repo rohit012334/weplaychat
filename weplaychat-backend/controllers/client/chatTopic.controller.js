@@ -3,7 +3,7 @@ const ChatTopic = require("../../models/chatTopic.model");
 //mongoose
 const mongoose = require("mongoose");
 
-//get chat thumb list ( user )
+// Unified chat list ( Inbox )
 exports.fetchChatList = async (req, res) => {
   try {
     if (!req.user || !req.user.userId) {
@@ -23,133 +23,80 @@ exports.fetchChatList = async (req, res) => {
       },
       {
         $addFields: {
-          receiverId: {
-            $cond: {
-              if: { $eq: ["$senderId", userObjectId] },
-              then: "$receiverId",
-              else: "$senderId",
-            },
-          },
+          otherPartyId: { $cond: [{ $eq: ["$senderId", userObjectId] }, "$receiverId", "$senderId"] },
+          otherPartyModel: { $cond: [{ $eq: ["$senderId", userObjectId] }, "$receiverModel", "$senderModel"] },
         },
       },
-      {
-        $lookup: {
-          from: "blocks",
-          let: { receiverId: "$receiverId" },
-          pipeline: [
-            {
-              $match: {
-                $expr: {
-                  $or: [
-                    {
-                      $and: [{ $eq: ["$userId", userObjectId] }, { $eq: ["$hostId", "$$receiverId"] }],
-                    },
-                    {
-                      $and: [{ $eq: ["$userId", "$$receiverId"] }, { $eq: ["$hostId", userObjectId] }],
-                    },
-                  ],
-                },
-              },
-            },
-          ],
-          as: "blockInfo",
-        },
-      },
-      {
-        $match: {
-          blockInfo: { $eq: [] }, // Exclude both user-blocked-host and host-blocked-user
-        },
-      },
+      // Lookup if Other Party is a Host
       {
         $lookup: {
           from: "hosts",
-          localField: "receiverId",
+          localField: "otherPartyId",
           foreignField: "_id",
-          as: "host",
+          as: "hostData",
         },
       },
-      { $unwind: { path: "$host", preserveNullAndEmptyArrays: false } },
+      // Lookup if Other Party is a User
+      {
+        $lookup: {
+          from: "users",
+          localField: "otherPartyId",
+          foreignField: "_id",
+          as: "userData",
+        },
+      },
+      {
+        $addFields: {
+          otherParty: {
+            $cond: [
+              { $eq: ["$otherPartyModel", "Host"] },
+              { $arrayElemAt: ["$hostData", 0] },
+              { $arrayElemAt: ["$userData", 0] },
+            ],
+          },
+        },
+      },
+      { $match: { otherParty: { $exists: true, $ne: null } } },
+      // Lookup Last Chat
       {
         $lookup: {
           from: "chats",
           localField: "chatId",
           foreignField: "_id",
-          as: "chat",
+          as: "lastChat",
         },
       },
-      { $unwind: { path: "$chat", preserveNullAndEmptyArrays: false } },
-      { $sort: { "chat.createdAt": -1 } },
-      {
-        $group: {
-          _id: "$_id",
-          receiverId: { $first: "$receiverId" },
-          name: { $first: "$host.name" },
-          image: { $first: "$host.image" },
-          isFake: { $first: "$host.isFake" },
-          isOnline: { $first: "$host.isOnline" },
-          chatTopic: { $first: "$chat.chatTopicId" },
-          senderId: { $first: "$chat.senderId" },
-          messageType: { $first: "$chat.messageType" },
-          message: { $first: "$chat.message" },
-          isRead: { $first: "$chat.isRead" },
-          lastChatMessageTime: { $first: "$chat.createdAt" },
-        },
-      },
+      { $unwind: "$lastChat" },
       {
         $lookup: {
-          from: "chats",
-          let: { topicId: "$chatTopic" },
-          pipeline: [
-            {
-              $match: {
-                $expr: {
-                  $and: [{ $eq: ["$chatTopicId", "$$topicId"] }, { $eq: ["$isRead", false] }, { $ne: ["$senderId", userObjectId] }],
-                },
-              },
-            },
-            { $count: "unreadCount" },
-          ],
-          as: "unreads",
-        },
-      },
-      {
-        $addFields: {
-          unreadCount: {
-            $cond: [{ $gt: [{ $size: "$unreads" }, 0] }, { $arrayElemAt: ["$unreads.unreadCount", 0] }, 0],
-          },
-        },
+           from: "chats",
+           let: { topicId: "$_id" },
+           pipeline: [
+              { $match: { $expr: { $and: [{ $eq: ["$chatTopicId", "$$topicId"] }, { $eq: ["$isRead", false] }, { $ne: ["$senderId", userObjectId] }] } } },
+              { $count: "count" }
+           ],
+           as: "unread"
+        }
       },
       {
         $project: {
-          receiverId: 1,
-          name: 1,
-          image: 1,
-          isFake: 1,
-          isOnline: 1,
-          chatTopic: 1,
-          senderId: 1,
-          messageType: 1,
-          message: 1,
-          unreadCount: 1,
-          lastChatMessageTime: 1,
+          _id: 1,
+          otherPartyId: 1,
+          otherPartyModel: 1,
+          name: "$otherParty.name",
+          image: "$otherParty.image",
+          isOnline: "$otherParty.isOnline",
+          message: "$lastChat.message",
+          messageType: "$lastChat.messageType",
+          lastChatMessageTime: "$lastChat.createdAt",
+          unreadCount: { $ifNull: [{ $arrayElemAt: ["$unread.count", 0] }, 0] },
           time: {
             $let: {
               vars: {
-                messageDay: {
-                  $dateToString: { format: "%Y-%m-%d", date: "$lastChatMessageTime" },
-                },
-                today: {
-                  $dateToString: { format: "%Y-%m-%d", date: new Date() },
-                },
-                yesterday: {
-                  $dateToString: {
-                    format: "%Y-%m-%d",
-                    date: new Date(Date.now() - 24 * 60 * 60 * 1000),
-                  },
-                },
-                dayOfWeek: {
-                  $dayOfWeek: "$lastChatMessageTime",
-                },
+                messageDay: { $dateToString: { format: "%Y-%m-%d", date: "$lastChat.createdAt" } },
+                today: { $dateToString: { format: "%Y-%m-%d", date: new Date() } },
+                yesterday: { $dateToString: { format: "%Y-%m-%d", date: new Date(Date.now() - 24 * 60 * 60 * 1000) } },
+                dayOfWeek: { $dayOfWeek: "$lastChat.createdAt" },
               },
               in: {
                 $cond: [
@@ -186,13 +133,9 @@ exports.fetchChatList = async (req, res) => {
       { $limit: limit },
     ]);
 
-    return res.status(200).json({
-      status: true,
-      message: "Success",
-      chatList,
-    });
+    return res.status(200).json({ status: true, message: "Success", chatList });
   } catch (error) {
-    console.error("Error in fetchChatList:", error);
+    console.error(error);
     return res.status(500).json({ status: false, message: error.message || "Internal Server Error" });
   }
 };

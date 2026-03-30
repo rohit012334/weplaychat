@@ -1193,3 +1193,78 @@ exports.deactivateMyAccount = async (req, res) => {
       });
   }
 };
+
+//common profile retrieval ( Host ya User dono ke liye )
+exports.retrieveProfileDetails = async (req, res) => {
+  try {
+    const { profileId } = req.query;
+
+    if (!profileId || !mongoose.Types.ObjectId.isValid(profileId)) {
+      return res.status(200).json({ status: false, message: "Valid profileId is required." });
+    }
+
+    const viewerId = req.user ? new mongoose.Types.ObjectId(req.user.userId) : null;
+    const targetId = new mongoose.Types.ObjectId(profileId);
+
+    // 1. Pehle check karo ki profileId Host ki hai ya User ki
+    let target = await Host.findOne({ _id: targetId, isBlock: false })
+      .select("name email gender dob bio uniqueId countryFlagImage country impression language image photoGallery profileVideo randomCallRate randomCallFemaleRate randomCallMaleRate privateCallRate audioCallRate chatRate coin isFake video liveVideo userId")
+      .lean();
+    
+    let profileType = "Host";
+
+    if (!target) {
+      // 2. Agar host nahi mila toh user check karo
+      target = await User.findOne({ _id: targetId, isBlock: false })
+        .select("name gender bio identity language image coin isVip vipLevel country countryFlagImage mobileNumber uniqueId selfIntro")
+        .lean();
+      
+      if (!target) {
+        return res.status(200).json({ status: false, message: "Profile not found or blocked." });
+      }
+      profileType = "User";
+    }
+
+    // 3. Follow Counts & Status
+    const [totalFollower, totalFollowing, isFollowing] = await Promise.all([
+      FollowerFollowing.countDocuments({ followingId: targetId }),
+      FollowerFollowing.countDocuments({ followerId: targetId }),
+      viewerId ? FollowerFollowing.exists({ followerId: viewerId, followingId: targetId }) : false
+    ]);
+
+    target.totalFollower = totalFollower;
+    target.totalFollowing = totalFollowing;
+    target.isFollowing = !!isFollowing;
+    target.profileType = profileType;
+
+    // 4. Agar Host hai toh Gifts bhi show karo
+    let receivedGifts = [];
+    if (profileType === "Host") {
+      receivedGifts = await History.aggregate([
+        { $match: { hostId: targetId, giftId: { $ne: null } } },
+        {
+          $group: {
+            _id: "$giftId",
+            totalReceived: { $sum: "$giftCount" },
+            lastReceivedAt: { $max: "$createdAt" },
+            giftCoin: { $first: "$giftCoin" },
+            giftImage: { $first: "$giftImage" },
+            giftType: { $first: "$giftType" },
+          },
+        },
+        { $limit: 10 } // Latest few gifts
+      ]);
+    }
+
+    return res.status(200).json({
+      status: true,
+      message: `${profileType} profile retrieved successfully.`,
+      profile: target,
+      receivedGifts: profileType === "Host" ? receivedGifts : []
+    });
+
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ status: false, message: error.message || "Internal Server Error" });
+  }
+};

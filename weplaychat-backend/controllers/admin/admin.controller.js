@@ -854,7 +854,14 @@ exports.deleteAdmin = async (req, res) => {
 
     const firebaseInstance = await getFirebaseAdmin();
 
-    const firebaseUser = await firebaseInstance.auth().deleteUser(admin.uid);
+    if (admin.uid) {
+      try {
+        await firebaseInstance.auth().deleteUser(admin.uid);
+      } catch (fbErr) {
+        if (fbErr?.code !== "auth/user-not-found") throw fbErr;
+        console.warn("deleteAdmin: Firebase user already missing, removing DB row:", admin.uid);
+      }
+    }
 
     await Admin.deleteOne({ _id: req.params?.id });
 

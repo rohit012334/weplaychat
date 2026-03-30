@@ -17,7 +17,7 @@ const ChatController = require("../../controllers/client/chat.controller");
 //validate user's access token
 const validateUserToken = require("../../middleware/validateUserToken.middleware");
 
-//send message ( image or audio ) ( user )
+//send message ( image or audio ) ( unified for all roles )
 route.post(
   "/pushChatMessage",
   validateUserToken,
@@ -30,22 +30,21 @@ route.post(
   ChatController.pushChatMessage
 );
 
-//get old chat ( user )
+//get old chat ( unified for all roles )
 route.get("/fetchChatHistory", validateUserToken, checkAccessWithSecretKey(), ChatController.fetchChatHistory);
 
-//send message ( image or audio ) ( host )
+// Aliases for legacy support ( both point to unified functions )
 route.post(
   "/submitChatMessage",
+  validateUserToken,
   checkAccessWithSecretKey(),
   upload.fields([
     { name: "image", maxCount: 1 },
     { name: "audio", maxCount: 1 },
   ]),
   normalizeStoragePath,
-  ChatController.submitChatMessage
+  ChatController.pushChatMessage
 );
-
-//get old chat ( host )
-route.get("/retrieveChatHistory", checkAccessWithSecretKey(), ChatController.retrieveChatHistory);
+route.get("/retrieveChatHistory", validateUserToken, checkAccessWithSecretKey(), ChatController.fetchChatHistory);
 
 module.exports = route;
