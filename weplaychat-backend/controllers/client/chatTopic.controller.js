@@ -24,40 +24,18 @@ exports.fetchChatList = async (req, res) => {
       {
         $addFields: {
           otherPartyId: { $cond: [{ $eq: ["$senderId", userObjectId] }, "$receiverId", "$senderId"] },
-          otherPartyModel: { $cond: [{ $eq: ["$senderId", userObjectId] }, "$receiverModel", "$senderModel"] },
         },
       },
-      // Lookup if Other Party is a Host
-      {
-        $lookup: {
-          from: "hosts",
-          localField: "otherPartyId",
-          foreignField: "_id",
-          as: "hostData",
-        },
-      },
-      // Lookup if Other Party is a User
       {
         $lookup: {
           from: "users",
           localField: "otherPartyId",
           foreignField: "_id",
-          as: "userData",
+          as: "otherParty",
         },
       },
-      {
-        $addFields: {
-          otherParty: {
-            $cond: [
-              { $eq: ["$otherPartyModel", "Host"] },
-              { $arrayElemAt: ["$hostData", 0] },
-              { $arrayElemAt: ["$userData", 0] },
-            ],
-          },
-        },
-      },
-      { $match: { otherParty: { $exists: true, $ne: null } } },
-      // Lookup Last Chat
+      { $unwind: "$otherParty" },
+      { $match: { "otherParty.isBlock": false } },
       {
         $lookup: {
           from: "chats",
@@ -69,23 +47,23 @@ exports.fetchChatList = async (req, res) => {
       { $unwind: "$lastChat" },
       {
         $lookup: {
-           from: "chats",
-           let: { topicId: "$_id" },
-           pipeline: [
-              { $match: { $expr: { $and: [{ $eq: ["$chatTopicId", "$$topicId"] }, { $eq: ["$isRead", false] }, { $ne: ["$senderId", userObjectId] }] } } },
-              { $count: "count" }
-           ],
-           as: "unread"
+          from: "chats",
+          let: { topicId: "$_id" },
+          pipeline: [
+            { $match: { $expr: { $and: [{ $eq: ["$chatTopicId", "$$topicId"] }, { $eq: ["$isRead", false] }, { $ne: ["$senderId", userObjectId] }] } } },
+            { $count: "count" }
+          ],
+          as: "unread"
         }
       },
       {
         $project: {
           _id: 1,
           otherPartyId: 1,
-          otherPartyModel: 1,
           name: "$otherParty.name",
           image: "$otherParty.image",
           isOnline: "$otherParty.isOnline",
+          isHost: "$otherParty.isHost",
           message: "$lastChat.message",
           messageType: "$lastChat.messageType",
           lastChatMessageTime: "$lastChat.createdAt",
