@@ -1206,23 +1206,28 @@ exports.retrieveProfileDetails = async (req, res) => {
     const viewerId = req.user ? new mongoose.Types.ObjectId(req.user.userId) : null;
     const targetId = new mongoose.Types.ObjectId(profileId);
 
-    // 1. Pehle check karo ki profileId Host ki hai ya User ki
-    let target = await Host.findOne({ _id: targetId, isBlock: false })
-      .select("name email gender dob bio uniqueId countryFlagImage country impression language image photoGallery profileVideo randomCallRate randomCallFemaleRate randomCallMaleRate privateCallRate audioCallRate chatRate coin isFake video liveVideo userId")
+    // 1. Sabse pehle User collection mein search karo
+    let user = await User.findOne({ _id: targetId, isBlock: false })
+      .select("name gender bio identity language image coin isVip vipLevel country countryFlagImage mobileNumber uniqueId selfIntro isHost hostId")
       .lean();
-    
-    let profileType = "Host";
 
-    if (!target) {
-      // 2. Agar host nahi mila toh user check karo
-      target = await User.findOne({ _id: targetId, isBlock: false })
-        .select("name gender bio identity language image coin isVip vipLevel country countryFlagImage mobileNumber uniqueId selfIntro")
+    if (!user) {
+      return res.status(200).json({ status: false, message: "Profile not found or blocked." });
+    }
+
+    let target = user;
+    let profileType = "User";
+
+    // 2. Agar isHost true hai, toh Host ka sara data fetch karo
+    if (user.isHost && user.hostId) {
+      const hostData = await Host.findOne({ _id: user.hostId, isBlock: false })
+        .select("name email gender dob bio uniqueId countryFlagImage country impression language image photoGallery profileVideo randomCallRate randomCallFemaleRate randomCallMaleRate privateCallRate audioCallRate chatRate coin isFake video liveVideo userId")
         .lean();
-      
-      if (!target) {
-        return res.status(200).json({ status: false, message: "Profile not found or blocked." });
+
+      if (hostData) {
+        target = hostData;
+        profileType = "Host";
       }
-      profileType = "User";
     }
 
     // 3. Follow Counts & Status
