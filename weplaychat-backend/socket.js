@@ -62,64 +62,61 @@ io.on("connection", async (socket) => {
     console.warn("Invalid globalRoom format:", globalRoom);
   }
 
-  //chat
+  // --- Unified Chat Message Handling ---
   socket.on("chatMessageSent", async (data) => {
-    const parseData = JSON.parse(data);
-    console.log("🔹 Data in chatMessageSent:", parseData);
+    try {
+      const parseData = JSON.parse(data);
+      console.log("🔹 [Socket] chatMessageSent received:", parseData);
 
-    let senderPromise, receiverPromise;
+      const senderId = new mongoose.Types.ObjectId(parseData?.senderId);
+      const receiverUserId = new mongoose.Types.ObjectId(parseData?.receiverId);
+      const chatTopicId = new mongoose.Types.ObjectId(parseData?.chatTopicId);
 
-    if (parseData?.senderRole === "user") {
-      senderPromise = User.findById(parseData?.senderId).lean().select("_id name image coin isVip vipLevel vipPlanEndDate");
-    } else if (parseData?.senderRole === "host") {
-      senderPromise = Host.findById(parseData?.senderId).lean().select("_id name image isFake coin");
-    }
+      const [uniqueId, sender, receiverUser, chatTopic] = await Promise.all([
+        generateHistoryUniqueId(),
+        User.findById(senderId).lean().select("_id name image coin isVip vipLevel vipPlanEndDate isHost"),
+        User.findById(receiverUserId).lean().select("_id name image fcmToken isHost isBlock"),
+        ChatTopic.findById(chatTopicId).lean().select("_id senderId receiverId chatId messageCount"),
+      ]);
 
-    if (parseData?.receiverRole === "host") {
-      receiverPromise = Host.findById(parseData?.receiverId).lean().select("_id name image fcmToken isBlock coin chatRate agencyId");
-    } else if (parseData?.receiverRole === "user") {
-      receiverPromise = User.findById(parseData?.receiverId).lean().select("_id name image fcmToken isBlock coin");
-    }
+      if (!sender || !receiverUser || !chatTopic) {
+        console.log("❌ Sender, Receiver or Topic not found via socket");
+        return;
+      }
 
-    const chatTopicPromise = ChatTopic.findById(parseData?.chatTopicId).lean().select("_id senderId receiverId chatId messageCount");
+      // --- Coin Deduction Check (User to Host) ---
+      let hostReceiver = null;
+      let isWithinFreeLimit = true;
+      let chatRate = 0;
 
-    const [uniqueId, sender, receiver, chatTopic] = await Promise.all([generateHistoryUniqueId(), senderPromise, receiverPromise, chatTopicPromise]);
+      if (receiverUser.isHost && !sender.isHost) {
+          hostReceiver = await Host.findOne({ userId: receiverUserId, isBlock: false }).lean().select("_id chatRate agencyId");
+          if (hostReceiver) {
+              chatRate = hostReceiver.chatRate || (global.settingJSON ? global.settingJSON.chatRate : 10);
+              const maxFreeChatMessages = global.settingJSON ? global.settingJSON.maxFreeChatMessages : 10;
+              
+              let hasUnlimitedChat = false;
+              if (sender.isVip && sender.vipPlanEndDate && new Date(sender.vipPlanEndDate) > new Date()) {
+                const privilege = await VipPlanPrivilege.findOne({ level: sender.vipLevel }).lean();
+                if (privilege && privilege.unlimitedChat) {
+                  hasUnlimitedChat = true;
+                }
+              }
+              
+              isWithinFreeLimit = hasUnlimitedChat || chatTopic.messageCount < maxFreeChatMessages;
 
-    if (!chatTopic) {
-      console.log("❌ Chat topic not found");
-      return;
-    }
-
-    if (parseData?.messageType == 1) {
-      if (parseData.senderRole === "user" && parseData.receiverRole === "host") {
-        let maxFreeChatMessages = settingJSON.maxFreeChatMessages || 10;
-
-        //Check user's VIP level and fetch privileges dynamically
-        if (sender?.isVip) {
-          const vipLevel = sender.vipLevel || 1;
-          const vipPrivilege = await VipPlanPrivilege.findOne({ level: vipLevel }).lean();
-          
-          if (vipPrivilege?.unlimitedChat) {
-            maxFreeChatMessages = 999999; // Unlimited
-          } else if (vipPrivilege?.freeMessages) {
-            maxFreeChatMessages = vipPrivilege.freeMessages;
+              if (!isWithinFreeLimit && sender.coin < chatRate) {
+                console.log("❌ Insufficient coins via socket.");
+                io.in("globalRoom:" + senderId.toString()).emit("insufficientCoins", "Insufficient coins to send message.");
+                return;
+              }
           }
-        }
-
-        const isWithinFreeLimit = chatTopic.messageCount < maxFreeChatMessages;
-        const chatRate = receiver.chatRate || 10;
-
-        if (!isWithinFreeLimit && sender?.coin < chatRate) {
-          console.log("❌ Insufficient coins, message not sent.");
-          io.in("globalRoom:" + chatTopic?.senderId?.toString()).emit("insufficientCoins", "Insufficient coins to send message.");
-          return;
-        }
       }
 
       const chat = new Chat({
-        messageType: parseData?.messageType,
-        senderId: parseData?.senderId,
-        message: parseData?.message,
+        messageType: parseData?.messageType || 1, // Default to Text
+        senderId: senderId,
+        message: parseData?.message || "",
         image: parseData?.image || "",
         chatTopicId: chatTopic._id,
         date: new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }),
@@ -127,310 +124,204 @@ io.on("connection", async (socket) => {
 
       await Promise.all([
         chat.save(),
-        ChatTopic.updateOne(
-          { _id: chatTopic._id },
-          {
+        ChatTopic.updateOne({ _id: chatTopic._id }, {
             $set: { chatId: chat._id },
             $inc: { messageCount: 1 },
-          }
-        ),
+        }),
       ]);
 
       const eventData = {
-        data,
+        data: { ...parseData, messageId: chat._id.toString(), date: chat.date },
         messageId: chat._id.toString(),
       };
 
-      io.in("globalRoom:" + chatTopic?.senderId?.toString()).emit("chatMessageSent", eventData);
-      io.in("globalRoom:" + chatTopic?.receiverId?.toString()).emit("chatMessageSent", eventData);
+      // Emit to both parties
+      io.in("globalRoom:" + senderId.toString()).emit("chatMessageSent", eventData);
+      io.in("globalRoom:" + receiverUserId.toString()).emit("chatMessageSent", eventData);
 
-      if (parseData.senderRole === "user" && parseData.receiverRole === "host") {
-        const maxFreeChatMessages = settingJSON.maxFreeChatMessages || 10;
-        const adminCommissionRate = settingJSON.adminCommissionRate || 10;
-        const isWithinFreeLimit = chatTopic.messageCount < maxFreeChatMessages;
-        const chatRate = receiver.chatRate || 10;
+      // --- Post-send Coin Deduction Logic ---
+      if (!isWithinFreeLimit && hostReceiver) {
+          const adminCommissionRate = global.settingJSON ? global.settingJSON.adminCommissionRate : 10;
+          const adminShare = (chatRate * adminCommissionRate) / 100;
+          const hostEarnings = chatRate - adminShare;
 
-        let deductedCoins = 0;
-        let adminShare = 0;
-        let hostEarnings = 0;
-        let agencyShare = 0;
-
-        if (!isWithinFreeLimit && sender.coin >= chatRate) {
-          deductedCoins = chatRate;
-          adminShare = (chatRate * adminCommissionRate) / 100;
-          hostEarnings = chatRate - adminShare;
-
+          let agencyShare = 0;
           let agencyUpdate = null;
-          if (receiver.agencyId) {
-            const agency = await Agency.findById(receiver.agencyId).lean().select("_id commissionType commission");
-
-            if (agency) {
-              if (agency.commissionType === 1) {
-                // Percentage commission
-                agencyShare = (hostEarnings * agency.commission) / 100;
-              } else {
-                // Fixed salary, ignore earnings share
-                agencyShare = 0;
-              }
-
-              agencyUpdate = Agency.updateOne({ _id: agency._id }, [
-                {
-                  $set: {
-                    hostCoins: { $add: ["$hostCoins", hostEarnings] },
-                    totalEarnings: { $add: ["$totalEarnings", Math.floor(agencyShare)] },
-                    totalEarningsWithCommissionAndHostCoin: {
-                      $add: [{ $add: ["$hostCoins", hostEarnings] }, { $add: ["$totalEarnings", Math.floor(agencyShare)] }],
-                    },
-                    netAvailableEarnings: {
-                      $add: [{ $add: ["$hostCoins", hostEarnings] }, { $add: ["$totalEarnings", Math.floor(agencyShare)] }],
-                    },
-                  },
-                },
-              ]);
-            }
+          if (hostReceiver.agencyId) {
+             const agency = await Agency.findById(hostReceiver.agencyId).lean().select("_id commissionType commission");
+             if (agency) {
+                agencyShare = agency.commissionType === 1 ? (hostEarnings * agency.commission) / 100 : 0;
+                agencyUpdate = Agency.updateOne({ _id: agency._id }, {
+                   $inc: {
+                     hostCoins: hostEarnings,
+                     totalEarnings: Math.floor(agencyShare),
+                     totalEarningsWithCommissionAndHostCoin: hostEarnings + Math.floor(agencyShare),
+                     netAvailableEarnings: hostEarnings + Math.floor(agencyShare)
+                   }
+                });
+             }
           }
 
           await Promise.all([
-            User.updateOne(
-              { _id: sender._id, coin: { $gte: deductedCoins } },
-              {
-                $inc: {
-                  coin: -deductedCoins,
-                  spentCoins: deductedCoins,
-                },
-              }
-            ),
-            Host.updateOne({ _id: receiver._id }, { $inc: { coin: hostEarnings } }),
+            User.updateOne({ _id: senderId, coin: { $gte: chatRate } }, { $inc: { coin: -chatRate, spentCoins: chatRate } }),
+            Host.updateOne({ _id: hostReceiver._id }, { $inc: { coin: hostEarnings } }),
             History.create({
               uniqueId: uniqueId,
               type: 9,
-              userId: sender._id,
-              hostId: receiver._id,
-              agencyId: receiver?.agencyId,
+              userId: senderId,
+              hostId: hostReceiver._id,
+              agencyId: hostReceiver?.agencyId,
               userCoin: chatRate,
               hostCoin: hostEarnings,
               adminCoin: adminShare,
-              agencyCoin: Math.floor(agencyShare),
-              date: new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }),
+              date: chat.date
             }),
-            agencyUpdate,
+            agencyUpdate
           ]);
-
-          console.log(`💰 Coins Deducted: ${deductedCoins} | Admin: ${adminShare} | Host Earnings: ${hostEarnings}`);
-        }
+          console.log(`💰 [Socket] coins deducted for messaging`);
       }
 
-      if (receiver && receiver.fcmToken) {
-        const isBlocked = await Block.findOne({
-          $or: [
-            { userId: sender._id, hostId: receiver._id },
-            { userId: receiver._id, hostId: sender._id },
-          ],
-        });
+      // --- FCM Notification ---
+      if (receiverUser.fcmToken && !receiverUser.isBlock) {
+        const payload = {
+          token: receiverUser.fcmToken,
+          data: {
+            title: `${sender.name} sent you a message 📩`,
+            body: `🗨️ ${chat.message}`,
+            type: "CHAT",
+            senderId: String(senderId),
+            receiverId: String(receiverUserId),
+            userName: String(sender.name),
+            userImage: String(sender.image || ""),
+            senderRole: sender.isHost ? "host" : "user",
+          },
+        };
 
-        if (!isBlocked) {
-          const payload = {
-            token: receiver.fcmToken,
-            data: {
-              title: `${sender?.name} sent you a message 💌`,
-              body: `🗨️ ${chat?.message}`,
-              type: "CHAT",
-              senderId: String(chatTopic?.senderId ?? ""),
-              receiverId: String(chatTopic?.receiverId ?? ""),
-              userName: String(sender?.name ?? ""),
-              hostName: String(receiver?.name ?? ""),
-              userImage: String(sender?.image ?? ""),
-              hostImage: String(receiver?.image ?? ""),
-              senderRole: String(parseData?.senderRole ?? ""),
-              isFakeSender: String(parseData?.senderRole === "host" ? !!sender?.isFake : false),
-            },
-          };
-
-          try {
-            const adminInstance = await admin;
-            const response = await adminInstance.messaging().send(payload);
-            console.log("✅ Successfully sent FCM notification: ", response);
-          } catch (error) {
-            console.log("❌ Error sending FCM message:", error);
-          }
-        } else {
-          console.log("🚫 Notification not sent. Block exists between sender and receiver.");
-        }
+        const adminInstance = await admin;
+        adminInstance.messaging().send(payload).catch(err => console.error("FCM Error via Socket:", err));
       }
-    } else {
-      console.log("ℹ️ Other message type received");
-
-      const eventData = {
-        data,
-        messageId: parseData?.messageId?.toString() || "",
-      };
-
-      io.in("globalRoom:" + chatTopic?.senderId?.toString()).emit("chatMessageSent", eventData);
-      io.in("globalRoom:" + chatTopic?.receiverId?.toString()).emit("chatMessageSent", eventData);
+    } catch (error) {
+      console.error("Error in socket chatMessageSent:", error);
     }
   });
 
+  // --- Unified Gift Handling ---
   socket.on("chatGiftSent", async (data) => {
-    const parseData = JSON.parse(data);
-    console.log("🎁 Data in chatGiftSent:", parseData);
+    try {
+      const parseData = JSON.parse(data);
+      console.log("🎁 [Socket] chatGiftSent received:", parseData);
 
-    let senderPromise, receiverPromise;
+      const senderId = new mongoose.Types.ObjectId(parseData?.senderId);
+      const receiverUserId = new mongoose.Types.ObjectId(parseData?.receiverId);
+      const chatTopicId = new mongoose.Types.ObjectId(parseData?.chatTopicId);
+      const giftId = new mongoose.Types.ObjectId(parseData?.giftId);
 
-    if (parseData?.senderRole === "user") {
-      senderPromise = User.findById(parseData?.senderId).lean().select("_id name coin");
-    } else if (parseData?.senderRole === "host") {
-      senderPromise = Host.findById(parseData?.senderId).lean().select("_id name coin");
-    }
+      const [uniqueId, sender, receiverUser, chatTopic, gift] = await Promise.all([
+        generateHistoryUniqueId(),
+        User.findById(senderId).lean().select("_id name coin"),
+        User.findById(receiverUserId).lean().select("_id name fcmToken isHost isBlock"),
+        ChatTopic.findById(chatTopicId).lean().select("_id senderId receiverId chatId"),
+        Gift.findById(giftId).lean().select("_id coin image svgaImage type"),
+      ]);
 
-    if (parseData?.receiverRole === "host") {
-      receiverPromise = Host.findById(parseData?.receiverId).lean().select("_id fcmToken isBlock coin agencyId");
-    } else if (parseData?.receiverRole === "user") {
-      receiverPromise = User.findById(parseData?.receiverId).lean().select("_id fcmToken isBlock coin");
-    }
-
-    const chatTopicPromise = ChatTopic.findById(parseData?.chatTopicId).lean().select("_id senderId receiverId chatId");
-    const giftPromise = Gift.findById(parseData?.giftId).lean().select("_id coin image svgaImage type");
-
-    const [uniqueId, sender, receiver, chatTopic, gift] = await Promise.all([generateHistoryUniqueId(), senderPromise, receiverPromise, chatTopicPromise, giftPromise]);
-
-    if (!chatTopic) {
-      console.log("❌ Chat topic not found");
-      return;
-    }
-
-    if (!gift) {
-      console.log("❌ Gift not found");
-      return;
-    }
-
-    const giftPrice = gift?.coin || 0;
-    const giftCount = parseData?.giftCount || 1;
-    const totalGiftCost = giftPrice * giftCount;
-    const adminCommissionRate = settingJSON.adminCommissionRate;
-
-    if (sender?.coin < totalGiftCost) {
-      console.log("❌ Insufficient coins, gift not sent.");
-      io.in("globalRoom:" + chatTopic?.senderId?.toString()).emit("insufficientCoins", "Insufficient coins to send gift.");
-      return;
-    }
-
-    const chat = new Chat({
-      messageType: 4,
-      message: `🎁 ${sender.name} sent a gift`,
-      image: "",
-      giftImage: gift.image || "",
-      giftsvgaImage: gift.svgaImage || "",
-      senderId: sender._id,
-      chatTopicId: chatTopic._id,
-      giftCount: giftCount,
-      giftType: gift.type,
-      date: new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }),
-    });
-
-    await Promise.all([
-      chat.save(),
-      ChatTopic.updateOne(
-        { _id: chatTopic._id },
-        {
-          $set: { chatId: chat._id },
-        }
-      ),
-    ]);
-
-    const eventData = {
-      data,
-      messageId: chat._id.toString(),
-    };
-
-    io.in("globalRoom:" + chatTopic?.senderId?.toString()).emit("chatGiftSent", eventData);
-    io.in("globalRoom:" + chatTopic?.receiverId?.toString()).emit("chatGiftSent", eventData);
-
-    let adminShare = (totalGiftCost * adminCommissionRate) / 100;
-    let hostEarnings = totalGiftCost - adminShare;
-    let agencyShare = 0;
-
-    let agencyUpdate = null;
-    if (receiver.agencyId) {
-      const agency = await Agency.findById(receiver.agencyId).lean().select("_id commissionType commission");
-
-      if (agency) {
-        if (agency.commissionType === 1) {
-          // Percentage commission
-          agencyShare = (hostEarnings * agency.commission) / 100;
-        } else {
-          // Fixed salary, ignore earnings share
-          agencyShare = 0;
-        }
-
-        agencyUpdate = Agency.updateOne({ _id: agency._id }, [
-          {
-            $set: {
-              hostCoins: { $add: ["$hostCoins", hostEarnings] },
-              totalEarnings: { $add: ["$totalEarnings", Math.floor(agencyShare)] },
-              totalEarningsWithCommissionAndHostCoin: {
-                $add: [{ $add: ["$hostCoins", hostEarnings] }, { $add: ["$totalEarnings", Math.floor(agencyShare)] }],
-              },
-              netAvailableEarnings: {
-                $add: [{ $add: ["$hostCoins", hostEarnings] }, { $add: ["$totalEarnings", Math.floor(agencyShare)] }],
-              },
-            },
-          },
-        ]);
+      if (!sender || !receiverUser || !chatTopic || !gift) {
+        console.log("❌ Missing gift or chat setup for gift sending");
+        return;
       }
-    }
 
-    await Promise.all([
-      User.updateOne(
-        { _id: sender._id, coin: { $gte: totalGiftCost } },
-        {
-          $inc: {
-            coin: -totalGiftCost,
-            spentCoins: totalGiftCost,
-          },
-        }
-      ),
-      Host.updateOne({ _id: receiver._id }, { $inc: { coin: hostEarnings, totalGifts: 1 } }),
-      History.create({
-        uniqueId: uniqueId,
-        type: 10,
-        userId: sender._id,
-        hostId: receiver._id,
-        agencyId: receiver?.agencyId,
-        giftId: gift._id,
-        giftCoin: gift.coin || 0,
+      const giftPrice = gift?.coin || 0;
+      const giftCount = parseData?.giftCount || 1;
+      const totalGiftCost = giftPrice * giftCount;
+
+      if (sender.coin < totalGiftCost) {
+        console.log("❌ Insufficient gift coins via socket.");
+        io.in("globalRoom:" + senderId.toString()).emit("insufficientCoins", "Insufficient coins to send gift.");
+        return;
+      }
+
+      const chat = new Chat({
+        messageType: 4, // GIFT
+        message: `🎁 ${sender.name} sent a gift`,
         giftImage: gift.image || "",
         giftsvgaImage: gift.svgaImage || "",
-        giftType: gift.type || 1,
+        senderId: senderId,
+        chatTopicId: chatTopic._id,
         giftCount: giftCount,
-        userCoin: totalGiftCost,
-        hostCoin: hostEarnings,
-        adminCoin: adminShare,
-        agencyCoin: Math.floor(agencyShare),
+        giftType: gift.type,
         date: new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }),
-      }),
-      agencyUpdate,
-    ]);
+      });
 
-    console.log(`💰 Gift Sent | Cost: ${totalGiftCost} | Admin Share: ${adminShare} | Host Earnings: ${hostEarnings}`);
+      await Promise.all([
+        chat.save(),
+        ChatTopic.updateOne({ _id: chatTopic._id }, { $set: { chatId: chat._id } }),
+      ]);
 
-    if (receiver && !receiver.isBlock && receiver.fcmToken) {
-      const payload = {
-        token: receiver.fcmToken,
-        data: {
-          title: `${sender.name} sent you a gift 🎁`,
-          body: `💝 You received ${giftCount} gifts worth ${totalGiftCost} coins!`,
-          type: "GIFT",
-          giftCount: giftCount.toString(),
-        },
+      const eventData = {
+        data: { ...parseData, messageId: chat._id.toString(), date: chat.date },
+        messageId: chat._id.toString(),
       };
 
-      try {
-        const adminInstance = await admin;
-        const response = await adminInstance.messaging().send(payload);
-        console.log("✅ Successfully sent FCM notification for gift:", response);
-      } catch (error) {
-        console.log("❌ Error sending FCM message:", error);
+      io.in("globalRoom:" + senderId.toString()).emit("chatGiftSent", eventData);
+      io.in("globalRoom:" + receiverUserId.toString()).emit("chatGiftSent", eventData);
+
+      // --- Reward Logic ---
+      const hostReceiver = receiverUser.isHost ? await Host.findOne({ userId: receiverUserId }).lean() : null;
+      const adminCommissionRate = global.settingJSON ? global.settingJSON.adminCommissionRate : 10;
+      const adminShare = (totalGiftCost * adminCommissionRate) / 100;
+      const hostEarnings = totalGiftCost - adminShare;
+
+      let agencyShare = 0;
+      let agencyUpdate = null;
+      if (hostReceiver && hostReceiver.agencyId) {
+         const agency = await Agency.findById(hostReceiver.agencyId).lean().select("_id commissionType commission");
+         if (agency) {
+            agencyShare = agency.commissionType === 1 ? (hostEarnings * agency.commission) / 100 : 0;
+            agencyUpdate = Agency.updateOne({ _id: agency._id }, {
+               $inc: {
+                 hostCoins: hostEarnings,
+                 totalEarnings: Math.floor(agencyShare),
+                 totalEarningsWithCommissionAndHostCoin: hostEarnings + Math.floor(agencyShare),
+                 netAvailableEarnings: hostEarnings + Math.floor(agencyShare)
+               }
+            });
+         }
       }
+
+      await Promise.all([
+        User.updateOne({ _id: senderId, coin: { $gte: totalGiftCost } }, { $inc: { coin: -totalGiftCost, spentCoins: totalGiftCost } }),
+        hostReceiver ? Host.updateOne({ _id: hostReceiver._id }, { $inc: { coin: hostEarnings, totalGifts: 1 } }) : 
+                     User.updateOne({ _id: receiverUserId }, { $inc: { coin: hostEarnings } }),
+        History.create({
+          uniqueId: uniqueId,
+          type: 10, // GIFT type
+          userId: senderId,
+          hostId: hostReceiver ? hostReceiver._id : null,
+          receiverId: !hostReceiver ? receiverUserId : null,
+          agencyId: hostReceiver?.agencyId,
+          giftId: gift._id,
+          giftCoin: gift.coin || 0,
+          userCoin: totalGiftCost,
+          hostCoin: hostEarnings,
+          adminCoin: adminShare,
+          date: chat.date
+        }),
+        agencyUpdate
+      ]);
+
+      if (receiverUser.fcmToken && !receiverUser.isBlock) {
+        const payload = {
+          token: receiverUser.fcmToken,
+          data: {
+            title: `${sender.name} sent you a gift 🎁`,
+            body: `💝 Gift worth ${totalGiftCost} coins!`,
+            type: "GIFT",
+          },
+        };
+        const adminInstance = await admin;
+        adminInstance.messaging().send(payload).catch(err => console.error("Gift FCM error:", err));
+      }
+    } catch (error) {
+      console.error("Gift socket error:", error);
     }
   });
 
