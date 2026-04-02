@@ -14,7 +14,7 @@ async function initializeSettings() {
       await setting.save();
       console.log("✅ Default Settings document created in DB.");
     }
-    
+
     global.settingJSON = setting;
     console.log("✅ Settings Initialized from DB");
   } catch (error) {

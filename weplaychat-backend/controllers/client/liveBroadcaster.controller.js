@@ -61,8 +61,14 @@ exports.HostStreaming = async (req, res) => {
     const expirationTimeInSeconds = 24 * 3600;
     const privilegeExpiredTs = Math.floor(Date.now() / 1000) + expirationTimeInSeconds;
 
+    console.log("🔹 [HostStreaming] Generating Agora Token:");
+    console.log("   - AppId:", global.settingJSON?.agoraAppId);
+    console.log("   - Certificate:", global.settingJSON?.agoraAppCertificate);
+    console.log("   - Channel:", channel);
+    console.log("   - UID:", uid);
+
     const [token] = await Promise.all([
-      RtcTokenBuilder.buildTokenWithUid(settingJSON.agoraAppId, settingJSON.agoraAppCertificate, channel, uid, role, privilegeExpiredTs),
+      RtcTokenBuilder.buildTokenWithUid(global.settingJSON.agoraAppId, global.settingJSON.agoraAppCertificate, channel, uid, role, privilegeExpiredTs),
       LiveBroadcaster.deleteOne({ hostId: hostObjectId }),
     ]);
 

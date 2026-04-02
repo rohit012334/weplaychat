@@ -30,15 +30,15 @@ const validateAdminFirebaseToken = async (req, res, next) => {
       decodedToken = await firebaseAdmin.auth().verifyIdToken(token);
     } catch (error) {
       console.warn("❌ [AUTH] Firebase token verification failed:", error.message);
-      
+
       // DEVELOPMENT BYPASS: If we are on localhost and it's a DNS error, we can optionally bypass for testing
       // But for now, let's just log it clearly. 
       if (error.code === 'auth/network-request-failed' || error.message.includes('ENOTFOUND')) {
-         console.warn("⚠️ [AUTH] Network/DNS error detected. In production this would FAIL.");
-         // If you want to bypass for local dev, uncomment the next line:
-         // decodedToken = { uid: adminUid, email: 'dev@bypass.com' }; 
+        console.warn("⚠️ [AUTH] Network/DNS error detected. In production this would FAIL.");
+        // If you want to bypass for local dev, uncomment the next line:
+        // decodedToken = { uid: adminUid, email: 'dev@bypass.com' }; 
       }
-      
+
       if (!decodedToken) {
         return res.status(401).json({ status: false, message: `Invalid token: ${error.message}` });
       }
@@ -48,7 +48,7 @@ const validateAdminFirebaseToken = async (req, res, next) => {
       console.warn("⚠️ [AUTH] Invalid token. Decoded payload:", decodedToken);
       return res.status(401).json({ status: false, message: "Invalid token. Authorization failed." });
     }
-    
+
     // 2. Find admin in DB using UID from TOKEN or Header
     const finalUid = decodedToken.uid || adminUid;
     const mainAdmin = await Admin.findOne({ uid: finalUid }).select("_id email password role uid");

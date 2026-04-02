@@ -365,9 +365,15 @@ io.on("connection", async (socket) => {
     const currentTimestamp = Math.floor(Date.now() / 1000);
     const privilegeExpiredTs = currentTimestamp + expirationTimeInSeconds;
 
+    console.log("🔹 [Socket - callRinging] Generating Agora Token:");
+    console.log("   - AppId:", global.settingJSON?.agoraAppId);
+    console.log("   - Certificate:", global.settingJSON?.agoraAppCertificate);
+    console.log("   - Channel:", channel);
+    console.log("   - UID:", uid);
+
     const [callUniqueId, token, caller, receiver] = await Promise.all([
       generateHistoryUniqueId(),
-      RtcTokenBuilder.buildTokenWithUid(settingJSON?.agoraAppId, settingJSON?.agoraAppCertificate, channel, uid, role, privilegeExpiredTs),
+      RtcTokenBuilder.buildTokenWithUid(global.settingJSON?.agoraAppId, global.settingJSON?.agoraAppCertificate, channel, uid, role, privilegeExpiredTs),
       callerModel.findById(callerId).select("_id name image isBlock isBusy callId isOnline uniqueId freeCallCount freeCallHosts coin isVip vipLevel vipPlanEndDate").lean(),
       receiverModel.findById(receiverId).select("_id name image isBlock isBusy callId isOnline uniqueId fcmToken isLive privateCallRate audioCallRate").lean(),
     ]);
@@ -1983,9 +1989,15 @@ io.on("connection", async (socket) => {
     const currentTimestamp = Math.floor(Date.now() / 1000);
     const privilegeExpiredTs = currentTimestamp + expirationTimeInSeconds;
 
+    console.log("🔹 [Socket - randomCall] Generating Agora Token:");
+    console.log("   - AppId:", global.settingJSON?.agoraAppId);
+    console.log("   - Certificate:", global.settingJSON?.agoraAppCertificate);
+    console.log("   - Channel:", channel);
+    console.log("   - UID:", uid);
+
     const [callUniqueId, token, caller, receiver] = await Promise.all([
       generateHistoryUniqueId(),
-      RtcTokenBuilder.buildTokenWithUid(settingJSON?.agoraAppId, settingJSON?.agoraAppCertificate, channel, uid, role, privilegeExpiredTs),
+      RtcTokenBuilder.buildTokenWithUid(global.settingJSON?.agoraAppId, global.settingJSON?.agoraAppCertificate, channel, uid, role, privilegeExpiredTs),
       User.findById(callerId).select("_id name image isBlock isBusy callId isOnline uniqueId").lean(),
       Host.findById(receiverId).select("_id name image isBlock isBusy callId isOnline uniqueId fcmToken").lean(),
     ]);

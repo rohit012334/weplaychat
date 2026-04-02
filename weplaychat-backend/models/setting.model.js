@@ -37,8 +37,8 @@ const settingSchema = new mongoose.Schema(
     paypalClientId: { type: String, default: "PAYPAL CLIENT ID" },
     paypalSecretKey: { type: String, default: "PAYPAL SECRET KEY" },
 
-    agoraAppId: { type: String, default: "AGORA APP ID" },
-    agoraAppCertificate: { type: String, default: "AGORA APP CERTIFICATE" },
+    agoraAppId: { type: String, default: "" },
+    agoraAppCertificate: { type: String, default: "" },
 
     loginBonus: { type: Number, default: 0 },
     isDemoData: { type: Boolean, default: false },

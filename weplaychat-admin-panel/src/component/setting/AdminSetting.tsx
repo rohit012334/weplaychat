@@ -53,8 +53,8 @@ const AdminSetting = () => {
       ...
     }`);
   const [minWithdrawText, setmMinWithdrawText] = useState<any>();
-  const [agoraAppId, setAgoraAppId] = useState<any>("c2b63c57c5f54c199ad088be248");
-  const [agoraAppCertificate, setAgoraAppCertificate] = useState<any>("214fdgb63c57c5f54c199ad088be248");
+  const [agoraAppId, setAgoraAppId] = useState<any>("");
+  const [agoraAppCertificate, setAgoraAppCertificate] = useState<any>("");
   const [minCoinsToConvert, setMinCoinsToConvert] = useState<any>(500);
   const [chatInteractionRate, setChatInteractionRate] = useState("10");
   const [maxFreeChatMessages, setMaxFreeChatMessages] = useState("1");
