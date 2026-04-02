@@ -32,22 +32,39 @@ exports.HostStreaming = async (req, res) => {
       return res.status(200).json({ status: false, message: "Setting not found." });
     }
 
-    const hostObjectId = new mongoose.Types.ObjectId(hostId);
+    const idObjectId = new mongoose.Types.ObjectId(hostId);
+    let host = null;
+
+    // 1. Check in User table first
+    const user = await User.findById(idObjectId).select("isHost hostId").lean();
+
+    if (user) {
+      if (user.isHost && user.hostId) {
+        // User is a host, use their hostId
+        host = await Host.findById(user.hostId).select("userId name gender image countryFlagImage country isFake isBlock").lean();
+      } else {
+        return res.status(200).json({ status: false, message: "You are not a host." });
+      }
+    } else {
+      // 2. User not found, search in Host table directly
+      host = await Host.findById(idObjectId).select("userId name gender image countryFlagImage country isFake isBlock").lean();
+    }
+
+    if (!host) {
+      return res.status(200).json({ status: false, message: "Host context not found." });
+    }
+
+    const hostObjectId = host._id;
 
     const role = RtcRole.PUBLISHER;
     const uid = 0;
     const expirationTimeInSeconds = 24 * 3600;
     const privilegeExpiredTs = Math.floor(Date.now() / 1000) + expirationTimeInSeconds;
 
-    const [host, token] = await Promise.all([
-      Host.findById(hostObjectId).select("userId name gender image countryFlagImage country isFake isBlock").lean(),
+    const [token] = await Promise.all([
       RtcTokenBuilder.buildTokenWithUid(settingJSON.agoraAppId, settingJSON.agoraAppCertificate, channel, uid, role, privilegeExpiredTs),
       LiveBroadcaster.deleteOne({ hostId: hostObjectId }),
     ]);
-
-    if (!host) {
-      return res.status(200).json({ status: false, message: "Host not found." });
-    }
 
     if (host.isBlock) {
       return res.status(200).json({ status: false, message: "You are blocked by the admin." });
