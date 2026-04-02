@@ -13,6 +13,8 @@ const VipPlanBenefitDialog = () => {
   const dispatch = useAppDispatch();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const freeEntryFileInputRef = useRef<HTMLInputElement>(null);
+  const svgaFileInputRef = useRef<HTMLInputElement>(null);
+  const mp4FileInputRef = useRef<HTMLInputElement>(null);
 
   const [mongoId, setMongoId] = useState("");
   const [level, setLevel] = useState(1);
@@ -45,6 +47,12 @@ const VipPlanBenefitDialog = () => {
 
   const [freeEntryImage, setFreeEntryImage] = useState<File | null>(null);
   const [freeEntryPreview, setFreeEntryPreview] = useState("");
+  
+  const [entrance1Image, setEntrance1Image] = useState<File | null>(null);
+  const [entrance1Preview, setEntrance1Preview] = useState("");
+  
+  const [entrance2Image, setEntrance2Image] = useState<File | null>(null);
+  const [entrance2Preview, setEntrance2Preview] = useState("");
 
   useEffect(() => {
     if (dialogueData) {
@@ -78,6 +86,12 @@ const VipPlanBenefitDialog = () => {
       if (dialogueData.freeEntryImage) {
         setFreeEntryPreview(getStorageUrl(dialogueData.freeEntryImage));
       }
+      if (dialogueData.vipEntrance1) {
+        setEntrance1Preview(getStorageUrl(dialogueData.vipEntrance1));
+      }
+      if (dialogueData.vipEntrance2) {
+        setEntrance2Preview(getStorageUrl(dialogueData.vipEntrance2));
+      }
     }
   }, [dialogueData]);
 
@@ -97,6 +111,22 @@ const VipPlanBenefitDialog = () => {
     }
   };
 
+  const handleEntrance1ImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setEntrance1Image(file);
+      setEntrance1Preview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleEntrance2ImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setEntrance2Image(file);
+      setEntrance2Preview(URL.createObjectURL(file));
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -106,6 +136,8 @@ const VipPlanBenefitDialog = () => {
     if (mongoId) formData.append("privilegeId", mongoId);
     if (badgeImage) formData.append("vipFrameBadge", badgeImage);
     if (freeEntryImage) formData.append("freeEntryImage", freeEntryImage);
+    if (entrance1Image) formData.append("vipEntrance1", entrance1Image);
+    if (entrance2Image) formData.append("vipEntrance2", entrance2Image);
 
     // Append numerical
     Object.entries(numericalFields).forEach(([key, val]) => {
@@ -116,6 +148,11 @@ const VipPlanBenefitDialog = () => {
     Object.entries(booleanFields).forEach(([key, val]) => {
       formData.append(key, val.toString());
     });
+
+    console.warn("VIP FORM SUBMITTING...");
+    for (let pair of (formData as any).entries()) {
+      console.warn(pair[0] + ': ' + (pair[1] instanceof File ? `File(${pair[1].name})` : pair[1]));
+    }
 
     dispatch(updateVipPlanBenefits(formData));
     dispatch(closeDialog());
@@ -156,9 +193,10 @@ const VipPlanBenefitDialog = () => {
         .vpb-section-title { font-size: 14px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin: 24px 0 16px; display: flex; align-items: center; gap: 8px; }
         .vpb-section-title::after { content: ''; flex: 1; height: 1px; background: #e2e8f0; }
         
-        .vpb-main-grid { display: grid; grid-template-columns: repeat(2, 200px) 1fr; gap: 20px; }
-        .vpb-badge-upload { width: 200px; height: 180px; background: #fff; border: 2px dashed #e2e8f0; border-radius: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; overflow: hidden; position: relative; transition: 0.3s; }
-        .vpb-badge-upload:hover { border-color: #6366f1; background: #f5f3ff; }
+        .vpb-square-upload { width: 120px; height: 120px; background: #fff; border: 2px dashed #e2e8f0; border-radius: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; overflow: hidden; position: relative; transition: 0.3s; margin: 0 auto; }
+        .vpb-square-upload:hover { border-color: #6366f1; background: #f5f3ff; }
+        .vpb-rect-upload { width: 100%; height: 140px; background: #fff; border: 2px dashed #e2e8f0; border-radius: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; overflow: hidden; position: relative; transition: 0.3s; margin-top: 5px; }
+        .vpb-rect-upload:hover { border-color: #6366f1; background: #f5f3ff; }
         .vpb-badge-img { width: 100%; height: 100%; object-fit: contain; }
         .vpb-badge-svga { width: 100%; height: 100%; }
         
@@ -194,10 +232,10 @@ const VipPlanBenefitDialog = () => {
           </div>
 
           <form id="vipBenefitForm" onSubmit={handleSubmit} className="vpb-body">
-            <div className="vpb-main-grid">
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px", marginBottom: "30px" }}>
               <div className="vpb-input-group">
-                <label className="vpb-label">Level Badge (SVGA/Image)</label>
-                <div className="vpb-badge-upload" onClick={() => fileInputRef.current?.click()}>
+                <label className="vpb-label" style={{ textAlign: "center" }}>Level Badge (Square)</label>
+                <div className="vpb-square-upload" onClick={() => fileInputRef.current?.click()}>
                   {badgePreview ? (
                     badgePreview.toLowerCase().endsWith(".svga") || (badgeImage && badgeImage.name.toLowerCase().endsWith(".svga")) ? (
                       <SvgaPlayer url={badgePreview} className="vpb-badge-svga" />
@@ -217,8 +255,8 @@ const VipPlanBenefitDialog = () => {
               </div>
 
               <div className="vpb-input-group">
-                <label className="vpb-label">Free Entry (SVGA/MP4/Image)</label>
-                <div className="vpb-badge-upload" onClick={() => freeEntryFileInputRef.current?.click()}>
+                <label className="vpb-label" style={{ textAlign: "center" }}>App Icon (Square)</label>
+                <div className="vpb-square-upload" onClick={() => freeEntryFileInputRef.current?.click()}>
                   {freeEntryPreview ? (
                     freeEntryPreview.toLowerCase().endsWith(".svga") || (freeEntryImage && freeEntryImage.name.toLowerCase().endsWith(".svga")) ? (
                       <SvgaPlayer url={freeEntryPreview} className="vpb-badge-svga" />
@@ -234,6 +272,48 @@ const VipPlanBenefitDialog = () => {
                     </div>
                   )}
                   <input ref={freeEntryFileInputRef} type="file" hidden accept="image/*,.svga,.mp4,video/*" onChange={handleFreeEntryImageChange} />
+                </div>
+              </div>
+
+              <div className="vpb-input-group">
+                <label className="vpb-label">VIP Entrance Animation 1 (Rectangle)</label>
+                <div className="vpb-rect-upload" onClick={() => svgaFileInputRef.current?.click()}>
+                  {entrance1Preview ? (
+                    entrance1Preview.toLowerCase().endsWith(".svga") || (entrance1Image && entrance1Image.name.toLowerCase().endsWith(".svga")) ? (
+                      <SvgaPlayer url={entrance1Preview} className="vpb-badge-svga" />
+                    ) : entrance1Preview.toLowerCase().endsWith(".mp4") || (entrance1Image && entrance1Image.name.toLowerCase().endsWith(".mp4")) ? (
+                      <video src={entrance1Preview} className="vpb-badge-img" autoPlay loop muted />
+                    ) : (
+                      <img src={entrance1Preview} className="vpb-badge-img" alt="Entrance 1" />
+                    )
+                  ) : (
+                    <div style={{ textAlign: "center", color: "#94a3b8" }}>
+                      <svg width="32" height="32" fill="currentColor" viewBox="0 0 16 16"><path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z" /></svg>
+                      <div style={{ fontSize: 12, marginTop: 4 }}>Upload SVGA/MP4/Image</div>
+                    </div>
+                  )}
+                  <input ref={svgaFileInputRef} type="file" hidden accept=".svga,.mp4,video/*,image/*" onChange={handleEntrance1ImageChange} />
+                </div>
+              </div>
+
+              <div className="vpb-input-group">
+                <label className="vpb-label">VIP Entrance Animation 2 (Rectangle)</label>
+                <div className="vpb-rect-upload" onClick={() => mp4FileInputRef.current?.click()}>
+                  {entrance2Preview ? (
+                    entrance2Preview.toLowerCase().endsWith(".svga") || (entrance2Image && entrance2Image.name.toLowerCase().endsWith(".svga")) ? (
+                      <SvgaPlayer url={entrance2Preview} className="vpb-badge-svga" />
+                    ) : entrance2Preview.toLowerCase().endsWith(".mp4") || (entrance2Image && entrance2Image.name.toLowerCase().endsWith(".mp4")) ? (
+                      <video src={entrance2Preview} className="vpb-badge-img" autoPlay loop muted />
+                    ) : (
+                      <img src={entrance2Preview} className="vpb-badge-img" alt="Entrance 2" />
+                    )
+                  ) : (
+                    <div style={{ textAlign: "center", color: "#94a3b8" }}>
+                      <svg width="32" height="32" fill="currentColor" viewBox="0 0 16 16"><path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z" /></svg>
+                      <div style={{ fontSize: 12, marginTop: 4 }}>Upload SVGA/MP4/Image</div>
+                    </div>
+                  )}
+                  <input ref={mp4FileInputRef} type="file" hidden accept=".svga,.mp4,video/*,image/*" onChange={handleEntrance2ImageChange} />
                 </div>
               </div>
 

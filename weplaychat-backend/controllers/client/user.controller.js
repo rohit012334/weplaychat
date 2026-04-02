@@ -1022,12 +1022,38 @@ exports.retrieveUserProfile = async (req, res) => {
 
     const userId = new mongoose.Types.ObjectId(req.user.userId);
 
-    const [user, hostRequest, totalFollowers, totalFollowing] = await Promise.all([
+    const [user, hostRequest, totalFollowers, totalFollowing, friendsResult] = await Promise.all([
       User.findOne({ _id: userId }).lean(),
       Host.findOne({ userId }).select("status").lean(),
       FollowerFollowing.countDocuments({ followingId: userId }),   // kitne log mujhe follow karte hain
       FollowerFollowing.countDocuments({ followerId: userId }),    // main kitno ko follow karta hoon
+      FollowerFollowing.aggregate([
+        { $match: { followerId: userId } },
+        {
+          $lookup: {
+            from: "followerfollowings",
+            let: { uId: "$followerId", tId: "$followingId" },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $and: [
+                      { $eq: ["$followerId", "$$tId"] },
+                      { $eq: ["$followingId", "$$uId"] }
+                    ]
+                  }
+                }
+              }
+            ],
+            as: "mutual"
+          }
+        },
+        { $match: { "mutual.0": { $exists: true } } },
+        { $count: "count" }
+      ])
     ]);
+
+    const totalFriends = friendsResult.length > 0 ? friendsResult[0].count : 0;
 
     const hasHostRequest = !!hostRequest;
     user["id"] = user._id;
@@ -1063,6 +1089,7 @@ exports.retrieveUserProfile = async (req, res) => {
       balanceTotal,
       totalFollowers,   // kitne log mujhe follow karte hain
       totalFollowing,   // main kitno ko follow karta hoon
+      totalFriends,     // kitne dono side se follow kar rahe hain
     });
 
     if (
@@ -1231,15 +1258,36 @@ exports.retrieveProfileDetails = async (req, res) => {
     }
 
     // 3. Follow Counts & Status
-    const [totalFollower, totalFollowing, isFollowing] = await Promise.all([
+    const [totalFollower, totalFollowing, isFollowing, followsViewer, friendsResult] = await Promise.all([
       FollowerFollowing.countDocuments({ followingId: targetId }),
       FollowerFollowing.countDocuments({ followerId: targetId }),
-      viewerId ? FollowerFollowing.exists({ followerId: viewerId, followingId: targetId }) : false
+      viewerId ? FollowerFollowing.exists({ followerId: viewerId, followingId: targetId }) : false,
+      viewerId ? FollowerFollowing.exists({ followerId: targetId, followingId: viewerId }) : false,
+      FollowerFollowing.aggregate([
+        { $match: { followerId: targetId } },
+        {
+          $lookup: {
+            from: "followerfollowings",
+            let: { uId: "$followerId", tId: "$followingId" },
+            pipeline: [
+              { $match: { $expr: { $and: [{ $eq: ["$followerId", "$$tId"] }, { $eq: ["$followingId", "$$uId"] }] } } }
+            ],
+            as: "mutual"
+          }
+        },
+        { $match: { "mutual.0": { $exists: true } } },
+        { $count: "count" }
+      ])
     ]);
+
+    const totalFriends = friendsResult.length > 0 ? friendsResult[0].count : 0;
+    const isFriend = !!(isFollowing && followsViewer);
 
     target.totalFollower = totalFollower;
     target.totalFollowing = totalFollowing;
+    target.totalFriends = totalFriends;
     target.isFollowing = !!isFollowing;
+    target.isFriend = isFriend;
     target.profileType = profileType;
 
     // 4. Agar Host hai toh Gifts bhi show karo

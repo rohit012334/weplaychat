@@ -24,6 +24,7 @@ route.post("/handleHostFollowUnfollow", checkAccessWithSecretKey(), FollowerFoll
 // Public Lists (id can be UserID or HostID)
 route.get("/getFollowingList", checkAccessWithSecretKey(), FollowerFollowingController.getFollowingList);
 route.get("/getFollowerList", checkAccessWithSecretKey(), FollowerFollowingController.getFollowerList);
+route.get("/getFriendsList", checkAccessWithSecretKey(), FollowerFollowingController.getFriendsList);
 
 // Toggle State Check
 route.get("/getFollowStatus", checkAccessWithSecretKey(), FollowerFollowingController.getFollowStatus);

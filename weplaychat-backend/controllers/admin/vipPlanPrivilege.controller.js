@@ -22,14 +22,17 @@ exports.modifyVipPrivilege = async (req, res) => {
 
     // Handle multiple file uploads (from upload.any())
     if (req.files && Array.isArray(req.files)) {
+      console.log("VIP Upload Files:", req.files.map(f => ({ fieldname: f.fieldname, path: f.path })));
       const badgeFile = req.files.find(f => f.fieldname === "vipFrameBadge");
       const freeEntryFile = req.files.find(f => f.fieldname === "freeEntryImage");
+      const entrance1File = req.files.find(f => f.fieldname === "vipEntrance1");
+      const entrance2File = req.files.find(f => f.fieldname === "vipEntrance2");
 
       if (badgeFile) {
         if (privilege.vipFrameBadge) {
-          const oldBadgePath = privilege.vipFrameBadge.split("storage");
-          if (oldBadgePath.length > 1 && fs.existsSync("storage" + oldBadgePath[1])) {
-            fs.unlinkSync("storage" + oldBadgePath[1]);
+          const oldPath = privilege.vipFrameBadge.split("storage");
+          if (oldPath.length > 1 && fs.existsSync("storage" + oldPath[1])) {
+            fs.unlinkSync("storage" + oldPath[1]);
           }
         }
         privilege.vipFrameBadge = badgeFile.path;
@@ -37,12 +40,32 @@ exports.modifyVipPrivilege = async (req, res) => {
 
       if (freeEntryFile) {
         if (privilege.freeEntryImage) {
-          const oldFreeEntryPath = privilege.freeEntryImage.split("storage");
-          if (oldFreeEntryPath.length > 1 && fs.existsSync("storage" + oldFreeEntryPath[1])) {
-            fs.unlinkSync("storage" + oldFreeEntryPath[1]);
+          const oldPath = privilege.freeEntryImage.split("storage");
+          if (oldPath.length > 1 && fs.existsSync("storage" + oldPath[1])) {
+            fs.unlinkSync("storage" + oldPath[1]);
           }
         }
         privilege.freeEntryImage = freeEntryFile.path;
+      }
+
+      if (entrance1File) {
+        if (privilege.vipEntrance1) {
+          const oldPath = privilege.vipEntrance1.split("storage");
+          if (oldPath.length > 1 && fs.existsSync("storage" + oldPath[1])) {
+            fs.unlinkSync("storage" + oldPath[1]);
+          }
+        }
+        privilege.vipEntrance1 = entrance1File.path;
+      }
+
+      if (entrance2File) {
+        if (privilege.vipEntrance2) {
+          const oldPath = privilege.vipEntrance2.split("storage");
+          if (oldPath.length > 1 && fs.existsSync("storage" + oldPath[1])) {
+            fs.unlinkSync("storage" + oldPath[1]);
+          }
+        }
+        privilege.vipEntrance2 = entrance2File.path;
       }
     }
 

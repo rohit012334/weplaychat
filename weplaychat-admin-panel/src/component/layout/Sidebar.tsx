@@ -18,21 +18,21 @@ import WithdrawRequest from "@/assets/images/withdrawRequest";
 import User from "@/assets/images/user";
 import { useSelector } from "react-redux";
 import { RootStore } from "@/store/store";
+import { vipsSidebarMenu } from "./vipsSidebarMenu";
+import DashboardRoundedIcon from "@mui/icons-material/DashboardRounded";
+import GroupRoundedIcon from "@mui/icons-material/GroupRounded";
+import AdminPanelSettingsRoundedIcon from "@mui/icons-material/AdminPanelSettingsRounded";
+import StorefrontRoundedIcon from "@mui/icons-material/StorefrontRounded";
+import CardGiftcardRoundedIcon from "@mui/icons-material/CardGiftcardRounded";
+import WorkspacePremiumRoundedIcon from "@mui/icons-material/WorkspacePremiumRounded";
+import PublicRoundedIcon from "@mui/icons-material/PublicRounded";
+import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
+import AccountTreeRoundedIcon from "@mui/icons-material/AccountTreeRounded";
 
 // ── Logo image ──
 import LogoNew from "@/assets/images/unnamed__2_..-removebg-preview.png";
 
-const DashIcon = () => (
-  <svg width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
-    <path d="M0 0h16v16H0zm1 1v6.5h6.5V1zm7.5 0v6.5H15V1zM15 8.5H8.5V15H15zM7.5 15V8.5H1V15z" />
-  </svg>
-);
-const GearIcon = () => (
-  <svg width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
-    <path d="M8 4.754a3.246 3.246 0 1 0 0 6.492A3.246 3.246 0 0 0 8 4.754M5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0" />
-    <path d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.893 3.434-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.893-1.64-.902-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52z" />
-  </svg>
-);
+const DashIcon = () => <DashboardRoundedIcon fontSize="small" />;
 const PersonIcon = () => (
   <svg width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
     <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6m2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0m4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4m-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10s-3.516.68-4.168 1.332c-.678.678-.83 1.418-.832 1.664z" />
@@ -49,6 +49,17 @@ const WheelIcon = () => (
     <path d="M8 4.75a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5" />
   </svg>
 );
+const getTitleIcon = (title: string) => {
+  const t = title.toLowerCase();
+  if (t.includes("store")) return <StorefrontRoundedIcon fontSize="small" />;
+  if (t.includes("gift") || t.includes("badge") || t.includes("reward") || t.includes("event") || t.includes("frame") || t.includes("entry") || t.includes("tag")) return <CardGiftcardRoundedIcon fontSize="small" />;
+  if (t.includes("vip")) return <WorkspacePremiumRoundedIcon fontSize="small" />;
+  if (t.includes("user") || t.includes("employee") || t.includes("manager")) return <GroupRoundedIcon fontSize="small" />;
+  if (t.includes("permission") || t.includes("role") || t.includes("admin")) return <AdminPanelSettingsRoundedIcon fontSize="small" />;
+  if (t.includes("setting") || t.includes("config")) return <SettingsRoundedIcon fontSize="small" />;
+  if (t.includes("system") || t.includes("module")) return <AccountTreeRoundedIcon fontSize="small" />;
+  return <PublicRoundedIcon fontSize="small" />;
+};
 
 const Sidebar = () => {
   const router = useRouter();
@@ -78,12 +89,12 @@ const Sidebar = () => {
       "/dashboard", "/User/User", "/User/Manager", "/User/Admin", "/User/Reseller",
       "/Agency", "/Host", "/HostRequest", "/Impression",
       "/GiftCategory", "/GiftPage", "/DailyCheckInReward", "/SpinWheel", "/Banner",
-      "/Store", "/Background", "/EntryTag",
+      "/Store", "/Background", "/EntryTag", "/Frame", "/Entry", "/Tag", "/Event",
       "/Plan", "/VipPlanPrevilage",
       "/WithdrawRequest", "/adminProfile",
       "/User/UserInfoPage", "/User/CoinPlanHistoryPage", "/PurchaseCoinPlanHistory",
       "/Host/AgencyWiseHost", "/Host/HostInfoPage", "/Host/HostHistoryPage", "/HostProfile"
-    ].includes(p);
+    ].some(route => route.toLowerCase() === p.toLowerCase());
 
   useEffect(() => {
     if (role === "admin" && !isAdminRoute(nextRouter.pathname)) router.push("/Agency");
@@ -91,39 +102,136 @@ const Sidebar = () => {
 
   const genralMenu = [
     { name: "Dashboard", path: "/dashboard", navSVG: <DashIcon /> },
-    { name: "User", path: "/User/User", path4: "/User/UserInfoPage", path2: "/User/CoinPlanHistoryPage", path3: "/PurchaseCoinPlanHistory", navSVG: <User />, onClick: handleOnClick },
-    { name: "Manager", path: "/User/Manager", path4: "/User/UserInfoPage", path2: "/User/CoinPlanHistoryPage", path3: "/PurchaseCoinPlanHistory", navSVG: <User />, onClick: handleOnClick },
-    { name: "Admin", path: "/User/Admin", path4: "/User/UserInfoPage", path2: "/User/CoinPlanHistoryPage", path3: "/PurchaseCoinPlanHistory", navSVG: <User />, onClick: handleOnClick },
-    { name: "Reseller", path: "/User/Reseller", path4: "/User/UserInfoPage", path2: "/User/CoinPlanHistoryPage", path3: "/PurchaseCoinPlanHistory", navSVG: <User />, onClick: handleOnClick },
+    {
+      name: "Employee & Permission",
+      path: "/User/User",
+      path2: "/User/Manager",
+      path3: "/User/Admin",
+      path4: "/User/Reseller",
+      navSVG: <GroupRoundedIcon fontSize="small" />,
+      onClick: handleOnClick,
+      subMenu: [
+        { subName: "User", subPath: "/User/User", onClick: handleOnClick },
+        { subName: "Manager", subPath: "/User/Manager", onClick: handleOnClick },
+        { subName: "Admin", subPath: "/User/Admin", onClick: handleOnClick },
+        { subName: "Reseller", subPath: "/User/Reseller", onClick: handleOnClick },
+      ],
+    },
   ];
 
   const managerMenu = [
     { name: "Dashboard", path: "/dashboard", navSVG: <DashIcon /> },
-    { name: "Admin", path: "/User/Admin", path4: "/User/UserInfoPage", path2: "/User/CoinPlanHistoryPage", path3: "/PurchaseCoinPlanHistory", navSVG: <User />, onClick: handleOnClick },
+    {
+      name: "Employee & Permission",
+      path: "/User/Admin",
+      path2: "/User/Reseller",
+      navSVG: <GroupRoundedIcon fontSize="small" />,
+      onClick: handleOnClick,
+      subMenu: [
+        { subName: "Admin", subPath: "/User/Admin", onClick: handleOnClick },
+        { subName: "Reseller", subPath: "/User/Reseller", onClick: handleOnClick },
+      ],
+    },
   ];
 
+  const fastOrdersData = vipsSidebarMenu.find(
+    (item: any) => String(item?.title || "").toLowerCase() === "fast orders"
+  );
+  const fastOrdersMenu = fastOrdersData
+    ? [
+      {
+        name: "Fast orders",
+        path: fastOrdersData?.href || "#",
+        navSVG: getTitleIcon("fast orders"),
+        external: fastOrdersData?.href !== "#",
+        onClick: (fastOrdersData?.href === "#" && (!fastOrdersData?.children || fastOrdersData?.children?.length === 0)) ? () => toast.info("Coming soon") : undefined,
+        subMenu: (fastOrdersData?.children || []).map((child: any) => ({
+          subName: child?.title,
+          subPath: child?.href,
+          external: child?.href !== "#",
+          onClick: child?.href === "#" ? () => toast.info("Coming soon") : undefined,
+          navSVG: getTitleIcon(child?.title || ""),
+        })),
+      },
+    ]
+    : [];
+
   const hostAndAgency = [
-    { name: "Agency", path: "/Agency", path2: "/Host/AgencyWiseHost", navSVG: <Agency />, onClick: handleOnClick },
-    { name: "Host", path: "/Host", path2: "/Host/HostInfoPage", path3: "/Host/HostHistoryPage", navSVG: <Host />, onClick: handleOnClick },
-    { name: "Host Request", path: "/HostRequest", path2: "/HostProfile", navSVG: <HostRequest /> },
-    { name: "Host Tags", path: "/Impression", navSVG: <Impression />, onClick: handleOnClick },
+    {
+      name: "Host & Agency",
+      path: "/Agency",
+      path2: "/Host",
+      path3: "/HostRequest",
+      path4: "/Impression",
+      path5: "/Host/AgencyWiseHost",
+      path6: "/Host/HostInfoPage",
+      path7: "/Host/HostHistoryPage",
+      path8: "/HostProfile",
+      navSVG: <Agency />,
+      onClick: handleOnClick,
+      subMenu: [
+        { subName: "Agency", subPath: "/Agency", onClick: handleOnClick },
+        { subName: "Host", subPath: "/Host", onClick: handleOnClick },
+        { subName: "Host Request", subPath: "/HostRequest", onClick: handleOnClick },
+        { subName: "Host Tags", subPath: "/Impression", onClick: handleOnClick },
+      ],
+    },
   ];
 
   const giftAndRewards = [
-    { name: "Gift Category", path: "/GiftCategory", navSVG: <GiftCategory />, onClick: handleOnClick },
-    { name: "Gift", path: "/GiftPage", navSVG: <Gift />, onClick: handleOnClick },
-    { name: "Daily CheckIn", path: "/DailyCheckInReward", navSVG: <DailyCheckInReward />, onClick: handleOnClick },
-    { name: "Spin Wheel", path: "/SpinWheel", navSVG: <WheelIcon />, onClick: handleOnClick },
-    { name: "Banner", path: "/Banner", navSVG: <Gift />, onClick: handleOnClick },
+    {
+      name: "Gifts & Rewards",
+      path: "/GiftCategory",
+      path2: "/GiftPage",
+      path3: "/DailyCheckInReward",
+      path4: "/SpinWheel",
+      path5: "/Banner",
+      navSVG: <Gift />,
+      onClick: handleOnClick,
+      subMenu: [
+        { subName: "Gift Category", subPath: "/GiftCategory", onClick: handleOnClick },
+        { subName: "Gift", subPath: "/GiftPage", onClick: handleOnClick },
+        { subName: "Daily CheckIn", subPath: "/DailyCheckInReward", onClick: handleOnClick },
+        { subName: "Spin Wheel", subPath: "/SpinWheel", onClick: handleOnClick },
+        { subName: "Banner", subPath: "/Banner", onClick: handleOnClick },
+      ],
+    },
   ];
 
   const storeMenu = [
-    { name: "Store", path: "/Store", onClick: handleOnClick, navSVG: <StoreIcon /> },
+    {
+      name: "Store",
+      path: "/Background",
+      path2: "/EntryTag",
+      path3: "/Frame",
+      path4: "/Entry",
+      path5: "/Tag",
+      path6: "/Event",
+      navSVG: <StorefrontRoundedIcon fontSize="small" />,
+      onClick: handleOnClick,
+      subMenu: [
+        { subName: "Frame", subPath: "/Frame", onClick: handleOnClick },
+        { subName: "Entry", subPath: "/Entry", onClick: handleOnClick },
+        { subName: "Tag", subPath: "/Tag", onClick: handleOnClick },
+        { subName: "Event", subPath: "/Event", onClick: handleOnClick },
+        { subName: "Background", subPath: "/Background", onClick: handleOnClick },
+        { subName: "Entry Tag", subPath: "/EntryTag", onClick: handleOnClick },
+      ],
+    },
   ];
 
-  const packages = [
-    { name: "Plan", path: "/Plan", navSVG: <Plan />, onClick: handleOnClick },
-    { name: "Vip Plan Benefits", path: "/VipPlanPrevilage", navSVG: <Vipplan_benefits />, onClick: handleOnClick },
+  const vipMenu = [
+    {
+      name: "VIP",
+      path: "/Plan",
+      path2: "/VipPlanPrevilage",
+      navSVG: <WorkspacePremiumRoundedIcon fontSize="small" />,
+      onClick: handleOnClick,
+      subMenu: [
+        { subName: "Plan", subPath: "/Plan", onClick: handleOnClick },
+        { subName: "Vip Plan Benefits", subPath: "/VipPlanPrevilage", onClick: handleOnClick },
+      ],
+    },
   ];
 
   const finance = [
@@ -135,20 +243,67 @@ const Sidebar = () => {
     { name: "Profile", path: "/adminProfile", navSVG: <PersonIcon />, onClick: handleOnClick },
   ];
 
+  const blockedVipsTopLevel = new Set([
+    "dashboard",
+    "users",
+    "gifts rewards",
+    "store",
+    "vip",
+    "fast orders",
+    "employees and permissions",
+    "agency system",
+    "regions system",
+    "countries system",
+    "advertisements",
+    "chat",
+    "moment",
+    "reels",
+  ]);
+  const vipsImportedMenu = vipsSidebarMenu
+    .filter((item: any) => !blockedVipsTopLevel.has(String(item?.title || "").toLowerCase()))
+    .map((item: any) => ({
+      name: item?.title,
+      path: item?.href || "#",
+      navSVG: getTitleIcon(item?.title || ""),
+      external: item?.href && item?.href !== "#",
+      onClick: (item?.href === "#" && (!item?.children || item?.children?.length === 0)) ? () => toast.info("Coming soon") : undefined,
+      subMenu: item?.children?.map((child: any) => ({
+        subName: child?.title,
+        subPath: child?.href,
+        external: child?.href !== "#",
+        onClick: child?.href === "#" ? () => toast.info("Coming soon") : undefined,
+        navSVG: getTitleIcon(child?.title || ""),
+      })),
+    }));
+
   const renderMenuItems = (items: any[]) =>
     items.map((res: any, i: number) => (
-      <React.Fragment key={i}>
+      <React.Fragment key={`${res?.name}-${i}`}>
+        {/*
+          Ensure icons always show: if navSVG isn't provided in data,
+          derive it from the item name/title.
+        */}
         <Navigator
           name={res?.name} path={res?.path}
           path2={res?.path2} path3={res?.path3} path4={res?.path4}
-          navIcon={res?.navIcon} navSVG={res?.navSVG}
+          navIcon={res?.navIcon}
+          navSVG={res?.navSVG ?? getTitleIcon(res?.name || "")}
           onClick={res?.onClick}
+          external={res?.external}
         >
           {res?.subMenu && (
             <ul className="subMenu">
               <span className="subhead">{res?.name}</span>
-              {res?.subMenu?.map((sub: any) => (
-                <Navigator name={sub.subName} path={sub.subPath} onClick={sub.onClick} key={sub.subPath} />
+              {res?.subMenu?.map((sub: any, subIdx: number) => (
+                <Navigator
+                  name={sub?.subName}
+                  path={sub?.subPath}
+                  external={sub?.external}
+                  navIcon={sub?.navIcon}
+                  navSVG={sub?.navSVG ?? getTitleIcon(sub?.subName || "")}
+                  onClick={sub?.onClick}
+                  key={`${sub?.subName}-${subIdx}`}
+                />
               ))}
             </ul>
           )}
@@ -162,18 +317,18 @@ const Sidebar = () => {
         @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=Outfit:wght@400;500;600;700&display=swap');
 
         .wpc-sidebar {
-          --sb-bg:          #ffffff;
-          --sb-page:        #f4f5fb;
-          --sb-border:      #e8eaf2;
-          --sb-accent:      #6366f1;
-          --sb-purple:      #a855f7;
-          --sb-accent-soft: rgba(99,102,241,0.08);
-          --sb-text:        #64748b;
-          --sb-text-bright: #1e2235;
-          --sb-text-dim:    #a0a8c0;
-          --sb-danger:      #f43f5e;
-          --sb-dsof:        rgba(244,63,94,0.07);
-          --sb-dbdr:        rgba(244,63,94,0.18);
+          --sb-bg:          linear-gradient(180deg, #f8fbff 0%, #f3f7ff 52%, #ecebff 100%);
+          --sb-page:        #f8fafc;
+          --sb-border:      #d8e2f4;
+          --sb-accent:      #3b5bdb;
+          --sb-purple:      #7c3aed;
+          --sb-accent-soft: rgba(59,91,219,0.14);
+          --sb-text:        #1b2436;
+          --sb-text-bright: #0f172a;
+          --sb-text-dim:    #64748b;
+          --sb-danger:      #ef4444;
+          --sb-dsof:        rgba(239,68,68,0.07);
+          --sb-dbdr:        rgba(239,68,68,0.22);
 
           width: 100%;
           min-width: 0;
@@ -183,8 +338,15 @@ const Sidebar = () => {
           display: flex;
           flex-direction: column;
           font-family: 'Outfit', sans-serif;
-          box-shadow: 2px 0 20px rgba(99,102,241,0.07);
+          box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
           position: relative;
+          animation: dynamicSidebarBg 8s ease-in-out infinite;
+        }
+
+        @keyframes dynamicSidebarBg {
+          0% { background: linear-gradient(180deg, #ffffff 0%, #f8fafc 60%, #eef2ff 100%); }
+          50% { background: linear-gradient(180deg, #f8fafc 0%, #ffffff 40%, #e0e7ff 100%); }
+          100% { background: linear-gradient(180deg, #ffffff 0%, #f8fafc 60%, #eef2ff 100%); }
         }
 
         /* ══════════════════════════════
@@ -199,8 +361,8 @@ const Sidebar = () => {
           flex-shrink: 0;
           height: 80px;
           background: linear-gradient(135deg,
-            rgba(99,102,241,0.05) 0%,
-            rgba(168,85,247,0.03) 100%);
+            rgba(37,99,235,0.10) 0%,
+            rgba(124,58,237,0.08) 100%);
           position: relative;
           overflow: hidden;
         }
@@ -377,10 +539,11 @@ const Sidebar = () => {
         .wpc-sidebar .sb-scroll {
           flex: 1; overflow-y: auto; overflow-x: hidden; padding: 10px 12px 0;
         }
-        .wpc-sidebar .sb-scroll::-webkit-scrollbar { width: 3px; }
+        .wpc-sidebar .sb-scroll::-webkit-scrollbar { width: 8px; }
         .wpc-sidebar .sb-scroll::-webkit-scrollbar-track { background: transparent; }
         .wpc-sidebar .sb-scroll::-webkit-scrollbar-thumb {
-          background: rgba(99,102,241,0.18); border-radius: 10px;
+          background: linear-gradient(180deg, rgba(37,99,235,.45), rgba(124,58,237,.45));
+          border-radius: 999px;
         }
 
         /* ── Section labels ── */
@@ -399,12 +562,40 @@ const Sidebar = () => {
 
         .wpc-sidebar .mainMenu > li > a {
           display: flex; align-items: center; gap: 12px;
-          padding: 10px 13px; border-radius: 10px;
+          justify-content: space-between;
+          padding: 12px 14px; border-radius: 12px;
           border: 1px solid transparent; color: var(--sb-text);
           text-decoration: none; font-family: 'Outfit', sans-serif;
           font-size: 15.5px; font-weight: 600; margin-bottom: 2px;
-          transition: background .15s, color .15s, border-color .15s, box-shadow .15s;
+          transition: background .22s, color .22s, border-color .22s, box-shadow .22s, transform .22s;
           position: relative; cursor: pointer;
+          margin: 3px 0;
+          overflow: hidden;
+        }
+        .wpc-sidebar .mainMenu > li > a > div {
+          display: flex;
+          align-items: center;
+          min-width: 0;
+          gap: 12px;
+        }
+        .wpc-sidebar .mainMenu > li > a .subtext {
+          margin-left: 0 !important;
+          font-weight: 600;
+          letter-spacing: .1px;
+          color: inherit;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .wpc-sidebar .mainMenu > li > a::after {
+          content: '';
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(90deg, rgba(37,99,235,0.06), rgba(124,58,237,0.03));
+          opacity: 0;
+          transition: opacity .22s;
+          pointer-events: none;
         }
 
         .wpc-sidebar .mainMenu > li > a svg,
@@ -414,15 +605,29 @@ const Sidebar = () => {
         }
 
         .wpc-sidebar .mainMenu > li > a:hover {
-          background: var(--sb-accent-soft); color: var(--sb-accent);
+          background: var(--sb-accent-soft);
+          color: var(--sb-accent);
+          transform: translateX(4px);
+          box-shadow: 0 6px 16px rgba(37,99,235,0.14);
         }
+        .wpc-sidebar .mainMenu > li > a:hover::after { opacity: 1; }
         .wpc-sidebar .mainMenu > li > a:hover svg,
-        .wpc-sidebar .mainMenu > li > a:hover > div svg { opacity: .9; }
+        .wpc-sidebar .mainMenu > li > a:hover > div svg {
+          opacity: .95;
+          filter: drop-shadow(0 0 4px rgba(37,99,235,.55));
+          animation: iconGlow .9s ease-in-out infinite;
+        }
+
+        @keyframes iconGlow {
+          0%,100% { transform: scale(1); }
+          50% { transform: scale(1.1); }
+        }
 
         .wpc-sidebar .mainMenu > li > a.activeMenu {
-          background: linear-gradient(135deg, rgba(99,102,241,0.12) 0%, rgba(168,85,247,0.06) 100%);
-          color: var(--sb-accent); border-color: rgba(99,102,241,0.20);
-          box-shadow: 0 2px 12px rgba(99,102,241,0.09); font-weight: 700;
+          background: linear-gradient(135deg, rgba(37,99,235,0.18) 0%, rgba(124,58,237,0.08) 100%);
+          color: var(--sb-accent); border-color: rgba(37,99,235,0.24);
+          box-shadow: 0 8px 20px rgba(37,99,235,0.14); font-weight: 700;
+          transform: translateX(4px);
         }
         .wpc-sidebar .mainMenu > li > a.activeMenu svg,
         .wpc-sidebar .mainMenu > li > a.activeMenu > div svg { opacity: 1; }
@@ -432,6 +637,70 @@ const Sidebar = () => {
           transform: translateY(-50%); width: 3px; height: 55%;
           background: linear-gradient(180deg, var(--sb-accent), var(--sb-purple));
           border-radius: 0 3px 3px 0;
+        }
+
+        /* ── Dropdown / Submenu ── */
+        .wpc-sidebar .subMenu {
+          list-style: none;
+          margin: 4px 0 10px 12px;
+          padding: 8px;
+          border-radius: 12px;
+          border: 1px solid rgba(99,102,241,0.20);
+          background: linear-gradient(145deg, rgba(59,91,219,0.10) 0%, rgba(124,58,237,0.08) 100%);
+          box-shadow: inset 0 1px 0 rgba(255,255,255,.65), 0 8px 20px rgba(59,91,219,0.10);
+        }
+        .wpc-sidebar .subMenu .subhead {
+          display: block;
+          font-size: 10px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 1.05px;
+          color: #5b6ea6;
+          padding: 2px 8px 7px;
+        }
+        .wpc-sidebar .subMenu > li {
+          list-style: none;
+        }
+        .wpc-sidebar .subMenu > li > a {
+          display: flex;
+          align-items: center;
+          border-radius: 9px;
+          padding: 9px 10px;
+          color: #334155;
+          font-size: 14px;
+          font-weight: 500;
+          text-decoration: none;
+          margin: 2px 0;
+          transition: background .2s ease, color .2s ease, transform .2s ease;
+        }
+        .wpc-sidebar .subMenu > li > a .subtext {
+          font-size: 13.5px;
+          font-weight: 600;
+          margin-left: 0 !important;
+          color: inherit;
+        }
+        .wpc-sidebar .subMenu > li > a:hover {
+          background: rgba(59,91,219,0.16);
+          color: #1d4ed8;
+          transform: translateX(3px);
+        }
+        .wpc-sidebar .subMenu > li > a.activeMenu {
+          background: linear-gradient(135deg, rgba(59,91,219,0.24), rgba(124,58,237,0.14));
+          color: #1e40af;
+          box-shadow: inset 0 0 0 1px rgba(59,91,219,0.24);
+        }
+        .wpc-sidebar .mainMenu > li > a > i {
+          font-size: 18px;
+          color: #7282a7;
+          transition: transform .2s ease, color .2s ease;
+          flex-shrink: 0;
+        }
+        .wpc-sidebar .mainMenu > li > a:hover > i {
+          color: #3454d1;
+        }
+        .wpc-sidebar .mainMenu > li > a > i.rotate90 {
+          transform: rotate(90deg);
+          color: #3454d1;
         }
 
         /* ══════════════════════════════
@@ -547,28 +816,28 @@ const Sidebar = () => {
 
                 {role !== "admin" && role !== "manager" && renderMenuItems(genralMenu)}
                 {role === "manager" && renderMenuItems(managerMenu)}
+                {renderMenuItems(fastOrdersMenu)}
 
-                <li className="sb-label">Host &amp; Agency</li>
                 {renderMenuItems(hostAndAgency)}
 
                 {role !== "admin" && role !== "manager" && (
                   <>
-                    <li className="sb-label">Gifts &amp; Rewards</li>
                     {renderMenuItems(giftAndRewards)}
 
-                    <li className="sb-label">Store</li>
                     {renderMenuItems(storeMenu)}
 
-                    <li className="sb-label">Packages</li>
-                    {renderMenuItems(packages)}
-
-                    <li className="sb-label">Finance</li>
-                    {renderMenuItems(finance)}
-
-                    <li className="sb-label">Settings</li>
-                    {renderMenuItems(setting)}
+                    {renderMenuItems(vipMenu)}
                   </>
                 )}
+
+                <li className="sb-label">More Modules</li>
+                {renderMenuItems(vipsImportedMenu)}
+
+                <li className="sb-label">Finance</li>
+                {renderMenuItems(finance)}
+
+                <li className="sb-label">Settings</li>
+                {renderMenuItems(setting)}
 
                 <li style={{ height: "16px", listStyle: "none" }} />
               </ul>
@@ -603,6 +872,7 @@ export const SideMenuJS = () => {
     $(".subMenu").hide();
     const handleNav = (event: any) => {
       const t = event.currentTarget;
+      if ($(t).next(".subMenu").length) event.preventDefault();
       $(".subMenu").not($(t).next(".subMenu")).slideUp();
       $(".mainMenu i").not($(t).children("i")).removeClass("rotate90");
       $(t).next(".subMenu").slideToggle();

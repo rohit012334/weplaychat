@@ -10,6 +10,7 @@ import ToggleSwitch from "@/extra/TogggleSwitch";
 import CommonDialog from "@/utils/CommonDialog";
 import { getTags, deleteTag, updateTagStatus } from "@/store/tagSlice";
 import TagDialog from "@/component/tag/TagDialog";
+import RootLayout from "@/component/layout/Layout";
 
 const TagContent = () => {
   const dispatch = useDispatch();
@@ -209,6 +210,10 @@ const TagContent = () => {
       </div>
     </>
   );
+};
+
+TagContent.getLayout = function getLayout(page: React.ReactNode) {
+  return <RootLayout>{page}</RootLayout>;
 };
 
 export default TagContent;

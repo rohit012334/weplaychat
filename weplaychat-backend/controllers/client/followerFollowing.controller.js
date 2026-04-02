@@ -52,15 +52,23 @@ exports.handleFollowUnfollow = async (req, res) => {
 
     if (existingFollow) {
       await FollowerFollowing.deleteOne({ _id: existingFollow._id });
-      return res.status(200).json({ status: true, message: "Unfollowed successfully.", isFollow: false });
+      return res.status(200).json({ status: true, message: "Unfollowed successfully.", isFollow: false, isFriend: false });
     } else {
       await new FollowerFollowing({ followerId: followerObjectId, followerModel: "User", followingId: followingObjectId, followingModel: model }).save();
-      res.status(200).json({ status: true, message: "Followed successfully.", isFollow: true });
+
+      // Check for mutual follow (Friendship)
+      const isMutual = await FollowerFollowing.findOne({ followerId: followingObjectId, followingId: followerObjectId });
+
+      res.status(200).json({ status: true, message: "Followed successfully.", isFollow: true, isFriend: !!isMutual });
 
       if (target.fcmToken) {
         const payload = {
           token: target.fcmToken,
-          data: { title: "🌟 New Follower!", body: "Someone just followed you!", type: "FOLLOW" },
+          data: { 
+            title: isMutual ? "🤝 New Friend!" : "🌟 New Follower!", 
+            body: isMutual ? `You and ${target.name} are now friends!` : "Someone just followed you!", 
+            type: isMutual ? "FRIEND" : "FOLLOW" 
+          },
         };
         const adminPromise = await admin;
         adminPromise.messaging().send(payload).catch(console.error);
@@ -94,10 +102,14 @@ exports.handleHostFollowUnfollow = async (req, res) => {
 
     if (existingFollow) {
       await FollowerFollowing.deleteOne({ _id: existingFollow._id });
-      return res.status(200).json({ status: true, message: "Unfollowed successfully.", isFollow: false });
+      return res.status(200).json({ status: true, message: "Unfollowed successfully.", isFollow: false, isFriend: false });
     } else {
       await new FollowerFollowing({ followerId: fromHost._id, followerModel: "Host", followingId: target._id, followingModel: model }).save();
-      res.status(200).json({ status: true, message: "Followed successfully.", isFollow: true });
+
+      // Check for mutual follow
+      const isMutual = await FollowerFollowing.findOne({ followerId: target._id, followingId: fromHost._id });
+
+      res.status(200).json({ status: true, message: "Followed successfully.", isFollow: true, isFriend: !!isMutual });
     }
   } catch (error) {
     console.error(error);
@@ -152,6 +164,41 @@ exports.getFollowingList = async (req, res) => {
 };
 
 // ─────────────────────────────────────────────
+// GET FRIENDS LIST (Mutual Follows)
+// ─────────────────────────────────────────────
+exports.getFriendsList = async (req, res) => {
+  try {
+    const { id } = req.query;
+    if (!id) return res.status(200).json({ status: false, message: "id required." });
+
+    const resolved = await resolveTarget(id);
+    if (!resolved) return res.status(200).json({ status: false, message: "Target not found." });
+
+    const userId = resolved.target._id;
+
+    // 1. Find everyone this user follows
+    const myFollowings = await FollowerFollowing.find({ followerId: userId }).select("followingId").lean();
+    const followingIds = myFollowings.map(f => f.followingId);
+
+    // 2. Find mutual follows: People from followingIds who also follow userId
+    const friendsList = await FollowerFollowing.find({ 
+      followerId: { $in: followingIds },
+      followingId: userId 
+    })
+    .populate("followerId", "_id name image gender isOnline") // This is the friend
+    .sort({ createdAt: -1 })
+    .lean();
+
+    const friends = friendsList.map(f => f.followerId);
+
+    res.status(200).json({ status: true, message: "Retrieved friends list.", totalFriends: friends.length, friends });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ status: false, message: "Internal Server Error" });
+  }
+};
+
+// ─────────────────────────────────────────────
 // CHECK FOLLOW STATUS (Smart Resolver)
 // ─────────────────────────────────────────────
 exports.getFollowStatus = async (req, res) => {
@@ -171,7 +218,15 @@ exports.getFollowStatus = async (req, res) => {
     if (!target) return res.status(200).json({ status: false, message: "Target not found." });
 
     const existingFollow = await FollowerFollowing.findOne({ followerId: myId, followingId: target.target._id });
-    res.status(200).json({ status: true, message: "Follow status retrieved.", isFollow: !!existingFollow });
+    
+    // Check if friends (mutual)
+    let isFriend = false;
+    if (existingFollow) {
+      const mutual = await FollowerFollowing.findOne({ followerId: target.target._id, followingId: myId });
+      isFriend = !!mutual;
+    }
+
+    res.status(200).json({ status: true, message: "Status retrieved.", isFollow: !!existingFollow, isFriend });
   } catch (error) {
     console.error(error);
     res.status(500).json({ status: false, message: "Internal Server Error" });

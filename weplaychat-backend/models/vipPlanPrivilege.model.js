@@ -28,6 +28,10 @@ const VipPlanPrivilegeSchema = new mongoose.Schema(
     // SVIP Features
     hide: { type: Boolean, default: false },
     canMuteOthers: { type: Boolean, default: false }, // Logic for SVIP muting VIP/VVIP
+    
+    // Additional Media Fields
+    vipEntrance1: { type: String, default: "" },
+    vipEntrance2: { type: String, default: "" },
   },
   {
     timestamps: true,

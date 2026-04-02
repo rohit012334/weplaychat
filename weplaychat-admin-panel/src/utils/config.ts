@@ -1,12 +1,11 @@
 export const baseURL: string =
   process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/";
 
-/** Build full URL for a storage file (image/doc/video). Normalizes paths so /app/.../storage/xxx or storage/xxx becomes /storage/xxx. */
 export function getStorageUrl(path: string | null | undefined): string {
   if (!path || typeof path !== "string") return "";
   const p = path.replace(/\\/g, "/").trim();
   if (p.startsWith("http") || p.startsWith("blob:")) return p;
-  
+
   // Use native URL constructor to correctly join base and path without double-slashes
   try {
     const base = baseURL?.endsWith("/") ? baseURL : `${baseURL}/`;

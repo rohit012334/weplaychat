@@ -74,6 +74,12 @@ const VipPlanPrevilage = () => {
                 .powers-section { margin-top: 20px; display: grid; grid-template-columns: 1fr; gap: 8px; }
                 .edit-priv-btn { width: 100%; padding: 14px; border-radius: 14px; background: #0f172a; color: #fff; border: none; cursor: pointer; font-weight: 700; margin-top: 24px; transition: 0.2s; box-shadow: 0 10px 15px -3px rgba(15,23,42,0.1); }
                 .edit-priv-btn:hover { background: #1e293b; letter-spacing: 0.5px; }
+
+                .vip-media-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 22px; padding: 0 10px; }
+                .vip-media-card { display: flex; flex-direction: column; gap: 5px; }
+                .vip-media-rect { width: 100%; height: 60px; background: rgba(255,255,255,0.12); backdrop-filter: blur(5px); border-radius: 12px; border: 1px solid rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; }
+                .vip-media-square { width: 70px; height: 70px; background: rgba(255,255,255,0.12); backdrop-filter: blur(5px); border-radius: 12px; border: 1px solid rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; margin: 0 auto; }
+                .vip-media-label { font-size: 10px; font-weight: 800; color: #fff; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.9; text-align: center; }
             `}</style>
 
             <div className="vip-wrap">
@@ -90,37 +96,66 @@ const VipPlanPrevilage = () => {
                         return (
                             <div key={lvl.id} className="vip-card">
                                 <div className="vip-card-header" style={{ background: lvl.bg }}>
-                                    <div style={{ display: "flex", justifyContent: "center", gap: "12px", marginBottom: "15px" }}>
-                                        <div className="vip-badge-box" style={{ margin: 0 }}>
-                                            {data.vipFrameBadge ? (
-                                                data.vipFrameBadge.toLowerCase().endsWith(".svga") ? (
-                                                    <SvgaPlayer url={getStorageUrl(data.vipFrameBadge)} style={{ width: "80%", height: "80%" }} />
-                                                ) : data.vipFrameBadge.toLowerCase().endsWith(".mp4") ? (
-                                                    <video src={getStorageUrl(data.vipFrameBadge)} style={{ width: "80%", height: "80%", objectFit: "contain" }} autoPlay loop muted />
-                                                ) : (
-                                                    <img src={getStorageUrl(data.vipFrameBadge)} style={{ width: "80%", height: "80%", objectFit: "contain" }} alt="Badge" />
-                                                )
-                                            ) : (
-                                                <svg width="32" height="32" fill="#fff" viewBox="0 0 16 16"><path d="M7.646 6.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1-.708.708L8 7.707 2.354 13.354a.5.5 0 1 1-.708-.708l6-6z" /></svg>
-                                            )}
-                                        </div>
-                                    </div>
                                     <div className="level-title" style={{ color: lvl.id === 3 ? "#fbbf24" : "#fff" }}>{lvl.name}</div>
                                     <div style={{ fontSize: "12px", opacity: 0.8 }}>{data.name || lvl.name} Privilege</div>
-                                    {data.freeEntryImage && (
-                                        <div style={{ marginTop: "20px", display: "flex", flexDirection: "column", alignItems: "center" }}>
-                                            <div className="vip-badge-box" style={{ margin: "0 0 8px 0", background: "rgba(255,255,255,0.1)" }}>
-                                                {data.freeEntryImage.toLowerCase().endsWith(".svga") ? (
-                                                    <SvgaPlayer url={getStorageUrl(data.freeEntryImage)} style={{ width: "80%", height: "80%" }} />
-                                                ) : data.freeEntryImage.toLowerCase().endsWith(".mp4") ? (
-                                                    <video src={getStorageUrl(data.freeEntryImage)} style={{ width: "80%", height: "80%", objectFit: "contain" }} autoPlay loop muted />
-                                                ) : (
-                                                    <img src={getStorageUrl(data.freeEntryImage)} style={{ width: "80%", height: "80%", objectFit: "contain" }} alt="Free Entry" />
-                                                )}
+
+                                    <div className="vip-media-grid">
+                                        <div className="vip-media-card">
+                                            <div className="vip-media-square">
+                                                {data.vipFrameBadge ? (
+                                                    data.vipFrameBadge.toLowerCase().endsWith(".svga") ? (
+                                                        <SvgaPlayer url={getStorageUrl(data.vipFrameBadge)} style={{ width: "90%", height: "90%" }} />
+                                                    ) : (
+                                                        <img src={getStorageUrl(data.vipFrameBadge)} style={{ width: "90%", height: "90%", objectFit: "contain" }} alt="Badge" />
+                                                    )
+                                                ) : <span style={{ opacity: 0.3, fontSize: 10 }}>BADGE</span>}
                                             </div>
-                                            <div style={{ fontSize: "10px", fontWeight: 800, textTransform: "uppercase", letterSpacing: "1px", opacity: 0.9 }}>Free Entry</div>
+                                            <div className="vip-media-label">VIP Frame </div>
                                         </div>
-                                    )}
+
+                                        <div className="vip-media-card">
+                                            <div className="vip-media-square">
+                                                {data.freeEntryImage ? (
+                                                    data.freeEntryImage.toLowerCase().endsWith(".svga") ? (
+                                                        <SvgaPlayer url={getStorageUrl(data.freeEntryImage)} style={{ width: "90%", height: "90%" }} />
+                                                    ) : (
+                                                        <img src={getStorageUrl(data.freeEntryImage)} style={{ width: "90%", height: "90%", objectFit: "contain" }} alt="Icon" />
+                                                    )
+                                                ) : <span style={{ opacity: 0.3, fontSize: 10 }}>ICON</span>}
+                                            </div>
+                                            <div className="vip-media-label">VIP Entry Effect</div>
+                                        </div>
+
+                                        <div className="vip-media-card" style={{ gridColumn: "span 2" }}>
+                                            <div className="vip-media-rect">
+                                                {data.vipEntrance1 ? (
+                                                    data.vipEntrance1.toLowerCase().endsWith(".svga") ? (
+                                                        <SvgaPlayer url={getStorageUrl(data.vipEntrance1)} style={{ width: "100%", height: "100%" }} />
+                                                    ) : data.vipEntrance1.toLowerCase().endsWith(".mp4") ? (
+                                                        <video src={getStorageUrl(data.vipEntrance1)} style={{ width: "100%", height: "100%", objectFit: "cover" }} autoPlay loop muted />
+                                                    ) : (
+                                                        <img src={getStorageUrl(data.vipEntrance1)} style={{ width: "100%", height: "100%", objectFit: "contain" }} alt="Entrance 1" />
+                                                    )
+                                                ) : <span style={{ opacity: 0.3, fontSize: 10 }}>ENTRANCE 1</span>}
+                                            </div>
+                                            <div className="vip-media-label">VIP Tag</div>
+                                        </div>
+
+                                        <div className="vip-media-card" style={{ gridColumn: "span 2" }}>
+                                            <div className="vip-media-rect">
+                                                {data.vipEntrance2 ? (
+                                                    data.vipEntrance2.toLowerCase().endsWith(".svga") ? (
+                                                        <SvgaPlayer url={getStorageUrl(data.vipEntrance2)} style={{ width: "100%", height: "100%" }} />
+                                                    ) : data.vipEntrance2.toLowerCase().endsWith(".mp4") ? (
+                                                        <video src={getStorageUrl(data.vipEntrance2)} style={{ width: "100%", height: "100%", objectFit: "cover" }} autoPlay loop muted />
+                                                    ) : (
+                                                        <img src={getStorageUrl(data.vipEntrance2)} style={{ width: "100%", height: "100%", objectFit: "contain" }} alt="Entrance 2" />
+                                                    )
+                                                ) : <span style={{ opacity: 0.3, fontSize: 10 }}>ENTRANCE 2</span>}
+                                            </div>
+                                            <div className="vip-media-label">VIP Entry</div>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <div className="vip-card-body">

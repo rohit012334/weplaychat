@@ -12,6 +12,7 @@ import { getFrames, deleteFrame, updateFrameStatus } from "@/store/frameSlice";
 import FrameDialog from "@/component/frame/FrameDialog";
 import { baseURL, getStorageUrl } from "@/utils/config";
 import SvgaPlayer from "@/extra/SvgaPlayer";
+import RootLayout from "@/component/layout/Layout";
 
 const inferMediaType = (rawType: any, filePath?: string): "gif" | "mp4" | "svga" | "" => {
   const normalized = String(rawType ?? "").toLowerCase().trim();
@@ -281,6 +282,10 @@ const FrameContent = () => {
       </div>
     </>
   );
+};
+
+FrameContent.getLayout = function getLayout(page: React.ReactNode) {
+  return <RootLayout>{page}</RootLayout>;
 };
 
 export default FrameContent;
