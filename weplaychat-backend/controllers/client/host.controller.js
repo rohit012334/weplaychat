@@ -324,9 +324,9 @@ exports.retrieveHosts = async (req, res) => {
             status: {
               $switch: {
                 branches: [
-                  { case: { $and: [{ $eq: ["$isOnline", true] }, { $eq: ["$isLive", false] }, { $eq: ["$isBusy", false] }] }, then: "Online" },
-                  { case: { $and: [{ $eq: ["$isOnline", true] }, { $eq: ["$isLive", true] }, { $eq: ["$isBusy", true] }] }, then: "Live" },
-                  { case: { $and: [{ $eq: ["$isOnline", true] }, { $eq: ["$isBusy", true] }] }, then: "Busy" },
+                  { case: { $eq: ["$isLive", true] }, then: "Live" },
+                  { case: { $eq: ["$isBusy", true] }, then: "Busy" },
+                  { case: { $eq: ["$isOnline", true] }, then: "Online" },
                 ],
                 default: "Offline",
               },
@@ -404,9 +404,9 @@ exports.retrieveHosts = async (req, res) => {
             status: {
               $switch: {
                 branches: [
-                  { case: { $and: [{ $eq: ["$isOnline", true] }, { $eq: ["$isLive", false] }, { $eq: ["$isBusy", false] }] }, then: "Online" },
-                  { case: { $and: [{ $eq: ["$isOnline", true] }, { $eq: ["$isLive", true] }, { $eq: ["$isBusy", true] }] }, then: "Live" },
-                  { case: { $and: [{ $eq: ["$isOnline", true] }, { $eq: ["$isBusy", true] }] }, then: "Busy" },
+                  { case: { $eq: ["$isLive", true] }, then: "Live" },
+                  { case: { $eq: ["$isBusy", true] }, then: "Busy" },
+                  { case: { $eq: ["$isOnline", true] }, then: "Online" },
                 ],
                 default: "Offline",
               },

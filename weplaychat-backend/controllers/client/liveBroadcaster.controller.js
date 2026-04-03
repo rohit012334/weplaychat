@@ -103,6 +103,7 @@ exports.HostStreaming = async (req, res) => {
         { _id: hostObjectId },
         {
           $set: {
+            isOnline: true,
             isBusy: true,
             isLive: true,
             liveHistoryId: liveHistory._id,
