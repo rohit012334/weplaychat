@@ -105,3 +105,19 @@ a {
     color-scheme: dark;
   }
 }
+
+/* svgaplayerweb sets text-align:left on the container; canvas is inline-block so it stays left — center it */
+.svga-player-root {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center !important;
+}
+
+.svga-player-root canvas {
+  display: block !important;
+  margin: 0 auto !important;
+  vertical-align: middle;
+  transform-origin: 0 0 !important;
+  -webkit-transform-origin: 0 0 !important;
+}

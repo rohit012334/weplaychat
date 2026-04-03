@@ -91,17 +91,19 @@ const CreateGift = () => {
     if (!file) return;
     setImage(file);
 
-    const reader = new FileReader();
-    reader.addEventListener("load", () => {
-      setImagePath(reader.result as string);
-    });
-    reader.readAsDataURL(file);
+    if (file.type.includes("video")) {
+      setImagePath(URL.createObjectURL(file));
+    } else {
+      const reader = new FileReader();
+      reader.addEventListener("load", () => {
+        setImagePath(reader.result as string);
+      });
+      reader.readAsDataURL(file);
+    }
     setError({ ...error, image: "" });
   };
 
   const handleSubmit = (e: any) => {
-       
-
     e.preventDefault();
 
     let newError: ErrorState = {
@@ -119,16 +121,36 @@ const CreateGift = () => {
       return;
     }
 
+    let type = dialogueData?.giftAll?.type?.toString() || "1";
+    const fileExtension = image?.name?.split(".").pop()?.toLowerCase();
+
     let formData = new FormData();
     formData.append("coin", coin);
-    formData.append("image", image);
     formData.append("giftCategoryId", giftCategoryId);
-    formData.append("type", image?.type === "image/gif" ? "2" : "1");
+
+    if (image) {
+      if (fileExtension === "gif") {
+        type = "2";
+        formData.append("image", image);
+      } else if (fileExtension === "mp4") {
+        type = "4";
+        formData.append("mp4Image", image);
+      } else if (fileExtension === "webp") {
+        type = "5";
+        formData.append("webpImage", image);
+      } else {
+        type = "1";
+        formData.append("image", image);
+      }
+    }
+    formData.append("type", type);
 
     if (mongoId) {
       dispatch(updateGift({ data: formData, giftId: mongoId }));
     } else {
-      dispatch(addGift({ data: formData, giftCategoryId  : categoryDataSelect?._id }));
+      dispatch(
+        addGift({ data: formData, giftCategoryId: categoryDataSelect?._id })
+      );
     }
 
     dispatch(closeDialog());
@@ -206,27 +228,40 @@ const CreateGift = () => {
                     <div className="col-12 mt-2">
                       <ExInput
                         type={"file"}
-                        label={"Gift Image Or GIF Image "}
-                        accept={"image/png, image/jpeg,image/gif,image/webp"}
+                        label={"Gift Image Or Video"}
+                        accept={
+                          "image/png, image/jpeg, image/gif, image/webp, video/mp4"
+                        }
                         errorMessage={error.image && error.image}
                         onChange={handleFileUpload}
                       />
                       <span className="text-danger" style={{ fontSize: "12px" }}>
-                     Gift Image Or GIF Image (Accepted Format : png , jpeg , gif , webp)
-                    </span>
+                        Gift Image Or Video (Accepted Format: png, jpeg, gif, webp, mp4)
+                      </span>
                     </div>
                     <div className="col-6 d-flex justify-content-start">
                       {imagePath && (
-                        <img
-                          src={imagePath}
-                          className=""
-                          height={100}
-                          width={100}
-                          alt="Image"
-                          style={{ objectFit: 'contain', borderRadius: "10px " }}
-                        />
+                        image?.type === "video/mp4" || imagePath?.includes("video") || imagePath?.endsWith(".mp4") ? (
+                          <video
+                            src={imagePath}
+                            height={100}
+                            width={100}
+                            autoPlay
+                            loop
+                            muted
+                            style={{ objectFit: 'contain', borderRadius: "10px" }}
+                          />
+                        ) : (
+                          <img
+                            src={imagePath}
+                            className=""
+                            height={100}
+                            width={100}
+                            alt="Image"
+                            style={{ objectFit: 'contain', borderRadius: "10px" }}
+                          />
+                        )
                       )}
-
                     </div>
 
                     <div className="mt-3 d-flex justify-content-end">

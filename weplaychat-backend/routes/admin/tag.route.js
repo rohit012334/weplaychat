@@ -4,11 +4,28 @@ const route = express.Router();
 const checkAccessWithSecretKey = require("../../checkAccess");
 const TagController = require("../../controllers/admin/tag.controller");
 
+const multer = require("multer");
+const storage = require("../../util/multer");
+const upload = multer({ storage });
+const normalizeStoragePath = require("../../util/normalizeStoragePath");
+
 // Create tag
-route.post("/createTag", checkAccessWithSecretKey(), TagController.createTag);
+route.post(
+  "/createTag",
+  checkAccessWithSecretKey(),
+  upload.single("file"),
+  normalizeStoragePath,
+  TagController.createTag
+);
 
 // Update tag
-route.patch("/updateTag", checkAccessWithSecretKey(), TagController.updateTag);
+route.patch(
+  "/updateTag",
+  checkAccessWithSecretKey(),
+  upload.single("file"),
+  normalizeStoragePath,
+  TagController.updateTag
+);
 
 // List tags
 route.get("/listTags", checkAccessWithSecretKey(), TagController.listTags);

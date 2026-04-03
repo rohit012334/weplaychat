@@ -135,7 +135,7 @@ export default function GiftShow() {
               onClick={() => handleOpenModel("imageGift")}
               disableRipple
             >
-              Image,GIF
+              Image, GIF, MP4, WebP
             </MenuItem>
           </Menu>
         </div>
@@ -220,27 +220,45 @@ export default function GiftShow() {
                       >
                         <div className="giftCategory">
                           <div className="giftCategory-img">
-                            <img
-                              src={
-                                baseURL +
-                                (item.type === 3
-                                  ? item.svgaImage?.replace(/\\/g, "/")
-                                  : item.image?.replace(/\\/g, "/"))
-                              }
-                              className="img-gift"
-                              width={50}
-                              height={50}
-                              alt="Image"
-                              style={{
-                                objectFit: "cover",
-                                padding: "0px",
-                              }}
-                              onError={(e: any) => {
-                                e.target.error = null;
-                                e.target.src = emoji.src;
-                              }}
-                            />
-                            <h5 style={{ margin: "20px 0px" , fontWeight:"400" }}>
+                            {item.type === 4 ? (
+                              <video
+                                src={baseURL + item.mp4Image?.replace(/\\/g, "/")}
+                                className="img-gift"
+                                width={50}
+                                height={50}
+                                autoPlay
+                                loop
+                                muted
+                                style={{
+                                  objectFit: "contain",
+                                  padding: "0px",
+                                }}
+                              />
+                            ) : (
+                              <img
+                                src={
+                                  baseURL +
+                                  (item.type === 3
+                                    ? item.svgaImage?.replace(/\\/g, "/")
+                                    : item.type === 5 
+                                      ? item.webpImage?.replace(/\\/g, "/")
+                                      : item.image?.replace(/\\/g, "/"))
+                                }
+                                className="img-gift"
+                                width={50}
+                                height={50}
+                                alt="Image"
+                                style={{
+                                  objectFit: "cover",
+                                  padding: "0px",
+                                }}
+                                onError={(e: any) => {
+                                  e.target.error = null;
+                                  e.target.src = emoji.src;
+                                }}
+                              />
+                            )}
+                            <h5 style={{ margin: "20px 0px", fontWeight: "400" }}>
                               {item?.coin + " Coin"}
                             </h5>
                             <div className="action-button">

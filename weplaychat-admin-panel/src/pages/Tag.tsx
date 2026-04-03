@@ -1,4 +1,3 @@
-import Table from "@/extra/Table";
 import Pagination from "@/extra/Pagination";
 import { openDialog } from "@/store/dialogSlice";
 import { useDispatch, useSelector } from "react-redux";
@@ -11,12 +10,14 @@ import CommonDialog from "@/utils/CommonDialog";
 import { getTags, deleteTag, updateTagStatus } from "@/store/tagSlice";
 import TagDialog from "@/component/tag/TagDialog";
 import RootLayout from "@/component/layout/Layout";
+import { getStorageUrl } from "@/utils/config";
+import SvgaPlayer from "@/extra/SvgaPlayer";
 
 const TagContent = () => {
   const dispatch = useDispatch();
 
   const { dialogue, dialogueType } = useSelector((state: RootStore) => state.dialogue);
-  const { tags, total, isSkeleton } = useSelector((state: RootStore) => state.tag);
+  const { tags, total } = useSelector((state: RootStore) => state.tag);
 
   const [rowsPerPage, setRowsPerPage] = useState<number>(10);
   const [page, setPage] = useState<number>(1);
@@ -43,48 +44,21 @@ const TagContent = () => {
     }
   };
 
-  const tagTable = [
-    {
-      Header: "No",
-      Cell: ({ index }: { index: any }) => (
-        <span className="tc-cell-num">{(page - 1) * rowsPerPage + parseInt(index) + 1}</span>
-      ),
-    },
-    {
-      Header: "Tag Name",
-      Cell: ({ row }: { row: any }) => (
-        <span className="tc-tag-pill">
-          <svg width="12" height="12" fill="currentColor" viewBox="0 0 16 16">
-            <path d="M2 1a1 1 0 0 0-1 1v4.586a1 1 0 0 0 .293.707l7 7a1 1 0 0 0 1.414 0l4.586-4.586a1 1 0 0 0 0-1.414l-7-7A1 1 0 0 0 6.586 1zm4 3.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0" />
-          </svg>
-          {row?.name || "-"}
-        </span>
-      ),
-    },
-    {
-      Header: "Status",
-      Cell: ({ row }: { row: any }) => (
-        <ToggleSwitch
-          value={row?.isActive}
-          onClick={() => dispatch(updateTagStatus(row?._id))}
-        />
-      ),
-    },
-    {
-      Header: "Actions",
-      Cell: ({ row }: { row: any }) => (
-        <div className="tc-actions">
-          <button className="tc-btn-edit"
-            onClick={() => dispatch(openDialog({ type: "tag", data: row }))}>
-            <img src={EditIcon.src} alt="Edit" width={18} height={18} />
-          </button>
-          <button className="tc-btn-delete" onClick={() => handleDelete(row?._id)}>
-            <img src={TrashIcon.src} alt="Delete" width={18} height={18} />
-          </button>
-        </div>
-      ),
-    },
-  ];
+  const inferTagMediaType = (
+    rawType: any,
+    filePath?: string
+  ): "svga" | "png" | "jpg" | "" => {
+    const normalized = String(rawType ?? "").toLowerCase().trim();
+    if (normalized === "svga" || normalized === "3") return "svga";
+    if (normalized === "png" || normalized === "1") return "png";
+    if (normalized === "jpg" || normalized === "2" || normalized === "jpeg") return "jpg";
+
+    const ext = (filePath || "").split(".").pop()?.toLowerCase();
+    if (ext === "svga") return "svga";
+    if (ext === "png") return "png";
+    if (ext === "jpg" || ext === "jpeg") return "jpg";
+    return "";
+  };
 
   return (
     <>
@@ -138,6 +112,21 @@ const TagContent = () => {
           color: #6366f1; font-size: 13px; font-weight: 600;
           border: 1px solid rgba(99,102,241,0.20);
         }
+        .tc-no-file { color: #a0a8c0; font-size: 12px; }
+        .tc-file-thumb {
+          width: 70px;
+          height: 50px;
+          object-fit: cover;
+          border-radius: 8px;
+          border: 1px solid #e8eaf2;
+          background: #f8f9fa;
+        }
+        .tc-svga-badge {
+          display: inline-flex; align-items: center; justify-content: center;
+          width: 70px; height: 50px;
+          background: rgba(99,102,241,0.10); border-radius: 8px;
+          font-size: 11px; color: #6366f1; font-weight: 700;
+        }
         .tc-actions { display: flex; align-items: center; justify-content: center; gap: 8px; }
         .tc-btn-edit, .tc-btn-delete {
           width: 36px; height: 36px; border-radius: 9px;
@@ -190,13 +179,80 @@ const TagContent = () => {
         </div>
 
         <div className="tc-table-card">
-          <Table
-            data={tags}
-            mapData={tagTable}
-            PerPage={rowsPerPage}
-            Page={page}
-            type="server"
-          />
+          <div className="mainTable">
+            <table width="100%" className="primeTable">
+              <thead>
+                <tr>
+                  <th style={{ textAlign: "center", verticalAlign: "middle", padding: "16px 12px" }}>NO</th>
+                  <th style={{ textAlign: "center", verticalAlign: "middle", padding: "16px 12px" }}>TAG NAME</th>
+                  <th style={{ textAlign: "center", verticalAlign: "middle", padding: "16px 12px" }}>TAG FILE</th>
+                  <th style={{ textAlign: "center", verticalAlign: "middle", padding: "16px 12px" }}>STATUS</th>
+                  <th style={{ textAlign: "center", verticalAlign: "middle", padding: "16px 12px" }}>ACTIONS</th>
+                </tr>
+              </thead>
+              <tbody>
+                {tags.length > 0 ? (
+                  tags.map((row: any, index: number) => {
+                    const file = row?.file;
+                    const type = inferTagMediaType(row?.type, row?.file);
+                    const src = file ? getStorageUrl(file) : "";
+
+                    return (
+                      <tr key={row?._id || index}>
+                        <td style={{ textAlign: "center", verticalAlign: "middle" }}>
+                          <span className="tc-cell-num">{(page - 1) * rowsPerPage + index + 1}</span>
+                        </td>
+                        <td style={{ textAlign: "center", verticalAlign: "middle" }}>
+                          <span className="tc-tag-pill">
+                            <svg width="12" height="12" fill="currentColor" viewBox="0 0 16 16">
+                              <path d="M2 1a1 1 0 0 0-1 1v4.586a1 1 0 0 0 .293.707l7 7a1 1 0 0 0 1.414 0l4.586-4.586a1 1 0 0 0 0-1.414l-7-7A1 1 0 0 0 6.586 1zm4 3.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0" />
+                            </svg>
+                            {row?.name || "-"}
+                          </span>
+                        </td>
+                        <td style={{ textAlign: "center", verticalAlign: "middle" }}>
+                          {!file ? (
+                            <span className="tc-no-file">No file</span>
+                          ) : type === "svga" ? (
+                            <div className="tc-svga-badge">
+                              <SvgaPlayer url={src} id={`tag-svga-${row?._id}`} key={src} />
+                            </div>
+                          ) : (
+                            <img className="tc-file-thumb" src={src} alt="Tag" />
+                          )}
+                        </td>
+                        <td style={{ textAlign: "center", verticalAlign: "middle" }}>
+                          <ToggleSwitch
+                            value={row?.isActive}
+                            onClick={() => dispatch(updateTagStatus(row?._id))}
+                          />
+                        </td>
+                        <td style={{ textAlign: "center", verticalAlign: "middle" }}>
+                          <div className="tc-actions">
+                            <button
+                              className="tc-btn-edit"
+                              onClick={() => dispatch(openDialog({ type: "tag", data: row }))}
+                            >
+                              <img src={EditIcon.src} alt="Edit" width={18} height={18} />
+                            </button>
+                            <button className="tc-btn-delete" onClick={() => handleDelete(row?._id)}>
+                              <img src={TrashIcon.src} alt="Delete" width={18} height={18} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                ) : (
+                  <tr>
+                    <td colSpan={5} style={{ textAlign: "center", padding: "40px", color: "#64748b" }}>
+                      No Data Found!
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
           <Pagination
             type="server"
             serverPage={page}

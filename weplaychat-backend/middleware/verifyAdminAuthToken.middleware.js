@@ -1,6 +1,15 @@
 const getFirebaseAdmin = require("../util/privateKey");
 const Admin = require("../models/admin.model");
 
+/**
+ * Local dev only: skip Firebase Admin verifyIdToken when service account is not configured.
+ * Requires ADMIN_AUTH_DEV_BYPASS=true and NODE_ENV !== "production".
+ * Trusts x-admin-uid + Admin row in MongoDB (Bearer token must still be present, any value).
+ * NEVER enable on a public / production server.
+ */
+const isAdminAuthDevBypass = () =>
+  process.env.ADMIN_AUTH_DEV_BYPASS === "true" && process.env.NODE_ENV !== "production";
+
 const validateAdminFirebaseToken = async (req, res, next) => {
   console.log("🔹 [AUTH] Processing request for:", req.originalUrl);
 
@@ -18,6 +27,29 @@ const validateAdminFirebaseToken = async (req, res, next) => {
   }
 
   const token = authHeader.split("Bearer ")[1];
+
+  // --- Dev bypass: no Firebase service account needed ---
+  if (isAdminAuthDevBypass()) {
+    try {
+      if (!token || !token.trim()) {
+        return res.status(401).json({ status: false, message: "Authorization token required" });
+      }
+      const mainAdmin = await Admin.findOne({ uid: adminUid }).select("_id email password role uid");
+      if (!mainAdmin) {
+        console.warn(`⚠️ [AUTH DEV BYPASS] Admin with UID ${adminUid} not found.`);
+        return res.status(401).json({ status: false, message: "Admin not found. Authorization failed." });
+      }
+      req.admin = mainAdmin;
+      console.warn(
+        "⚠️ [AUTH DEV BYPASS] Firebase skipped — set FIREBASE_SERVICE_ACCOUNT_* for real auth. Admin:",
+        mainAdmin.email
+      );
+      return next();
+    } catch (err) {
+      console.error("❌ [AUTH DEV BYPASS] Error:", err.message);
+      return res.status(401).json({ status: false, message: `Auth failed: ${err.message}` });
+    }
+  }
 
   try {
     // Ensure Firebase Admin SDK is initialized before verifyIdToken

@@ -87,8 +87,8 @@ const SvgaPlayer: React.FC<SvgaPlayerProps> = ({ url, style, className, id = "sv
   return (
     <div
       id={id}
-      ref={containerRef} 
-      className={className}
+      ref={containerRef}
+      className={className ? `svga-player-root ${className}` : "svga-player-root"}
       style={{ 
         width: "100%", 
         height: "100%", 

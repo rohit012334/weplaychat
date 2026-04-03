@@ -1,4 +1,26 @@
 const Tag = require("../../models/Tag.model");
+const fs = require("fs");
+const path = require("path");
+const { resolveStorageAbsolutePath } = require("../../util/storagePath");
+
+const VALID_TAG_TYPES = ["svga", "png", "jpg"];
+
+const inferTagTypeFromFile = (file) => {
+    const ext = (file?.originalname ? path.extname(file.originalname) : "").toLowerCase().replace(".", "");
+    if (ext === "svga") return "svga";
+    if (ext === "png") return "png";
+    if (ext === "jpg" || ext === "jpeg") return "jpg";
+    return "";
+};
+
+const normalizeTagType = (value) => {
+    const type = String(value ?? "").toLowerCase().trim();
+    if (type === "jpeg") return "jpg";
+    if (type === "jpg") return "jpg";
+    if (type === "png") return "png";
+    if (type === "svga" || type === "3") return "svga";
+    return type;
+};
 
 // CREATE tag
 exports.createTag = async (req, res) => {
@@ -9,12 +31,37 @@ exports.createTag = async (req, res) => {
             return res.status(200).json({ status: false, message: "Tag name is required." });
         }
 
-        const existing = await Tag.findOne({ name: name.trim() });
+        const trimmedName = name.trim();
+        let tagPayload = { name: trimmedName };
+
+        // Optional upload
+        if (req.file) {
+            const providedType = normalizeTagType(req.body.type);
+            const inferredType = inferTagTypeFromFile(req.file);
+            const finalType = providedType || inferredType;
+
+            if (!VALID_TAG_TYPES.includes(finalType)) {
+                // Delete invalid uploaded file from disk
+                const abs = resolveStorageAbsolutePath(req.file.path);
+                if (abs && fs.existsSync(abs)) fs.unlinkSync(abs);
+                return res.status(200).json({ status: false, message: "Invalid file type. Only SVGA, PNG, JPG are allowed." });
+            }
+
+            tagPayload = { ...tagPayload, file: req.file.path, type: finalType };
+        }
+
+        // Only after validating uploaded file, check duplicates.
+        const existing = await Tag.findOne({ name: trimmedName });
         if (existing) {
+            // If multer saved a file but tag already exists, delete it to prevent orphan files.
+            if (req.file) {
+                const abs = resolveStorageAbsolutePath(req.file.path);
+                if (abs && fs.existsSync(abs)) fs.unlinkSync(abs);
+            }
             return res.status(200).json({ status: false, message: "Tag with this name already exists." });
         }
 
-        const tag = new Tag({ name: name.trim() });
+        const tag = new Tag(tagPayload);
         await tag.save();
 
         return res.status(200).json({
@@ -39,10 +86,37 @@ exports.updateTag = async (req, res) => {
 
         const tag = await Tag.findById(tagId);
         if (!tag) {
+            // If multer saved a file but tag doesn't exist, delete it to prevent orphan files.
+            if (req.file) {
+                const abs = resolveStorageAbsolutePath(req.file.path);
+                if (abs && fs.existsSync(abs)) fs.unlinkSync(abs);
+            }
             return res.status(200).json({ status: false, message: "Tag not found." });
         }
 
         if (req.body.name) tag.name = req.body.name.trim();
+
+        // Replace file only if new upload provided
+        if (req.file) {
+            const providedType = normalizeTagType(req.body.type);
+            const inferredType = inferTagTypeFromFile(req.file);
+            const finalType = providedType || inferredType;
+
+            if (!VALID_TAG_TYPES.includes(finalType)) {
+                const abs = resolveStorageAbsolutePath(req.file.path);
+                if (abs && fs.existsSync(abs)) fs.unlinkSync(abs);
+                return res.status(200).json({ status: false, message: "Invalid file type. Only SVGA, PNG, JPG are allowed." });
+            }
+
+            // Remove old file from disk
+            if (tag.file) {
+                const oldAbs = resolveStorageAbsolutePath(tag.file);
+                if (oldAbs && fs.existsSync(oldAbs)) fs.unlinkSync(oldAbs);
+            }
+
+            tag.file = req.file.path;
+            tag.type = finalType;
+        }
 
         await tag.save();
 
@@ -93,6 +167,12 @@ exports.deleteTag = async (req, res) => {
         const tag = await Tag.findById(tagId);
         if (!tag) {
             return res.status(200).json({ status: false, message: "Tag not found." });
+        }
+
+        // Delete stored file (if any)
+        if (tag.file) {
+            const abs = resolveStorageAbsolutePath(tag.file);
+            if (abs && fs.existsSync(abs)) fs.unlinkSync(abs);
         }
 
         await Tag.findByIdAndDelete(tagId);

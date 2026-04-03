@@ -29,7 +29,7 @@ export const getTags: any = createAsyncThunk(
 // CREATE tag
 export const createTag: any = createAsyncThunk(
     "tag/createTag",
-    async (payload: { name: string }) => {
+    async (payload: FormData) => {
         return apiInstanceFetch.post(`api/admin/tag/createTag`, payload);
     }
 );
@@ -37,10 +37,10 @@ export const createTag: any = createAsyncThunk(
 // UPDATE tag
 export const updateTag: any = createAsyncThunk(
     "tag/updateTag",
-    async (payload: { tagId: string; name: string }) => {
+    async (payload: { tagId: string; formData: FormData }) => {
         return apiInstanceFetch.patch(
             `api/admin/tag/updateTag?tagId=${payload.tagId}`,
-            { name: payload.name }
+            payload.formData
         );
     }
 );
