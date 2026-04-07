@@ -36,7 +36,7 @@ axios.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      const isLoginPage = typeof window !== "undefined" && ["/", "/Login", "/Registration"].includes(window.location.pathname);
+      const isLoginPage = typeof window !== "undefined" && ["/", "/login", "/Registration"].includes(window.location.pathname.toLowerCase());
       const isLoginRequest = error.config?.url?.includes("validateAdminLogin");
       const isManagerSession = typeof window !== "undefined" && sessionStorage.getItem("isManager") === "true";
 
@@ -46,7 +46,7 @@ axios.interceptors.response.use(
         sessionStorage.removeItem("admin");
         sessionStorage.removeItem("isAuth");
         sessionStorage.removeItem("admin_");
-        window.location.href = "/";
+        window.location.href = "/login";
       }
     }
     return Promise.reject(error);

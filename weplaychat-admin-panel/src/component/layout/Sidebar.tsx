@@ -28,6 +28,11 @@ import WorkspacePremiumRoundedIcon from "@mui/icons-material/WorkspacePremiumRou
 import PublicRoundedIcon from "@mui/icons-material/PublicRounded";
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
 import AccountTreeRoundedIcon from "@mui/icons-material/AccountTreeRounded";
+import SlowMotionVideoRoundedIcon from "@mui/icons-material/SlowMotionVideoRounded";
+import PhotoSizeSelectActualRoundedIcon from "@mui/icons-material/PhotoSizeSelectActualRounded";
+import SportsEsportsRoundedIcon from "@mui/icons-material/SportsEsportsRounded";
+import BarChartRoundedIcon from "@mui/icons-material/BarChartRounded";
+import AssessmentRoundedIcon from "@mui/icons-material/AssessmentRounded";
 
 // ── Logo image ──
 import LogoNew from "@/assets/images/unnamed__2_..-removebg-preview.png";
@@ -243,6 +248,33 @@ const Sidebar = () => {
     { name: "Profile", path: "/adminProfile", navSVG: <PersonIcon />, onClick: handleOnClick },
   ];
 
+  const reelsAndMoments = [
+    {
+      name: "Reels & Moments",
+      path: "#",
+      navSVG: <SlowMotionVideoRoundedIcon fontSize="small" />,
+      onClick: () => toast.info("Coming soon"),
+    },
+  ];
+
+  const gamesMenu = [
+    {
+      name: "Games",
+      path: "#",
+      navSVG: <SportsEsportsRoundedIcon fontSize="small" />,
+      onClick: () => toast.info("Coming soon"),
+    },
+  ];
+
+  const levelMenu = [
+    {
+      name: "Levels",
+      path: "#",
+      navSVG: <BarChartRoundedIcon fontSize="small" />,
+      onClick: () => toast.info("Coming soon"),
+    },
+  ];
+
   const blockedVipsTopLevel = new Set([
     "dashboard",
     "users",
@@ -258,6 +290,8 @@ const Sidebar = () => {
     "chat",
     "moment",
     "reels",
+    "games",
+    "level",
   ]);
   const vipsImportedMenu = vipsSidebarMenu
     .filter((item: any) => !blockedVipsTopLevel.has(String(item?.title || "").toLowerCase()))
@@ -829,6 +863,10 @@ const Sidebar = () => {
                     {renderMenuItems(vipMenu)}
                   </>
                 )}
+
+                {renderMenuItems(reelsAndMoments)}
+                {renderMenuItems(gamesMenu)}
+                {renderMenuItems(levelMenu)}
 
                 <li className="sb-label">More Modules</li>
                 {renderMenuItems(vipsImportedMenu)}

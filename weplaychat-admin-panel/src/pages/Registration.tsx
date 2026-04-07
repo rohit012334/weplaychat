@@ -659,7 +659,7 @@ export default function Registration() {
 
             <p style={{ textAlign: "center", marginTop: "12px", fontSize: "13px", color: "#94a3b8" }}>
               Already have an account?{" "}
-              <Link href="/Login" style={{ color: "#6366f1", fontWeight: "700", textDecoration: "none" }}>
+              <Link href="/login" style={{ color: "#6366f1", fontWeight: "700", textDecoration: "none" }}>
                 Log In →
               </Link>
             </p>

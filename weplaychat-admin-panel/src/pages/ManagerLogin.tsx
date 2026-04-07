@@ -57,11 +57,11 @@ export default function ManagerLogin() {
           if (res.data.status) {
             finalEmail = res.data.email;
           } else {
-             DangerRight(res.data.message || "Invalid Manager ID");
-             return null;
+            DangerRight(res.data.message || "Invalid Manager ID");
+            return null;
           }
         } catch (err) {
-           console.error("ID resolution failed:", err);
+          console.error("ID resolution failed:", err);
         }
       }
 
@@ -623,7 +623,7 @@ export default function ManagerLogin() {
             {/* Admin link */}
             <p className="lg-manager">
               Are you an Admin?{" "}
-              <a href="/">Admin Login →</a>
+              <a href="/login">Admin Login →</a>
             </p>
 
             {/* Registration link */}

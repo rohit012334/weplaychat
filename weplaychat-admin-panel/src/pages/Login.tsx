@@ -612,13 +612,13 @@ export default function Login() {
             {/* Manager link */}
             <p className="lg-manager">
               Are you a Manager?{" "}
-              <a href="/ManagerLogin">Manager Login →</a>
+              <a href="/managerlogin">Manager Login →</a>
             </p>
 
             {/* Registration link */}
             <p style={{ textAlign: "center", marginTop: "12px", fontSize: "13px", color: "#94a3b8" }}>
               Don't have an account?{" "}
-              <Link href="/Registration" style={{ color: "#6366f1", fontWeight: "700", textDecoration: "none" }}>
+              <Link href="/registration" style={{ color: "#6366f1", fontWeight: "700", textDecoration: "none" }}>
                 Sign Up →
               </Link>
             </p>

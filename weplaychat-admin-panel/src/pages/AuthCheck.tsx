@@ -8,7 +8,7 @@ interface AuthCheckProps {
 }
 
 // Public routes that don't require authentication
-const publicRoutes = ["/", "/Login", "/Registration", "/ForgotPassword", "/ManagerLogin"];
+const publicRoutes = ["/", "/login", "/registration", "/forgotpassword", "/managerlogin"];
 
 const AuthCheck: React.FC<AuthCheckProps> = (props) => {
   const router = useRouter();
@@ -34,13 +34,13 @@ const AuthCheck: React.FC<AuthCheckProps> = (props) => {
     // Clear stale redux auth if no session exists
     if (isAuth && !hasSession && !isPublicRoute) {
       dispatch(logoutApi());
-      router.push("/");
+      router.push("/login");
       return;
     }
 
     // Guard protected routes
     if (!isAuth && !hasSession && !isPublicRoute) {
-      router.push("/");
+      router.push("/login");
     }
 
     // Redirect authenticated users away from public routes to dashboard

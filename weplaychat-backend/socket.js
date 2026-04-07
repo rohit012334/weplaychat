@@ -65,7 +65,7 @@ io.on("connection", async (socket) => {
   // --- Unified Chat Message Handling ---
   socket.on("chatMessageSent", async (data) => {
     try {
-      const parseData = JSON.parse(data);
+      const parseData = typeof data === "string" ? JSON.parse(data) : data;
       console.log("🔹 [Socket] chatMessageSent received:", parseData);
 
       const senderId = new mongoose.Types.ObjectId(parseData?.senderId);
@@ -208,7 +208,7 @@ io.on("connection", async (socket) => {
   // --- Unified Gift Handling ---
   socket.on("chatGiftSent", async (data) => {
     try {
-      const parseData = JSON.parse(data);
+      const parseData = typeof data === "string" ? JSON.parse(data) : data;
       console.log("🎁 [Socket] chatGiftSent received:", parseData);
 
       const senderId = new mongoose.Types.ObjectId(parseData?.senderId);
@@ -327,7 +327,7 @@ io.on("connection", async (socket) => {
 
   socket.on("chatMessageSeen", async (data) => {
     try {
-      const parsedData = JSON.parse(data);
+      const parsedData = typeof data === "string" ? JSON.parse(data) : data;
       console.log("🔹 Data in chatMessageSeen event:", parsedData);
 
       const updated = await Chat.findByIdAndUpdate(parsedData.messageId, { $set: { isRead: true } }, { new: true, lean: true, select: "_id isRead" });
@@ -344,7 +344,7 @@ io.on("connection", async (socket) => {
 
   //private video call
   socket.on("callRinging", async (data) => {
-    const parsedData = JSON.parse(data);
+    const parsedData = typeof data === "string" ? JSON.parse(data) : data;
     console.log("callRinging request received:", parsedData);
     console.error("callRinging request received:", parsedData);
 
@@ -628,7 +628,7 @@ io.on("connection", async (socket) => {
 
   socket.on("callResponseHandled", async (data) => {
     try {
-      const parsedData = JSON.parse(data);
+      const parsedData = typeof data === "string" ? JSON.parse(data) : data;
 
       const { callerId, receiverId, callId, isAccept, callType, callMode, callerRole, receiverRole } = parsedData;
       console.log("🟢 [callResponseHandled] Event received:", parsedData);
@@ -969,7 +969,7 @@ io.on("connection", async (socket) => {
   });
 
   socket.on("callCancelled", async (data) => {
-    const parseData = JSON.parse(data);
+    const parseData = typeof data === "string" ? JSON.parse(data) : data;
     const { callerId, receiverId, callId, callType, callMode, callerRole, receiverRole } = parseData;
     console.log("🟢 [callCancelled] Event received:", parseData);
 
@@ -1086,7 +1086,7 @@ io.on("connection", async (socket) => {
   });
 
   socket.on("callDisconnected", async (data) => {
-    const parseData = JSON.parse(data);
+    const parseData = typeof data === "string" ? JSON.parse(data) : data;
     const { callerId, receiverId, callId, callType, callMode, callerRole, receiverRole } = parseData;
     console.log("[callDisconnected]", "data in callDisconnected:", parseData);
 
@@ -1496,7 +1496,7 @@ io.on("connection", async (socket) => {
 
   socket.on("callCoinCharged", async (data) => {
     try {
-      const parsedData = JSON.parse(data);
+      const parsedData = typeof data === "string" ? JSON.parse(data) : data;
       console.log("[callCoinCharged] Parsed Data:", parsedData);
 
       const { callerId, receiverId, callId, callMode, gender } = parsedData;
@@ -1817,7 +1817,7 @@ io.on("connection", async (socket) => {
 
   socket.on("callCoinChargedForFakeCall", async (data) => {
     try {
-      const parsedData = JSON.parse(data);
+      const parsedData = typeof data === "string" ? JSON.parse(data) : data;
       console.log("[callCoinChargedForFakeCall] Parsed Data:", parsedData);
 
       const { callerId, receiverId, callMode, callType, gender } = parsedData;
@@ -1970,7 +1970,7 @@ io.on("connection", async (socket) => {
 
   //random video call
   socket.on("ringingStarted", async (data) => {
-    const parsedData = JSON.parse(data);
+    const parsedData = typeof data === "string" ? JSON.parse(data) : data;
     const { callerId, receiverId, agoraUID, channel, gender, callerRole, receiverRole } = parsedData;
     console.error("ringingStarted request received:", parsedData);
 
@@ -2225,7 +2225,7 @@ io.on("connection", async (socket) => {
 
   //live-streaming
   socket.on("liveRoomJoin", async (data) => {
-    const parsedData = JSON.parse(data);
+    const parsedData = typeof data === "string" ? JSON.parse(data) : data;
     console.log("liveRoomJoin connected : ", parsedData);
 
     const sockets = await io.in(globalRoom).fetchSockets();
@@ -2253,7 +2253,7 @@ io.on("connection", async (socket) => {
 
   socket.on("liveStreamStatusCheck", async (data) => {
     try {
-      const dataOfCheck = JSON.parse(data);
+      const dataOfCheck = typeof data === "string" ? JSON.parse(data) : data;
       console.log("[liveStreamStatusCheck] Parsed data:", dataOfCheck);
 
       const { liveHistoryId, hostId } = dataOfCheck;
@@ -2288,7 +2288,7 @@ io.on("connection", async (socket) => {
   });
 
   socket.on("liveJoinerCount", async (data) => {
-    const dataOfaddView = JSON.parse(data);
+    const dataOfaddView = typeof data === "string" ? JSON.parse(data) : data;
     console.log("[liveJoinerCount] Received data:", dataOfaddView);
 
     const { userId, liveHistoryId } = dataOfaddView;
@@ -2359,7 +2359,7 @@ io.on("connection", async (socket) => {
 
   socket.on("removeLiveJoiner", async (data) => {
     try {
-      const dataOflessView = JSON.parse(data);
+      const dataOflessView = typeof data === "string" ? JSON.parse(data) : data;
       console.log("[removeLiveJoiner] Received data:", dataOflessView);
 
       const { userId, liveHistoryId } = dataOflessView;
@@ -2392,7 +2392,7 @@ io.on("connection", async (socket) => {
 
   socket.on("liveCommentBroadcast", async (data) => {
     try {
-      const dataOfComment = JSON.parse(data);
+      const dataOfComment = typeof data === "string" ? JSON.parse(data) : data;
       console.log("[liveCommentBroadcast] Parsed data:", dataOfComment);
 
       const { liveHistoryId, userId, comment } = dataOfComment;
@@ -2428,7 +2428,7 @@ io.on("connection", async (socket) => {
   });
 
   socket.on("liveGiftSent", async (data) => {
-    const giftData = JSON.parse(data);
+    const giftData = typeof data === "string" ? JSON.parse(data) : data;
     console.log("Gift Data Received:", giftData);
 
     if (!socket.rooms.has(giftData.liveHistoryId)) {
@@ -2565,7 +2565,7 @@ io.on("connection", async (socket) => {
   });
 
   socket.on("giftSent", async (data) => {
-    const giftData = JSON.parse(data);
+    const giftData = typeof data === "string" ? JSON.parse(data) : data;
     console.log("Gift Data Received:", giftData);
 
     if (!socket.rooms.has(giftData.liveHistoryId)) {
@@ -2710,7 +2710,7 @@ io.on("connection", async (socket) => {
 
   socket.on("liveStreamEnd", async (data) => {
     try {
-      const parsedData = JSON.parse(data);
+      const parsedData = typeof data === "string" ? JSON.parse(data) : data;
       console.log("Received liveStreamEnd event with data:", parsedData);
 
       const { hostId, liveHistoryId } = parsedData;
@@ -2773,7 +2773,7 @@ io.on("connection", async (socket) => {
   // Room Moderation: Mute and Kick with Hierarchy
   socket.on("roomAction", async (data) => {
     try {
-      const parsedData = JSON.parse(data);
+      const parsedData = typeof data === "string" ? JSON.parse(data) : data;
       console.log("🔹 [roomAction] event received:", parsedData);
 
       const { action, senderId, targetId, liveHistoryId } = parsedData; // action: "mute" or "kick"
