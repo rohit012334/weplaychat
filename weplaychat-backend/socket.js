@@ -2228,6 +2228,9 @@ io.on("connection", async (socket) => {
     const parsedData = typeof data === "string" ? JSON.parse(data) : data;
     console.log("liveRoomJoin connected : ", parsedData);
 
+    const liveHistoryId = (parsedData.liveHistoryId || parsedData.channel)?.toString();
+    if (!liveHistoryId) return;
+
     const sockets = await io.in(globalRoom).fetchSockets();
 
     if (sockets?.length) {
@@ -2241,11 +2244,11 @@ io.on("connection", async (socket) => {
         });
 
         // Join the new live room
-        socket.join(parsedData.liveHistoryId);
-        console.log(`Joined new room: ${parsedData.liveHistoryId}`);
+        socket.join(liveHistoryId);
+        console.log(`Joined new room: ${liveHistoryId}`);
       });
 
-      io.in(parsedData.liveHistoryId).emit("liveRoomJoin", data);
+      io.in(liveHistoryId).emit("liveRoomJoin", data);
     } else {
       console.log("Sockets not able to emit");
     }
@@ -2256,7 +2259,10 @@ io.on("connection", async (socket) => {
       const dataOfCheck = typeof data === "string" ? JSON.parse(data) : data;
       console.log("[liveStreamStatusCheck] Parsed data:", dataOfCheck);
 
-      const { liveHistoryId, hostId } = dataOfCheck;
+      const liveHistoryId = (dataOfCheck.liveHistoryId || dataOfCheck.channel)?.toString();
+      const { hostId } = dataOfCheck;
+
+      if (!liveHistoryId || !hostId) return;
 
       const liveUser = await LiveBroadcaster.findOne({ hostId: hostId, liveHistoryId: liveHistoryId }).lean();
 
@@ -2291,7 +2297,10 @@ io.on("connection", async (socket) => {
     const dataOfaddView = typeof data === "string" ? JSON.parse(data) : data;
     console.log("[liveJoinerCount] Received data:", dataOfaddView);
 
-    const { userId, liveHistoryId } = dataOfaddView;
+    const liveHistoryId = (dataOfaddView.liveHistoryId || dataOfaddView.channel)?.toString();
+    const { userId } = dataOfaddView;
+
+    if (!liveHistoryId || !userId) return;
 
     const [user, liveUser, existLiveView] = await Promise.all([
       User.findById(userId).select("_id name image gender countryFlagImage country isVip vipLevel").lean(),
@@ -2362,7 +2371,10 @@ io.on("connection", async (socket) => {
       const dataOflessView = typeof data === "string" ? JSON.parse(data) : data;
       console.log("[removeLiveJoiner] Received data:", dataOflessView);
 
-      const { userId, liveHistoryId } = dataOflessView;
+      const liveHistoryId = (dataOflessView.liveHistoryId || dataOflessView.channel)?.toString();
+      const { userId } = dataOflessView;
+
+      if (!liveHistoryId || !userId) return;
 
       const [liveUser, existLiveView] = await Promise.all([LiveBroadcaster.findOne({ liveHistoryId }).select("_id view").lean(), LiveBroadcastView.findOne({ userId, liveHistoryId }).lean()]);
 
@@ -2395,8 +2407,14 @@ io.on("connection", async (socket) => {
       const dataOfComment = typeof data === "string" ? JSON.parse(data) : data;
       console.log("[liveCommentBroadcast] Parsed data:", dataOfComment);
 
-      const { liveHistoryId, userId, comment } = dataOfComment;
-      if (!liveHistoryId || !userId) return;
+      const liveHistoryId = (dataOfComment.liveHistoryId || dataOfComment.channel)?.toString();
+      const userId = dataOfComment.userId;
+      const comment = dataOfComment.comment || dataOfComment.message;
+
+      if (!liveHistoryId || !userId) {
+        console.log("[liveCommentBroadcast] Missing liveHistoryId or userId. liveHistoryId:", liveHistoryId, "userId:", userId);
+        return;
+      }
 
       // Check if user is muted in this room
       const viewer = await LiveBroadcastView.findOne({ liveHistoryId, userId });
@@ -2405,7 +2423,7 @@ io.on("connection", async (socket) => {
       }
 
       if (!socket.rooms.has(liveHistoryId)) {
-        socket.join(liveHistoryId.toString());
+        socket.join(liveHistoryId);
         console.log(`[liveCommentBroadcast] joined room: ${liveHistoryId}`);
       } else {
         console.log(`[liveCommentBroadcast] User is already in room: ${liveHistoryId}`);
@@ -2414,7 +2432,7 @@ io.on("connection", async (socket) => {
       const [liveHistory] = await Promise.all([LiveBroadcastHistory.findById(liveHistoryId).select("_id").lean()]);
 
       console.log(`[liveCommentBroadcast] Broadcast to room: ${liveHistoryId}`);
-      io.in(liveHistoryId).emit("liveCommentBroadcast", data);
+      io.in(liveHistoryId).emit("liveCommentBroadcast", dataOfComment);
 
       const socketCount = (await io.in(liveHistoryId).fetchSockets())?.length || 0;
       console.log(`[liveCommentBroadcast] Active sockets in room ${liveHistoryId}:`, socketCount);
@@ -2431,11 +2449,15 @@ io.on("connection", async (socket) => {
     const giftData = typeof data === "string" ? JSON.parse(data) : data;
     console.log("Gift Data Received:", giftData);
 
-    if (!socket.rooms.has(giftData.liveHistoryId)) {
-      socket.join(giftData.liveHistoryId.toString());
-      console.log(`[liveGiftSent] joined room: ${giftData.liveHistoryId}`);
+    const liveHistoryId = (giftData.liveHistoryId || giftData.channel)?.toString();
+
+    if (!liveHistoryId) return;
+
+    if (!socket.rooms.has(liveHistoryId)) {
+      socket.join(liveHistoryId);
+      console.log(`[liveGiftSent] joined room: ${liveHistoryId}`);
     } else {
-      console.log(`[liveGiftSent] User is already in room: ${giftData.liveHistoryId}`);
+      console.log(`[liveGiftSent] User is already in room: ${liveHistoryId}`);
     }
 
     try {
@@ -2568,11 +2590,15 @@ io.on("connection", async (socket) => {
     const giftData = typeof data === "string" ? JSON.parse(data) : data;
     console.log("Gift Data Received:", giftData);
 
-    if (!socket.rooms.has(giftData.liveHistoryId)) {
-      socket.join(giftData.liveHistoryId?.toString());
-      console.log(`[liveGiftSent] joined room: ${giftData.liveHistoryId}`);
-    } else {
-      console.log(`[liveGiftSent] User is already in room: ${giftData.liveHistoryId}`);
+    const liveHistoryId = (giftData.liveHistoryId || giftData.channel)?.toString();
+
+    if (liveHistoryId) {
+      if (!socket.rooms.has(liveHistoryId)) {
+        socket.join(liveHistoryId);
+        console.log(`[giftSent] joined room: ${liveHistoryId}`);
+      } else {
+        console.log(`[giftSent] User is already in room: ${liveHistoryId}`);
+      }
     }
 
     let sender = giftData.sendBy == "user" ? User : Host;
@@ -2713,7 +2739,10 @@ io.on("connection", async (socket) => {
       const parsedData = typeof data === "string" ? JSON.parse(data) : data;
       console.log("Received liveStreamEnd event with data:", parsedData);
 
-      const { hostId, liveHistoryId } = parsedData;
+      const liveHistoryId = (parsedData.liveHistoryId || parsedData.channel)?.toString();
+      const { hostId } = parsedData;
+
+      if (!liveHistoryId || !hostId) return;
 
       io.in(liveHistoryId).emit("liveStreamEnd", data);
 
