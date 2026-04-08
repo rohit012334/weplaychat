@@ -26,10 +26,6 @@ export const vipsSidebarMenu = [
       {
         "title": "Gift a Badge",
         "href": "#"
-      },
-      {
-        "title": "Edit Level",
-        "href": "#"
       }
     ]
   },
@@ -679,6 +675,10 @@ export const vipsSidebarMenu = [
       },
       {
         "title": "Level Gifts",
+        "href": "#"
+      },
+      {
+        "title": "Edit Level",
         "href": "#"
       }
     ]

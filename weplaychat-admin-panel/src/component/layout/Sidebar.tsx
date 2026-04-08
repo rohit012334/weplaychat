@@ -33,6 +33,11 @@ import PhotoSizeSelectActualRoundedIcon from "@mui/icons-material/PhotoSizeSelec
 import SportsEsportsRoundedIcon from "@mui/icons-material/SportsEsportsRounded";
 import BarChartRoundedIcon from "@mui/icons-material/BarChartRounded";
 import AssessmentRoundedIcon from "@mui/icons-material/AssessmentRounded";
+import MonetizationOnRoundedIcon from "@mui/icons-material/MonetizationOnRounded";
+import SecurityRoundedIcon from "@mui/icons-material/SecurityRounded";
+import CampaignRoundedIcon from "@mui/icons-material/CampaignRounded";
+import RoomPreferencesRoundedIcon from "@mui/icons-material/RoomPreferencesRounded";
+import EmojiEmotionsRoundedIcon from "@mui/icons-material/EmojiEmotionsRounded";
 
 // ── Logo image ──
 import LogoNew from "@/assets/images/unnamed__2_..-removebg-preview.png";
@@ -57,12 +62,21 @@ const WheelIcon = () => (
 const getTitleIcon = (title: string) => {
   const t = title.toLowerCase();
   if (t.includes("store")) return <StorefrontRoundedIcon fontSize="small" />;
-  if (t.includes("gift") || t.includes("badge") || t.includes("reward") || t.includes("event") || t.includes("frame") || t.includes("entry") || t.includes("tag")) return <CardGiftcardRoundedIcon fontSize="small" />;
-  if (t.includes("vip")) return <WorkspacePremiumRoundedIcon fontSize="small" />;
-  if (t.includes("user") || t.includes("employee") || t.includes("manager")) return <GroupRoundedIcon fontSize="small" />;
-  if (t.includes("permission") || t.includes("role") || t.includes("admin")) return <AdminPanelSettingsRoundedIcon fontSize="small" />;
-  if (t.includes("setting") || t.includes("config")) return <SettingsRoundedIcon fontSize="small" />;
-  if (t.includes("system") || t.includes("module")) return <AccountTreeRoundedIcon fontSize="small" />;
+  if (t.includes("gift") || t.includes("badge") || t.includes("reward") || t.includes("event") || t.includes("frame") || t.includes("entry") || t.includes("tag") || t.includes("spin")) return <CardGiftcardRoundedIcon fontSize="small" />;
+  if (t.includes("vip") || t.includes("achievement") || t.includes("rank")) return <WorkspacePremiumRoundedIcon fontSize="small" />;
+  if (t.includes("user") || t.includes("employee") || t.includes("manager") || t.includes("host") || t.includes("agency") || t.includes("family") || t.includes("reseller") || t.includes("bd")) return <GroupRoundedIcon fontSize="small" />;
+  if (t.includes("permission") || t.includes("role") || t.includes("admin") || t.includes("invitation")) return <AdminPanelSettingsRoundedIcon fontSize="small" />;
+  if (t.includes("setting") || t.includes("config") || t.includes("dashboard")) return <SettingsRoundedIcon fontSize="small" />;
+  if (t.includes("system") || t.includes("module") || t.includes("work") || t.includes("app")) return <AccountTreeRoundedIcon fontSize="small" />;
+  if (t.includes("report") || t.includes("log") || t.includes("history") || t.includes("assessment") || t.includes("stat")) return <AssessmentRoundedIcon fontSize="small" />;
+  if (t.includes("coin") || t.includes("charge") || t.includes("wallet") || t.includes("finance") || t.includes("withdraw") || t.includes("currency") || t.includes("diamond") || t.includes("target")) return <MonetizationOnRoundedIcon fontSize="small" />;
+  if (t.includes("ban") || t.includes("complaint") || t.includes("security") || t.includes("close") || t.includes("block") || t.includes("delete")) return <SecurityRoundedIcon fontSize="small" />;
+  if (t.includes("room") || t.includes("chat") || t.includes("broadcast") || t.includes("live")) return <RoomPreferencesRoundedIcon fontSize="small" />;
+  if (t.includes("emoji")) return <EmojiEmotionsRoundedIcon fontSize="small" />;
+  if (t.includes("banner") || t.includes("announcement") || t.includes("advertisement") || t.includes("official") || t.includes("splash")) return <CampaignRoundedIcon fontSize="small" />;
+  if (t.includes("level") || t.includes("chart") || t.includes("rank")) return <BarChartRoundedIcon fontSize="small" />;
+  if (t.includes("reels") || t.includes("video") || t.includes("moment") || t.includes("photo") || t.includes("gallery")) return <SlowMotionVideoRoundedIcon fontSize="small" />;
+  if (t.includes("game")) return <SportsEsportsRoundedIcon fontSize="small" />;
   return <PublicRoundedIcon fontSize="small" />;
 };
 
@@ -190,7 +204,6 @@ const Sidebar = () => {
       path2: "/GiftPage",
       path3: "/DailyCheckInReward",
       path4: "/SpinWheel",
-      path5: "/Banner",
       navSVG: <Gift />,
       onClick: handleOnClick,
       subMenu: [
@@ -198,7 +211,6 @@ const Sidebar = () => {
         { subName: "Gift", subPath: "/GiftPage", onClick: handleOnClick },
         { subName: "Daily CheckIn", subPath: "/DailyCheckInReward", onClick: handleOnClick },
         { subName: "Spin Wheel", subPath: "/SpinWheel", onClick: handleOnClick },
-        { subName: "Banner", subPath: "/Banner", onClick: handleOnClick },
       ],
     },
   ];
@@ -211,16 +223,28 @@ const Sidebar = () => {
       path3: "/Frame",
       path4: "/Entry",
       path5: "/Tag",
-      path6: "/Event",
       navSVG: <StorefrontRoundedIcon fontSize="small" />,
       onClick: handleOnClick,
       subMenu: [
         { subName: "Frame", subPath: "/Frame", onClick: handleOnClick },
         { subName: "Entry", subPath: "/Entry", onClick: handleOnClick },
         { subName: "Tag", subPath: "/Tag", onClick: handleOnClick },
-        { subName: "Event", subPath: "/Event", onClick: handleOnClick },
         { subName: "Background", subPath: "/Background", onClick: handleOnClick },
-        { subName: "Entry Tag", subPath: "/EntryTag", onClick: handleOnClick },
+        { subName: "Entry Effect", subPath: "/EntryTag", onClick: handleOnClick },
+      ],
+    },
+  ];
+
+  const bannerAndEvent = [
+    {
+      name: "Banner & Event",
+      path: "/Banner",
+      path2: "/Event",
+      navSVG: <CampaignRoundedIcon fontSize="small" />,
+      onClick: handleOnClick,
+      subMenu: [
+        { subName: "Banner", subPath: "/Banner", onClick: handleOnClick },
+        { subName: "Event", subPath: "/Event", onClick: handleOnClick },
       ],
     },
   ];
@@ -243,10 +267,7 @@ const Sidebar = () => {
     { name: "Withdrawal", path: "/WithdrawRequest", navSVG: <WithdrawRequest />, onClick: handleOnClick },
   ];
 
-  const setting = [
-    // { name: "Setting", path: "/Setting", navSVG: <GearIcon />, onClick: handleOnClick },
-    { name: "Profile", path: "/adminProfile", navSVG: <PersonIcon />, onClick: handleOnClick },
-  ];
+
 
   const reelsAndMoments = [
     {
@@ -265,15 +286,27 @@ const Sidebar = () => {
       onClick: () => toast.info("Coming soon"),
     },
   ];
+  const levelData = vipsSidebarMenu.find(
+    (item: any) => String(item?.title || "").toLowerCase() === "level"
+  );
+  const levelMenu = levelData
+    ? [
+      {
+        name: levelData?.title,
+        path: levelData?.href || "#",
+        navSVG: getTitleIcon(levelData?.title || ""),
+        onClick: (levelData?.href === "#" && (!levelData?.children || levelData?.children?.length === 0)) ? () => toast.info("Coming soon") : undefined,
+        subMenu: (levelData?.children || []).map((child: any) => ({
+          subName: child?.title,
+          subPath: child?.href,
+          navSVG: getTitleIcon(child?.title || ""),
+          onClick: child?.href === "#" ? () => toast.info("Coming soon") : undefined,
+        })),
+      },
+    ]
+    : [];
 
-  const levelMenu = [
-    {
-      name: "Levels",
-      path: "#",
-      navSVG: <BarChartRoundedIcon fontSize="small" />,
-      onClick: () => toast.info("Coming soon"),
-    },
-  ];
+
 
   const blockedVipsTopLevel = new Set([
     "dashboard",
@@ -292,6 +325,10 @@ const Sidebar = () => {
     "reels",
     "games",
     "level",
+    "settings",
+    "setting",
+    "advertisements",
+    "events",
   ]);
   const vipsImportedMenu = vipsSidebarMenu
     .filter((item: any) => !blockedVipsTopLevel.has(String(item?.title || "").toLowerCase()))
@@ -860,10 +897,11 @@ const Sidebar = () => {
 
                     {renderMenuItems(storeMenu)}
 
+                    {renderMenuItems(bannerAndEvent)}
+
                     {renderMenuItems(vipMenu)}
                   </>
                 )}
-
                 {renderMenuItems(reelsAndMoments)}
                 {renderMenuItems(gamesMenu)}
                 {renderMenuItems(levelMenu)}
@@ -874,8 +912,7 @@ const Sidebar = () => {
                 <li className="sb-label">Finance</li>
                 {renderMenuItems(finance)}
 
-                <li className="sb-label">Settings</li>
-                {renderMenuItems(setting)}
+
 
                 <li style={{ height: "16px", listStyle: "none" }} />
               </ul>

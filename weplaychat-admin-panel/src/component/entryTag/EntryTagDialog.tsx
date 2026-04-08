@@ -93,14 +93,14 @@ const EntryTagDialog = () => {
                     <div className="col-xl-4 col-md-6 col-11">
                         <div className="mainDiaogBox">
                             <div className="row justify-content-between align-items-center formHead">
-                                <div className="col-8"><h4 className="text-theme m0">{mongoId ? "Edit Entry Tag" : "Add Entry Tag"}</h4></div>
+                                <div className="col-8"><h4 className="text-theme m0">{mongoId ? "Edit Entry Effect" : "Add Entry Effect"}</h4></div>
                                 <div className="col-4"><div className="closeButton" onClick={() => dispatch(closeDialog())} style={{ fontSize: "20px" }}>✖</div></div>
                             </div>
                             <form onSubmit={handleSubmit}>
                                 <div className="row align-items-start formBody">
                                     <div className="col-12">
                                         <label className="form-label" style={{ fontWeight: 600, fontSize: "14px", color: "#555" }}>
-                                            Entry Tag File
+                                            Entry Effect File
                                             <span style={{ color: "#8F6DFF", fontSize: "12px", fontWeight: 400, marginLeft: "8px" }}>(MP4, SVGA)</span>
                                         </label>
                                         <div onClick={() => fileInputRef.current?.click()} style={{ border: "2px dashed #8F6DFF", borderRadius: "16px", padding: "20px", cursor: "pointer", textAlign: "center", background: "#faf8ff", minHeight: "280px", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: "8px", position: "relative", overflow: "hidden" }}>

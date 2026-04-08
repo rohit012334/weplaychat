@@ -68,7 +68,7 @@ const EntryTagPage = () => {
                 <div className="ec-topbar">
                     <div className="ec-topbar-left">
                         <div className="ec-topbar-pill" />
-                        <h4 className="ec-topbar-title">Entry Tags</h4>
+                        <h4 className="ec-topbar-title">Entry Effects</h4>
                         <span className="ec-topbar-count">{total ?? 0} total</span>
                     </div>
                     <button className="ec-add-btn" onClick={() => dispatch(openDialog({ type: "entryTag" }))}>
@@ -76,7 +76,7 @@ const EntryTagPage = () => {
                             <line x1="12" y1="5" x2="12" y2="19" />
                             <line x1="5" y1="12" x2="19" y2="12" />
                         </svg>
-                        Add Entry Tag
+                        Add Entry Effect
                     </button>
                 </div>
                 <div className="ec-table-card">

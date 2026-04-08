@@ -8,7 +8,6 @@ const FramePage  = dynamic(() => import("@/pages/Frame"),  { ssr: false });
 const EntryPage  = dynamic(() => import("@/pages/Entry"),  { ssr: false });
 const EntryTagPage = dynamic(() => import("@/pages/EntryTag"), { ssr: false });
 const TagPage    = dynamic(() => import("@/pages/Tag"),    { ssr: false });
-const EventPage  = dynamic(() => import("@/pages/Event"),  { ssr: false });
 
 
 const TAB_CONFIG = [
@@ -42,7 +41,7 @@ const TAB_CONFIG = [
   },
   {
     key: "EntryTag",
-    label: "Entry Tag",
+    label: "Entry Effect",
     icon: (
       <svg width="15" height="15" fill="currentColor" viewBox="0 0 16 16">
         <path d="M2 1a1 1 0 0 0-1 1v4.586a1 1 0 0 0 .293.707l7 7a1 1 0 0 0 1.414 0l4.586-4.586a1 1 0 0 0 0-1.414l-7-7A1 1 0 0 0 6.586 1zm4 3.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0" />
@@ -58,16 +57,6 @@ const TAB_CONFIG = [
       </svg>
     ),
   },
-  {
-    key: "Event",
-    label: "Event",
-    icon: (
-      <svg width="15" height="15" fill="currentColor" viewBox="0 0 16 16">
-        <path d="M11 6.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1z"/>
-        <path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z"/>
-      </svg>
-    ),
-  },
 ];
 
 const Store = () => {
@@ -80,7 +69,6 @@ const Store = () => {
       case "Entry":       return <EntryPage />;
       case "EntryTag":    return <EntryTagPage />;
       case "Tag":         return <TagPage />;
-      case "Event":       return <EventPage />;
       default:            return null;
     }
   };
