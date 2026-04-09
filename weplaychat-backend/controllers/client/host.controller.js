@@ -576,7 +576,7 @@ exports.retrieveHostDetails = async (req, res) => {
     const [host, receivedGifts, isFollowing, totalFollower] = await Promise.all([
       Host.findOne({ _id: hostId, isBlock: false })
         .select(
-          "name email gender bio uniqueId countryFlagImage country impression language image photoGallery profileVideo randomCallRate randomCallFemaleRate randomCallMaleRate privateCallRate audioCallRate chatRate coin isFake video liveVideo userId"
+          "name email gender dob bio uniqueId countryFlagImage country impression language image photoGallery profileVideo randomCallRate randomCallFemaleRate randomCallMaleRate privateCallRate audioCallRate chatRate coin isFake video liveVideo userId level totalEarnings"
         )
         .lean(),
       History.aggregate([
@@ -639,7 +639,7 @@ exports.fetchHostInfo = async (req, res) => {
     const [host] = await Promise.all([
       Host.findOne({ _id: hostId, isBlock: false })
         .select(
-          "name email gender dob bio uniqueId countryFlagImage country impression language image photoGallery profileVideo randomCallRate randomCallFemaleRate randomCallMaleRate privateCallRate audioCallRate chatRate coin"
+          "name email gender dob bio uniqueId countryFlagImage country impression language image photoGallery profileVideo randomCallRate randomCallFemaleRate randomCallMaleRate privateCallRate audioCallRate chatRate coin level totalEarnings"
         )
         .lean(),
     ]);

@@ -29,6 +29,7 @@ const userSchema = new mongoose.Schema(
 
     coin: { type: Number, default: 0 },
     spentCoins: { type: Number, default: 0 },
+    level: { type: Number, default: 0 },
     rechargedCoins: { type: Number, default: 0 }, //totalTopUp (Total coins the user has topped up)
 
     // Spin wheel (panel-managed rewards)

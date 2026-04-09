@@ -1235,7 +1235,7 @@ exports.retrieveProfileDetails = async (req, res) => {
 
     // 1. Sabse pehle User collection mein search karo
     let user = await User.findOne({ _id: targetId, isBlock: false })
-      .select("name gender bio identity language image coin isVip vipLevel country countryFlagImage mobileNumber uniqueId selfIntro isHost hostId")
+      .select("name gender bio identity language image coin isVip vipLevel country countryFlagImage mobileNumber uniqueId selfIntro isHost hostId level")
       .lean();
 
     if (!user) {
@@ -1248,7 +1248,7 @@ exports.retrieveProfileDetails = async (req, res) => {
     // 2. Agar isHost true hai, toh Host ka sara data fetch karo
     if (user.isHost && user.hostId) {
       const hostData = await Host.findOne({ _id: user.hostId, isBlock: false })
-        .select("name email gender dob bio uniqueId countryFlagImage country impression language image photoGallery profileVideo randomCallRate randomCallFemaleRate randomCallMaleRate privateCallRate audioCallRate chatRate coin isFake video liveVideo userId")
+        .select("name email gender dob bio uniqueId countryFlagImage country impression language image photoGallery profileVideo randomCallRate randomCallFemaleRate randomCallMaleRate privateCallRate audioCallRate chatRate coin isFake video liveVideo userId level totalEarnings")
         .lean();
 
       if (hostData) {

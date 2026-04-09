@@ -45,6 +45,8 @@ const hostSchema = new mongoose.Schema(
 
     coin: { type: Number, default: 0 },
     totalGifts: { type: Number, default: 0 },
+    totalEarnings: { type: Number, default: 0 },
+    level: { type: Number, default: 0 },
 
     redeemedCoins: { type: Number, default: 0 },
     redeemedAmount: { type: Number, default: 0 },

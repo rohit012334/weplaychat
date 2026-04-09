@@ -36,6 +36,7 @@ exports.HISTORY_TYPE = {
   ADMIN_DEDUCT_COIN: 15,
   RESELLER_RECHARGE_USER: 16, // When reseller recharged user with coins
   LUCKY_SPIN_REWARD: 17,
+  PK_BATTLE_GIFT: 18,
 };
 
 exports.COIN_TRANSACTION_TYPE = {

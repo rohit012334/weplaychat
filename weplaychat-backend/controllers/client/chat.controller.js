@@ -200,6 +200,10 @@ exports.pushChatMessage = async (req, res) => {
           }),
           agencyUpdate
         ]);
+
+        // Update Levels & EXP
+        addUserExp(senderId, finalChatRate);
+        addHostExp(hostReceiver._id, hostEarnings);
     }
 
     // Final Success Response
