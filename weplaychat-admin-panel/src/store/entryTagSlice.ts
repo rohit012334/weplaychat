@@ -84,6 +84,37 @@ const entryTagSlice = createSlice({
         builder.addCase(createEntryTag.rejected, (state) => {
             state.isLoading = false;
         });
+
+        // UPDATE entry tag
+        builder.addCase(updateEntryTag.pending, (state) => {
+            state.isLoading = true;
+        });
+        builder.addCase(updateEntryTag.fulfilled, (state, action: PayloadAction<any>) => {
+            state.isLoading = false;
+            if (action.payload.status) {
+                const idx = state.entryTags.findIndex(e => e._id === action.payload.data?._id);
+                if (idx !== -1) {
+                    state.entryTags[idx] = { ...state.entryTags[idx], ...action.payload.data };
+                }
+                Success("Updated Successfully");
+            } else {
+                DangerRight(action.payload.message);
+            }
+        });
+        builder.addCase(updateEntryTag.rejected, (state) => {
+            state.isLoading = false;
+        });
+
+        // TOGGLE status
+        builder.addCase(updateEntryTagStatus.fulfilled, (state, action: PayloadAction<any>) => {
+            if (action.payload.status) {
+                const idx = state.entryTags.findIndex(e => e._id === action.payload.data?._id);
+                if (idx !== -1) {
+                    state.entryTags[idx].isActive = action.payload.data.isActive;
+                }
+            }
+        });
+
         builder.addCase(deleteEntryTag.fulfilled, (state, action: any) => {
             if (action.payload.status) {
                 state.entryTags = state.entryTags.filter(e => e._id !== action.meta.arg);

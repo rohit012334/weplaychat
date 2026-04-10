@@ -215,28 +215,6 @@ const FrameDialog = () => {
                                                 </>
                                             )}
                                         </div>
-                                    
-                                    <div className="col-12 mt-3">
-                                        <label
-                                            className="form-label"
-                                            style={{ fontWeight: 600, fontSize: "14px", color: "#555" }}
-                                        >
-                                            Price
-                                        </label>
-                                        <input
-                                            type="number"
-                                            className="form-control"
-                                            placeholder="Enter Price"
-                                            value={price}
-                                            onChange={(e) => setPrice(Number(e.target.value))}
-                                            style={{
-                                                borderRadius: "10px",
-                                                border: "1px solid #e8eaf2",
-                                                padding: "10px 14px",
-                                                fontSize: "14px"
-                                            }}
-                                        />
-                                    </div>
                                         <input
                                             ref={fileInputRef}
                                             type="file"
@@ -258,6 +236,28 @@ const FrameDialog = () => {
                                                 ✕ Remove file
                                             </button>
                                         )}
+                                    </div>
+                                    
+                                    <div className="col-12 mt-3">
+                                        <label
+                                            className="form-label"
+                                            style={{ fontWeight: 600, fontSize: "14px", color: "#555" }}
+                                        >
+                                            Price
+                                        </label>
+                                        <input
+                                            type="number"
+                                            className="form-control"
+                                            placeholder="Enter Price"
+                                            value={price}
+                                            onChange={(e) => setPrice(Number(e.target.value))}
+                                            style={{
+                                                borderRadius: "10px",
+                                                border: "1px solid #e8eaf2",
+                                                padding: "10px 14px",
+                                                fontSize: "14px"
+                                            }}
+                                        />
                                     </div>
 
                                     {/* Buttons */}
