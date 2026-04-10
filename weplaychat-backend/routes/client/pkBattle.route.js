@@ -55,27 +55,6 @@ route.post(
   PKBattleController.joinRandomMatch
 );
 
-route.post(
-  "/random/:queueId/accept",
-  checkAccessWithSecretKey(),
-  validateUserToken,
-  PKBattleController.acceptRandomMatch
-);
-
-route.post(
-  "/random/:queueId/reject",
-  checkAccessWithSecretKey(),
-  validateUserToken,
-  PKBattleController.rejectRandomMatch
-);
-
-route.delete(
-  "/random/leave-queue",
-  checkAccessWithSecretKey(),
-  validateUserToken,
-  PKBattleController.leaveQueue
-);
-
 // ====== BATTLE ROUTES ======
 route.get(
   "/battle/:battleId",
@@ -85,25 +64,12 @@ route.get(
 );
 
 route.post(
-  "/battle/:battleId/start",
-  checkAccessWithSecretKey(),
-  validateUserToken,
-  PKBattleController.startBattle
-);
-
-route.post(
   "/battle/:battleId/end",
   checkAccessWithSecretKey(),
   validateUserToken,
   PKBattleController.endBattle
 );
 
-// route.post(
-//   "/battle/:battleId/action",
-//   checkAccessWithSecretKey(),
-//   validateUserToken,
-//   PKBattleController.performAction
-// );
 
 route.post(
   "/battle/:battleId/gift",
