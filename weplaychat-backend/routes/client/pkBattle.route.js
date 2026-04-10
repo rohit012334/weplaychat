@@ -6,10 +6,10 @@ const route = express.Router();
 const checkAccessWithSecretKey = require("../../checkAccess");
 
 //controller
-const PKBattleController = require("../../controllers/client/pkBattle.controller");
+const PKBattleController = require("../../controllers/client/pkBattle.controller.js");
 
 //validate user's access token
-const validateUserToken = require("../../middleware/validateUserToken.middleware");
+const validateUserToken = require("../../middleware/validateUserToken.middleware.js");
 
 // ====== INVITATION ROUTES ======
 route.post(
