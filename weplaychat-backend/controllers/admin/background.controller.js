@@ -22,6 +22,7 @@ exports.createBackground = async (req, res) => {
     const background = new Background({
       file: req.file.path,
       type,
+      price: req.body.price || 0,
     });
 
     await background.save();
@@ -55,6 +56,7 @@ exports.updateBackground = async (req, res) => {
     }
 
     if (req.body.type) background.type = req.body.type;
+    if (req.body.price !== undefined) background.price = req.body.price;
 
     if (req.file) {
       if (background.file) {

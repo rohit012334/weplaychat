@@ -185,6 +185,7 @@ const TagContent = () => {
                 <tr>
                   <th style={{ textAlign: "center", verticalAlign: "middle", padding: "16px 12px" }}>NO</th>
                   <th style={{ textAlign: "center", verticalAlign: "middle", padding: "16px 12px" }}>TAG NAME</th>
+                  <th style={{ textAlign: "center", verticalAlign: "middle", padding: "16px 12px" }}>PRICE</th>
                   <th style={{ textAlign: "center", verticalAlign: "middle", padding: "16px 12px" }}>TAG FILE</th>
                   <th style={{ textAlign: "center", verticalAlign: "middle", padding: "16px 12px" }}>STATUS</th>
                   <th style={{ textAlign: "center", verticalAlign: "middle", padding: "16px 12px" }}>ACTIONS</th>
@@ -209,6 +210,9 @@ const TagContent = () => {
                             </svg>
                             {row?.name || "-"}
                           </span>
+                        </td>
+                        <td style={{ textAlign: "center", verticalAlign: "middle" }}>
+                           <span style={{ fontWeight: 700, color: "#a855f7" }}>{row?.price || 0}</span>
                         </td>
                         <td style={{ textAlign: "center", verticalAlign: "middle" }}>
                           {!file ? (

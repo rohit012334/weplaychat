@@ -4,6 +4,7 @@ const entryTagSchema = new mongoose.Schema(
   {
     file: { type: String, default: "" },
     type: { type: String, enum: ["mp4", "svga"], default: "mp4" },
+    price: { type: Number, default: 0 },
     isActive: { type: Boolean, default: true },
   },
   {

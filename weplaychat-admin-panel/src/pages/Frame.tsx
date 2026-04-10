@@ -200,6 +200,7 @@ const FrameContent = () => {
                   <th style={{ textAlign: "center", verticalAlign: "middle", padding: "16px 12px" }}>NO</th>
                   <th style={{ textAlign: "center", verticalAlign: "middle", padding: "16px 12px" }}>PREVIEW</th>
                   <th style={{ textAlign: "center", verticalAlign: "middle", padding: "16px 12px" }}>TYPE</th>
+                  <th style={{ textAlign: "center", verticalAlign: "middle", padding: "16px 12px" }}>PRICE</th>
                   <th style={{ textAlign: "center", verticalAlign: "middle", padding: "16px 12px" }}>STATUS</th>
                   <th style={{ textAlign: "center", verticalAlign: "middle", padding: "16px 12px" }}>ACTIONS</th>
                 </tr>
@@ -238,6 +239,9 @@ const FrameContent = () => {
                           }}>
                             {mediaType}
                           </span>
+                        </td>
+                        <td style={{ textAlign: "center", verticalAlign: "middle" }}>
+                           <span style={{ fontWeight: 700, color: "#a855f7" }}>{row?.price || 0}</span>
                         </td>
                         <td style={{ textAlign: "center", verticalAlign: "middle" }}>
                            <ToggleSwitch

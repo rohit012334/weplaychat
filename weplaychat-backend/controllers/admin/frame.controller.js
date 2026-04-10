@@ -21,6 +21,7 @@ exports.createFrame = async (req, res) => {
         const frame = new Frame({
             file: req.file.path,
             type,
+            price: req.body.price || 0,
         });
 
         await frame.save();
@@ -54,6 +55,7 @@ exports.updateFrame = async (req, res) => {
         }
 
         if (req.body.type) frame.type = req.body.type;
+        if (req.body.price !== undefined) frame.price = req.body.price;
 
         if (req.file) {
             // Remove old file

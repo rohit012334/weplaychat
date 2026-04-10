@@ -6,7 +6,8 @@ const tagSchema = new mongoose.Schema(
         // Optional tag asset (SVGA / PNG / JPG). Stored as `/storage/<filename>` via normalizeStoragePath middleware.
         file: { type: String, default: "" },
         // Normalized file type: `svga` | `png` | `jpg` (jpeg will be normalized to `jpg`).
-        type: { type: String, default: "" },
+        type: { type: String, enum: ["png", "jpg", "svga"], default: "png" },
+        price: { type: Number, default: 0 },
         isActive: { type: Boolean, default: true },
     },
     {

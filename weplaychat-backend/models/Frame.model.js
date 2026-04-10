@@ -4,6 +4,7 @@ const frameSchema = new mongoose.Schema(
     {
         file: { type: String, default: "" },
         type: { type: String, enum: ["gif", "mp4", "svga"], default: "gif" },
+        price: { type: Number, default: 0 },
         isActive: { type: Boolean, default: true },
     },
     {

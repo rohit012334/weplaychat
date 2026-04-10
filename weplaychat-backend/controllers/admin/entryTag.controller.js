@@ -15,7 +15,7 @@ exports.createEntryTag = async (req, res) => {
       if (req.file) fs.existsSync(req.file.path) && fs.unlinkSync(req.file.path);
       return res.status(200).json({ status: false, message: "Invalid type. Must be mp4 or svga." });
     }
-    const entryTag = new EntryTag({ file: req.file.path, type });
+    const entryTag = new EntryTag({ file: req.file.path, type, price: req.body.price || 0 });
     await entryTag.save();
     return res.status(200).json({ status: true, message: "EntryTag created successfully.", data: entryTag });
   } catch (error) {
@@ -39,6 +39,7 @@ exports.updateEntryTag = async (req, res) => {
       return res.status(200).json({ status: false, message: "EntryTag not found." });
     }
     if (req.body.type) entryTag.type = req.body.type;
+    if (req.body.price !== undefined) entryTag.price = req.body.price;
     if (req.file) {
       if (entryTag.file) {
         const oldFilePath = resolveStorageAbsolutePath(entryTag.file);

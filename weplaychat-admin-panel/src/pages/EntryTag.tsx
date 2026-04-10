@@ -87,6 +87,7 @@ const EntryTagPage = () => {
                                     <th style={{ textAlign: "center", verticalAlign: "middle", padding: "16px 12px" }}>NO</th>
                                     <th style={{ textAlign: "center", verticalAlign: "middle", padding: "16px 12px" }}>PREVIEW</th>
                                     <th style={{ textAlign: "center", verticalAlign: "middle", padding: "16px 12px" }}>TYPE</th>
+                                    <th style={{ textAlign: "center", verticalAlign: "middle", padding: "16px 12px" }}>PRICE</th>
                                     <th style={{ textAlign: "center", verticalAlign: "middle", padding: "16px 12px" }}>STATUS</th>
                                     <th style={{ textAlign: "center", verticalAlign: "middle", padding: "16px 12px" }}>ACTIONS</th>
                                 </tr>
@@ -128,6 +129,9 @@ const EntryTagPage = () => {
                                                     <span style={{ textTransform: "uppercase", fontSize: 12, fontWeight: 700, color: "#6366f1", background: "rgba(99,102,241,0.09)", padding: "4px 14px", borderRadius: "20px" }}>
                                                         {type ? type.toUpperCase() : "-"}
                                                     </span>
+                                                </td>
+                                                <td style={{ textAlign: "center", verticalAlign: "middle" }}>
+                                                    <span style={{ fontWeight: 700, color: "#a855f7" }}>{row?.price || 0}</span>
                                                 </td>
                                                 <td style={{ textAlign: "center", verticalAlign: "middle" }}>
                                                     <ToggleSwitch value={row.isActive} onClick={() => dispatch(updateEntryTagStatus(row._id))} />

@@ -20,6 +20,7 @@ const TagDialog = () => {
     const [existingFilePreview, setExistingFilePreview] = useState<string>("");
     const [fileType, setFileType] = useState<string>("");
     const [existingFileType, setExistingFileType] = useState<string>("");
+    const [price, setPrice] = useState<number>(0);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const inferTagTypeFromFile = (file: File): string => {
@@ -54,6 +55,7 @@ const TagDialog = () => {
             const existingType = typeFromDb || inferredType;
             setExistingFileType(existingType);
             setFileType(existingType);
+            setPrice(dialogueData.price || 0);
         }
     }, [dialogueData]);
 
@@ -89,6 +91,7 @@ const TagDialog = () => {
 
         const formData = new FormData();
         formData.append("name", name.trim());
+        formData.append("price", price.toString());
 
         // Update mode: file will replace only if user selected a new one.
         if (tagFile) {
@@ -139,6 +142,17 @@ const TagDialog = () => {
                                             label="Tag Name"
                                             placeholder="Enter tag name"
                                             onChange={(e: any) => setName(e.target.value)}
+                                        />
+                                    </div>
+                                    <div className="col-12 mt-3">
+                                        <ExInput
+                                            type="number"
+                                            id="tagPrice"
+                                            name="price"
+                                            value={price}
+                                            label="Price"
+                                            placeholder="Enter Price"
+                                            onChange={(e: any) => setPrice(Number(e.target.value))}
                                         />
                                     </div>
 

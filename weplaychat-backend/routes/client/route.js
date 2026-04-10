@@ -26,6 +26,7 @@ const identityProof = require("./identityProof.route");
 const withdrawalRequest = require("./withdrawalRequest.route");
 const banner = require("./banner.route");
 const spin = require("./spin.route");
+const pkBattle = require("./pkBattle.route");
 
 //exports client's route.js
 route.use("/user", user);
@@ -48,5 +49,6 @@ route.use("/identityProof", identityProof);
 route.use("/withdrawalRequest", withdrawalRequest);
 route.use("/banner", banner);
 route.use("/spin", spin);
+route.use("/pkBattle", pkBattle);
 
 module.exports = route;

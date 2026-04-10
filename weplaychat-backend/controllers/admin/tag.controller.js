@@ -32,7 +32,7 @@ exports.createTag = async (req, res) => {
         }
 
         const trimmedName = name.trim();
-        let tagPayload = { name: trimmedName };
+        let tagPayload = { name: trimmedName, price: req.body.price || 0 };
 
         // Optional upload
         if (req.file) {
@@ -95,6 +95,7 @@ exports.updateTag = async (req, res) => {
         }
 
         if (req.body.name) tag.name = req.body.name.trim();
+        if (req.body.price !== undefined) tag.price = req.body.price;
 
         // Replace file only if new upload provided
         if (req.file) {

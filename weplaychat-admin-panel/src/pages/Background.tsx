@@ -47,6 +47,10 @@ const BackgroundPage = () => {
             Cell: ({ row }: { row: any }) => <span className="store-content-badge" style={{ textTransform: "uppercase" }}>{row.type}</span>,
         },
         {
+            Header: "Price",
+            Cell: ({ row }: { row: any }) => <span style={{ fontWeight: 700, color: "#a855f7" }}>{row.price || 0}</span>,
+        },
+        {
             Header: "Status",
             Cell: ({ row }: { row: any }) => <ToggleSwitch value={row.isActive} onClick={() => dispatch(updateBackgroundStatus(row._id))} />,
         },

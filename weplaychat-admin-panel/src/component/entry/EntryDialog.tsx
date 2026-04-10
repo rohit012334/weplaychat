@@ -37,6 +37,7 @@ const EntryDialog = () => {
     const [filePreview, setFilePreview] = useState<string>("");
     const [fileType, setFileType] = useState<FileType | "">("");
     const [existingType, setExistingType] = useState<FileType | "">("");
+    const [price, setPrice] = useState<number>(0);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
@@ -48,6 +49,7 @@ const EntryDialog = () => {
             if (dialogueData.file) {
                 setFilePreview(getStorageUrl(dialogueData.file));
             }
+            setPrice(dialogueData.price || 0);
         }
     }, [dialogueData]);
 
@@ -83,6 +85,7 @@ const EntryDialog = () => {
         if (!mongoId && !file) { DangerRight("Please select a file."); return; }
         const formData = new FormData();
         if (file) { formData.append("file", file); formData.append("type", fileType); }
+        formData.append("price", price.toString());
         if (mongoId) { dispatch(updateEntry({ formData, entryId: mongoId })); }
         else { dispatch(createEntry(formData)); }
         dispatch(closeDialog());
@@ -130,6 +133,24 @@ const EntryDialog = () => {
                                                 ✕ Remove file
                                             </button>
                                         )}
+                                    </div>
+                                    <div className="col-12 mt-3">
+                                        <label className="form-label" style={{ fontWeight: 600, fontSize: "14px", color: "#555" }}>
+                                            Price
+                                        </label>
+                                        <input
+                                            type="number"
+                                            className="form-control"
+                                            placeholder="Enter Price"
+                                            value={price}
+                                            onChange={(e) => setPrice(Number(e.target.value))}
+                                            style={{
+                                                borderRadius: "10px",
+                                                border: "1px solid #e8eaf2",
+                                                padding: "10px 14px",
+                                                fontSize: "14px"
+                                            }}
+                                        />
                                     </div>
                                     <div className="mt-4 d-flex justify-content-end gap-1">
                                         <Button className="text-light cancelButton" text="Cancel" type="button" onClick={() => dispatch(closeDialog())} />

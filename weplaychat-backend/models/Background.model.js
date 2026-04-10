@@ -4,6 +4,7 @@ const backgroundSchema = new mongoose.Schema(
   {
     file: { type: String, default: "" },
     type: { type: String, enum: ["mp4", "jpg", "png"], default: "jpg" },
+    price: { type: Number, default: 0 },
     isActive: { type: Boolean, default: true },
   },
   {

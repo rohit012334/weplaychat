@@ -21,6 +21,7 @@ exports.createEntry = async (req, res) => {
         const entry = new Entry({
             file: req.file.path,
             type,
+            price: req.body.price || 0,
         });
 
         await entry.save();
@@ -54,6 +55,7 @@ exports.updateEntry = async (req, res) => {
         }
 
         if (req.body.type) entry.type = req.body.type;
+        if (req.body.price !== undefined) entry.price = req.body.price;
 
         if (req.file) {
             if (entry.file) {
