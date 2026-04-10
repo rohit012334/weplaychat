@@ -11,6 +11,7 @@ const FollowerFollowing = require("../../models/followerFollowing.model");
 const User = require("../../models/user.model");
 const Chat = require("../../models/chat.model");
 const LiveBroadcastHistory = require("../../models/liveBroadcastHistory.model");
+const { calculateLevel } = require("../../util/levelManager");
 
 //deleteFiles
 const { deleteFile, deleteFiles } = require("../../util/deletefile");
@@ -615,6 +616,8 @@ exports.retrieveHostDetails = async (req, res) => {
     host.isFollowing = Boolean(isFollowing);
     host.totalFollower = totalFollower || 0;
 
+    host.level = calculateLevel(host.totalEarnings || 0);
+
     return res.status(200).json({
       status: true,
       message: "The host profile retrieved.",
@@ -654,6 +657,8 @@ exports.fetchHostInfo = async (req, res) => {
     const balance = await History.find({ hostId, type: { $in: [1, 2, 3, 6, 9, 10, 11, 12, 13] } }).sort({ date: -1 }).select("hostCoin").lean();
     const balanceTotal = balance.reduce((sum, item) => sum + (item.hostCoin || 0), 0);
     host.balanceTotal = balanceTotal || 0;
+
+    host.level = calculateLevel(host.totalEarnings || 0);
 
     return res.status(200).json({ status: true, message: "The host profile retrieved.", host });
   } catch (error) {

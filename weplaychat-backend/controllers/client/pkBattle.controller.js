@@ -1012,8 +1012,8 @@ exports.sendGiftDuringBattle = async (req, res, next) => {
 
     // Deduct from user, Add to host, Create history, Update battle
     await Promise.all([
-      User.updateOne({ _id: userId }, { $inc: { coin: -totalGiftValue, spentCoins: totalGiftValue } }),
-      Host.updateOne({ _id: recipientHostId }, { $inc: { coin: hostEarnings } }),
+      User.updateOne({ _id: userId }, { $inc: { coin: -totalGiftValue } }),
+      Host.updateOne({ _id: recipientHostId }, { $inc: { coin: 0 } }), // Addition handled by addHostExp below
       History.create({
         uniqueId,
         type: HISTORY_TYPE.PK_BATTLE_GIFT,
@@ -1065,8 +1065,8 @@ exports.sendGiftDuringBattle = async (req, res, next) => {
     }
 
     // Add EXP
-    addUserExp(userId, totalGiftValue);
-    addHostExp(recipientHostId, totalGiftValue);
+    await addUserExp(userId, totalGiftValue);
+    await addHostExp(recipientHostId, totalGiftValue);
 
     return res.status(200).json({
       status: true,

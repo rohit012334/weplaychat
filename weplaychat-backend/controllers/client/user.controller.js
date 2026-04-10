@@ -26,6 +26,7 @@ const { deleteFile } = require("../../util/deletefile");
 
 //userFunction
 const userFunction = require("../../util/userFunction");
+const { addUserExp, addHostExp, calculateLevel } = require("../../util/levelManager");
 
 function deleteFileIfExists(filePath) {
   if (filePath) {
@@ -1083,7 +1084,7 @@ exports.retrieveUserProfile = async (req, res) => {
     res.status(200).json({
       status: true,
       message: "The user has retrieved their profile.",
-      user: { ...user, privileges },
+      user: { ...user, level: calculateLevel(user.spentCoins || 0), privileges },
       hasHostRequest,
       topUpTotal,
       balanceTotal,
@@ -1307,6 +1308,13 @@ exports.retrieveProfileDetails = async (req, res) => {
         },
         { $limit: 10 } // Latest few gifts
       ]);
+    }
+
+    // Attach dynamic levels
+    if (profileType === "User") {
+      target.level = calculateLevel(target.spentCoins || 0);
+    } else if (profileType === "Host") {
+      target.level = calculateLevel(target.totalEarnings || 0);
     }
 
     return res.status(200).json({

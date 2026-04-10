@@ -160,7 +160,8 @@ exports.addHostExp = async (hostId, earnedAmount) => {
     const host = await Host.findById(hostId);
     if (!host) return;
 
-    // Coins earned/received increases host level
+    // Coins earned/received increases host balance and level
+    host.coin = (host.coin || 0) + earnedAmount;
     host.totalEarnings = (host.totalEarnings || 0) + earnedAmount;
     
     const newLevel = calculateLevel(host.totalEarnings);

@@ -185,8 +185,8 @@ exports.pushChatMessage = async (req, res) => {
         }
 
         await Promise.all([
-          User.updateOne({ _id: senderId, coin: { $gte: finalChatRate } }, { $inc: { coin: -finalChatRate, spentCoins: finalChatRate } }),
-          Host.updateOne({ _id: hostReceiver._id }, { $inc: { coin: hostEarnings } }),
+          User.updateOne({ _id: senderId, coin: { $gte: finalChatRate } }, { $inc: { coin: -finalChatRate } }),
+          Host.updateOne({ _id: hostReceiver._id }, { $inc: { coin: 0 } }), // Coin addition handled by addHostExp below
           History.create({
             uniqueId: uniqueId,
             type: 9, // CHAT type
@@ -202,8 +202,8 @@ exports.pushChatMessage = async (req, res) => {
         ]);
 
         // Update Levels & EXP
-        addUserExp(senderId, finalChatRate);
-        addHostExp(hostReceiver._id, hostEarnings);
+        await addUserExp(senderId, finalChatRate);
+        await addHostExp(hostReceiver._id, hostEarnings);
     }
 
     // Final Success Response
