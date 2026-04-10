@@ -1236,7 +1236,7 @@ exports.retrieveProfileDetails = async (req, res) => {
 
     // 1. Sabse pehle User collection mein search karo
     let user = await User.findOne({ _id: targetId, isBlock: false })
-      .select("name gender bio identity language image coin isVip vipLevel country countryFlagImage mobileNumber uniqueId selfIntro isHost hostId level")
+      .select("name gender bio identity language image coin isVip vipLevel country countryFlagImage mobileNumber uniqueId selfIntro isHost hostId level spentCoins")
       .lean();
 
     if (!user) {
