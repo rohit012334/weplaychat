@@ -118,8 +118,8 @@ const LevelContent = () => {
               <thead>
                 <tr>
                   <th style={{ textAlign: "center", padding: "16px" }}>LEVEL</th>
-                  <th style={{ textAlign: "center", padding: "16px" }}>USER IMAGE</th>
-                  <th style={{ textAlign: "center", padding: "16px" }}>HOST IMAGE</th>
+                  <th style={{ textAlign: "center", padding: "16px" }}>USER Level</th>
+                  <th style={{ textAlign: "center", padding: "16px" }}>HOST Level</th>
                   <th style={{ textAlign: "center", padding: "16px" }}>ACTIONS</th>
                 </tr>
               </thead>
