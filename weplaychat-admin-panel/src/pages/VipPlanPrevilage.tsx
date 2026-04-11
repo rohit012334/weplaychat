@@ -75,7 +75,7 @@ const VipPlanPrevilage = () => {
                 .edit-priv-btn { width: 100%; padding: 14px; border-radius: 14px; background: #0f172a; color: #fff; border: none; cursor: pointer; font-weight: 700; margin-top: 24px; transition: 0.2s; box-shadow: 0 10px 15px -3px rgba(15,23,42,0.1); }
                 .edit-priv-btn:hover { background: #1e293b; letter-spacing: 0.5px; }
 
-                .vip-media-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 22px; padding: 0 10px; }
+                .vip-media-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 22px; padding: 0 10px; }
                 .vip-media-card { display: flex; flex-direction: column; gap: 5px; }
                 .vip-media-rect { width: 100%; height: 60px; background: rgba(255,255,255,0.12); backdrop-filter: blur(5px); border-radius: 12px; border: 1px solid rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; }
                 .vip-media-square { width: 70px; height: 70px; background: rgba(255,255,255,0.12); backdrop-filter: blur(5px); border-radius: 12px; border: 1px solid rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; margin: 0 auto; }
@@ -110,7 +110,22 @@ const VipPlanPrevilage = () => {
                                                     )
                                                 ) : <span style={{ opacity: 0.3, fontSize: 10 }}>BADGE</span>}
                                             </div>
-                                            <div className="vip-media-label">VIP Frame </div>
+                                            <div className="vip-media-label">VIP FRAME</div>
+                                        </div>
+
+                                        <div className="vip-media-card">
+                                            <div className="vip-media-square">
+                                                {data.vipBackground ? (
+                                                    data.vipBackground.toLowerCase().endsWith(".svga") ? (
+                                                        <SvgaPlayer url={getStorageUrl(data.vipBackground)} style={{ width: "100%", height: "100%" }} />
+                                                    ) : data.vipBackground.toLowerCase().endsWith(".mp4") ? (
+                                                        <video src={getStorageUrl(data.vipBackground)} style={{ width: "100%", height: "100%", objectFit: "cover" }} autoPlay loop muted />
+                                                    ) : (
+                                                        <img src={getStorageUrl(data.vipBackground)} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt="Background" />
+                                                    )
+                                                ) : <span style={{ opacity: 0.3, fontSize: 10 }}>BACKGROUND</span>}
+                                            </div>
+                                            <div className="vip-media-label">VIP BACKGROUND</div>
                                         </div>
 
                                         <div className="vip-media-card">
@@ -123,10 +138,10 @@ const VipPlanPrevilage = () => {
                                                     )
                                                 ) : <span style={{ opacity: 0.3, fontSize: 10 }}>ICON</span>}
                                             </div>
-                                            <div className="vip-media-label">VIP Entry Effect</div>
+                                            <div className="vip-media-label">VIP ENTRY EFFECT</div>
                                         </div>
 
-                                        <div className="vip-media-card" style={{ gridColumn: "span 2" }}>
+                                        <div className="vip-media-card" style={{ gridColumn: "span 3" }}>
                                             <div className="vip-media-rect">
                                                 {data.vipEntrance1 ? (
                                                     data.vipEntrance1.toLowerCase().endsWith(".svga") ? (
@@ -138,10 +153,10 @@ const VipPlanPrevilage = () => {
                                                     )
                                                 ) : <span style={{ opacity: 0.3, fontSize: 10 }}>ENTRANCE 1</span>}
                                             </div>
-                                            <div className="vip-media-label">VIP Tag</div>
+                                            <div className="vip-media-label">VIP TAG</div>
                                         </div>
 
-                                        <div className="vip-media-card" style={{ gridColumn: "span 2" }}>
+                                        <div className="vip-media-card" style={{ gridColumn: "span 3" }}>
                                             <div className="vip-media-rect">
                                                 {data.vipEntrance2 ? (
                                                     data.vipEntrance2.toLowerCase().endsWith(".svga") ? (
@@ -153,22 +168,7 @@ const VipPlanPrevilage = () => {
                                                     )
                                                 ) : <span style={{ opacity: 0.3, fontSize: 10 }}>ENTRANCE 2</span>}
                                             </div>
-                                            <div className="vip-media-label">VIP Entry</div>
-                                        </div>
-
-                                        <div className="vip-media-card" style={{ gridColumn: "span 2" }}>
-                                            <div className="vip-media-rect" style={{ height: 70 }}>
-                                                {data.vipBackground ? (
-                                                    data.vipBackground.toLowerCase().endsWith(".svga") ? (
-                                                        <SvgaPlayer url={getStorageUrl(data.vipBackground)} style={{ width: "100%", height: "100%" }} />
-                                                    ) : data.vipBackground.toLowerCase().endsWith(".mp4") ? (
-                                                        <video src={getStorageUrl(data.vipBackground)} style={{ width: "100%", height: "100%", objectFit: "cover" }} autoPlay loop muted />
-                                                    ) : (
-                                                        <img src={getStorageUrl(data.vipBackground)} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt="Background" />
-                                                    )
-                                                ) : <span style={{ opacity: 0.3, fontSize: 10 }}>BACKGROUND</span>}
-                                            </div>
-                                            <div className="vip-media-label">VIP Background</div>
+                                            <div className="vip-media-label">VIP ENTRY</div>
                                         </div>
                                     </div>
                                 </div>
