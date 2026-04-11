@@ -24,7 +24,7 @@ const AuthCheck: React.FC<AuthCheckProps> = (props) => {
   useEffect(() => {
     if (!isHydrated) return;
 
-    const isPublicRoute = publicRoutes.includes(router.pathname);
+    const isPublicRoute = publicRoutes.some(route => route.toLowerCase() === router.pathname.toLowerCase());
 
     // Valid session = Firebase token (admin) OR isManager flag (manager)
     const hasToken = typeof window !== "undefined" && sessionStorage.getItem("token");

@@ -36,7 +36,7 @@ axios.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      const isLoginPage = typeof window !== "undefined" && ["/", "/login", "/Registration"].includes(window.location.pathname.toLowerCase());
+      const isLoginPage = typeof window !== "undefined" && ["/", "/login", "/registration"].includes(window.location.pathname.toLowerCase());
       const isLoginRequest = error.config?.url?.includes("validateAdminLogin");
       const isManagerSession = typeof window !== "undefined" && sessionStorage.getItem("isManager") === "true";
 
