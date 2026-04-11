@@ -15,6 +15,7 @@ const VipPlanBenefitDialog = () => {
   const freeEntryFileInputRef = useRef<HTMLInputElement>(null);
   const svgaFileInputRef = useRef<HTMLInputElement>(null);
   const mp4FileInputRef = useRef<HTMLInputElement>(null);
+  const backgroundFileInputRef = useRef<HTMLInputElement>(null);
 
   const [mongoId, setMongoId] = useState("");
   const [level, setLevel] = useState(1);
@@ -54,6 +55,9 @@ const VipPlanBenefitDialog = () => {
   const [entrance2Image, setEntrance2Image] = useState<File | null>(null);
   const [entrance2Preview, setEntrance2Preview] = useState("");
 
+  const [backgroundImage, setBackgroundImage] = useState<File | null>(null);
+  const [backgroundPreview, setBackgroundPreview] = useState("");
+
   useEffect(() => {
     if (dialogueData) {
       setMongoId(dialogueData._id || "");
@@ -92,6 +96,9 @@ const VipPlanBenefitDialog = () => {
       if (dialogueData.vipEntrance2) {
         setEntrance2Preview(getStorageUrl(dialogueData.vipEntrance2));
       }
+      if (dialogueData.vipBackground) {
+        setBackgroundPreview(getStorageUrl(dialogueData.vipBackground));
+      }
     }
   }, [dialogueData]);
 
@@ -127,6 +134,14 @@ const VipPlanBenefitDialog = () => {
     }
   };
 
+  const handleBackgroundImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setBackgroundImage(file);
+      setBackgroundPreview(URL.createObjectURL(file));
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -138,6 +153,7 @@ const VipPlanBenefitDialog = () => {
     if (freeEntryImage) formData.append("freeEntryImage", freeEntryImage);
     if (entrance1Image) formData.append("vipEntrance1", entrance1Image);
     if (entrance2Image) formData.append("vipEntrance2", entrance2Image);
+    if (backgroundImage) formData.append("vipBackground", backgroundImage);
 
     // Append numerical
     Object.entries(numericalFields).forEach(([key, val]) => {
@@ -296,7 +312,7 @@ const VipPlanBenefitDialog = () => {
                 </div>
               </div>
 
-              <div className="vpb-input-group">
+              <div className="vpb-input-group" style={{ gridColumn: "span 2" }}>
                 <label className="vpb-label">VIP Entrance Animation 2 (Rectangle)</label>
                 <div className="vpb-rect-upload" onClick={() => mp4FileInputRef.current?.click()}>
                   {entrance2Preview ? (
@@ -314,6 +330,27 @@ const VipPlanBenefitDialog = () => {
                     </div>
                   )}
                   <input ref={mp4FileInputRef} type="file" hidden accept=".svga,.mp4,video/*,image/*" onChange={handleEntrance2ImageChange} />
+                </div>
+              </div>
+
+              <div className="vpb-input-group" style={{ gridColumn: "span 2" }}>
+                <label className="vpb-label">VIP Background (Rectangle)</label>
+                <div className="vpb-rect-upload" style={{ height: 180 }} onClick={() => backgroundFileInputRef.current?.click()}>
+                  {backgroundPreview ? (
+                    backgroundPreview.toLowerCase().endsWith(".svga") || (backgroundImage && backgroundImage.name.toLowerCase().endsWith(".svga")) ? (
+                      <SvgaPlayer url={backgroundPreview} className="vpb-badge-svga" />
+                    ) : backgroundPreview.toLowerCase().endsWith(".mp4") || (backgroundImage && backgroundImage.name.toLowerCase().endsWith(".mp4")) ? (
+                      <video src={backgroundPreview} className="vpb-badge-img" autoPlay loop muted />
+                    ) : (
+                      <img src={backgroundPreview} className="vpb-badge-img" alt="Background" style={{ objectFit: "cover" }} />
+                    )
+                  ) : (
+                    <div style={{ textAlign: "center", color: "#94a3b8" }}>
+                      <svg width="32" height="32" fill="currentColor" viewBox="0 0 16 16"><path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z" /></svg>
+                      <div style={{ fontSize: 12, marginTop: 4 }}>Upload Background (SVGA/MP4/Image)</div>
+                    </div>
+                  )}
+                  <input ref={backgroundFileInputRef} type="file" hidden accept=".svga,.mp4,video/*,image/*" onChange={handleBackgroundImageChange} />
                 </div>
               </div>
 

@@ -32,6 +32,7 @@ const VipPlanPrivilegeSchema = new mongoose.Schema(
     // Additional Media Fields
     vipEntrance1: { type: String, default: "" },
     vipEntrance2: { type: String, default: "" },
+    vipBackground: { type: String, default: "" },
   },
   {
     timestamps: true,

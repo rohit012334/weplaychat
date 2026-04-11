@@ -155,6 +155,21 @@ const VipPlanPrevilage = () => {
                                             </div>
                                             <div className="vip-media-label">VIP Entry</div>
                                         </div>
+
+                                        <div className="vip-media-card" style={{ gridColumn: "span 2" }}>
+                                            <div className="vip-media-rect" style={{ height: 70 }}>
+                                                {data.vipBackground ? (
+                                                    data.vipBackground.toLowerCase().endsWith(".svga") ? (
+                                                        <SvgaPlayer url={getStorageUrl(data.vipBackground)} style={{ width: "100%", height: "100%" }} />
+                                                    ) : data.vipBackground.toLowerCase().endsWith(".mp4") ? (
+                                                        <video src={getStorageUrl(data.vipBackground)} style={{ width: "100%", height: "100%", objectFit: "cover" }} autoPlay loop muted />
+                                                    ) : (
+                                                        <img src={getStorageUrl(data.vipBackground)} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt="Background" />
+                                                    )
+                                                ) : <span style={{ opacity: 0.3, fontSize: 10 }}>BACKGROUND</span>}
+                                            </div>
+                                            <div className="vip-media-label">VIP Background</div>
+                                        </div>
                                     </div>
                                 </div>
 

@@ -27,6 +27,7 @@ exports.modifyVipPrivilege = async (req, res) => {
       const freeEntryFile = req.files.find(f => f.fieldname === "freeEntryImage");
       const entrance1File = req.files.find(f => f.fieldname === "vipEntrance1");
       const entrance2File = req.files.find(f => f.fieldname === "vipEntrance2");
+      const backgroundFile = req.files.find(f => f.fieldname === "vipBackground");
 
       if (badgeFile) {
         if (privilege.vipFrameBadge) {
@@ -66,6 +67,16 @@ exports.modifyVipPrivilege = async (req, res) => {
           }
         }
         privilege.vipEntrance2 = entrance2File.path;
+      }
+
+      if (backgroundFile) {
+        if (privilege.vipBackground) {
+          const oldPath = privilege.vipBackground.split("storage");
+          if (oldPath.length > 1 && fs.existsSync("storage" + oldPath[1])) {
+            fs.unlinkSync("storage" + oldPath[1]);
+          }
+        }
+        privilege.vipBackground = backgroundFile.path;
       }
     }
 
