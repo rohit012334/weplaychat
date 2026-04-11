@@ -11,7 +11,7 @@ const FollowerFollowing = require("../../models/followerFollowing.model");
 const User = require("../../models/user.model");
 const Chat = require("../../models/chat.model");
 const LiveBroadcastHistory = require("../../models/liveBroadcastHistory.model");
-const { calculateLevel } = require("../../util/levelManager");
+const { calculateLevel, getLevelDetails } = require("../../util/levelManager");
 
 //deleteFiles
 const { deleteFile, deleteFiles } = require("../../util/deletefile");
@@ -616,7 +616,9 @@ exports.retrieveHostDetails = async (req, res) => {
     host.isFollowing = Boolean(isFollowing);
     host.totalFollower = totalFollower || 0;
 
-    host.level = calculateLevel(host.totalEarnings || 0);
+    const levelNumber = calculateLevel(host.totalEarnings || 0);
+    host.level = levelNumber;
+    host.levelDetails = getLevelDetails(levelNumber);
 
     return res.status(200).json({
       status: true,
@@ -658,7 +660,9 @@ exports.fetchHostInfo = async (req, res) => {
     const balanceTotal = balance.reduce((sum, item) => sum + (item.hostCoin || 0), 0);
     host.balanceTotal = balanceTotal || 0;
 
-    host.level = calculateLevel(host.totalEarnings || 0);
+    const levelNumber = calculateLevel(host.totalEarnings || 0);
+    host.level = levelNumber;
+    host.levelDetails = getLevelDetails(levelNumber);
 
     return res.status(200).json({ status: true, message: "The host profile retrieved.", host });
   } catch (error) {
@@ -975,10 +979,19 @@ exports.hostLeaderBoards = async (req, res) => {
         $limit: limit
       }
     ]);
+    const data = hostLeaderBoard.map((host) => {
+      const levelNumber = calculateLevel(host.totalEarnings || 0);
+      return {
+        ...host,
+        level: levelNumber,
+        levelDetails: getLevelDetails(levelNumber)
+      };
+    });
+
     return res.status(200).json({
       status: true,
       message: "Hosts leaderboard retrieved successfully.",
-      data: hostLeaderBoard
+      data
     });
   } catch (error) {
     return res.status(500).json({

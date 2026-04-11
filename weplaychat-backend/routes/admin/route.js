@@ -40,6 +40,7 @@ const event = require("./event.route");
 const spinWheel = require("./spinWheel.route");
 const background = require("./background.route");
 const entryTag = require("./entryTag.route");
+const level = require("./level.route");
 
 //exports admin's route.js
 route.use("/admin", admin);
@@ -72,6 +73,7 @@ route.use("/event", validateAdminToken, event);
 route.use("/spinWheel", validateAdminToken, spinWheel);
 route.use("/background", validateAdminToken, background);
 route.use("/entryTag", validateAdminToken, entryTag);
+route.use("/level", validateAdminToken, level);
 route.use("/message", message);
 route.use("/login", login);
 route.use("/manager", manager);

@@ -25,6 +25,7 @@ import tagSlice from "./tagSlice";
 import eventSlice from "./eventSlice";
 import backgroundSlice from "./backgroundSlice";
 import entryTagSlice from "./entryTagSlice";
+import levelSlice from "./levelSlice";
 
 
 // Create a noop storage for SSR to prevent "redux-persist failed to create sync storage" warning
@@ -82,6 +83,7 @@ export function makeStore() {
       event: eventSlice,
       background: backgroundSlice,
       entryTag: entryTagSlice,
+      level: levelSlice,
 
 
     },

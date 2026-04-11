@@ -26,7 +26,7 @@ const { deleteFile } = require("../../util/deletefile");
 
 //userFunction
 const userFunction = require("../../util/userFunction");
-const { addUserExp, addHostExp, calculateLevel } = require("../../util/levelManager");
+const { addUserExp, addHostExp, calculateLevel, getLevelDetails } = require("../../util/levelManager");
 
 function deleteFileIfExists(filePath) {
   if (filePath) {
@@ -398,7 +398,7 @@ exports.signInOrSignUpUser = async (req, res) => {
     let user = null;
     if (Object.keys(userQuery).length > 0) {
       user = await User.findOne(userQuery).select(
-        "_id loginType name image fcmToken lastlogin isBlock isHost hostId"
+        "_id loginType name image fcmToken lastlogin isBlock isHost hostId spentCoins"
       );
     }
 
@@ -440,7 +440,11 @@ exports.signInOrSignUpUser = async (req, res) => {
       return res.status(200).json({
         status: true,
         message: "User logged in.",
-        user: user,
+        user: {
+          ...user.toObject(),
+          level: calculateLevel(user.spentCoins || 0),
+          levelDetails: getLevelDetails(calculateLevel(user.spentCoins || 0))
+        },
         signUp: false,
       });
 
@@ -1084,7 +1088,12 @@ exports.retrieveUserProfile = async (req, res) => {
     res.status(200).json({
       status: true,
       message: "The user has retrieved their profile.",
-      user: { ...user, level: calculateLevel(user.spentCoins || 0), privileges },
+      user: { 
+        ...user, 
+        level: calculateLevel(user.spentCoins || 0),
+        levelDetails: getLevelDetails(calculateLevel(user.spentCoins || 0)),
+        privileges 
+      },
       hasHostRequest,
       topUpTotal,
       balanceTotal,
@@ -1312,9 +1321,13 @@ exports.retrieveProfileDetails = async (req, res) => {
 
     // Attach dynamic levels
     if (profileType === "User") {
-      target.level = calculateLevel(target.spentCoins || 0);
+      const levelNumber = calculateLevel(target.spentCoins || 0);
+      target.level = levelNumber;
+      target.levelDetails = getLevelDetails(levelNumber);
     } else if (profileType === "Host") {
-      target.level = calculateLevel(target.totalEarnings || 0);
+      const levelNumber = calculateLevel(target.totalEarnings || 0);
+      target.level = levelNumber;
+      target.levelDetails = getLevelDetails(levelNumber);
     }
 
     return res.status(200).json({

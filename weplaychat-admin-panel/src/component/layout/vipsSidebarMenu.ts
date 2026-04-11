@@ -671,14 +671,14 @@ export const vipsSidebarMenu = [
     "children": [
       {
         "title": "Levels",
-        "href": "#"
+        "href": "/Level"
       },
       {
         "title": "Level Gifts",
         "href": "#"
       },
       {
-        "title": "Edit Level",
+        "title": "Level Settings",
         "href": "#"
       }
     ]

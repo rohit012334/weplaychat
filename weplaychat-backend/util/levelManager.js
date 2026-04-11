@@ -1,5 +1,26 @@
 const User = require("../models/user.model");
 const Host = require("../models/host.model");
+const Level = require("../models/Level.model");
+
+// In-memory cache for levels to avoid DB calls on every request
+let levelsCache = [];
+
+const loadLevelsCache = async () => {
+  try {
+    const levels = await Level.find().sort({ level: 1 }).lean();
+    if (levels.length > 0) {
+      levelsCache = levels;
+    }
+  } catch (error) {
+    console.error("Error loading levels cache:", error);
+  }
+};
+
+// Initial load
+loadLevelsCache();
+
+// Reload cache every 10 minutes or when needed
+setInterval(loadLevelsCache, 10 * 60 * 1000);
 
 /**
  * Level thresholds based on the provided images
@@ -7,122 +28,59 @@ const Host = require("../models/host.model");
  * Value = Coins required for that level
  */
 const levelThresholds = [
-  10000,      // Level 1
-  20000,      // Level 2
-  50000,      // Level 3
-  100000,     // Level 4
-  200000,     // Level 5
-  300000,     // Level 6
-  400000,     // Level 7
-  500000,     // Level 8
-  600000,     // Level 9
-  700000,     // Level 10
-  800000,     // Level 11
-  900000,     // Level 12
-  1000000,    // Level 13 (1M)
-  1200000,    // Level 14
-  1400000,    // Level 15
-  1600000,    // Level 16
-  1800000,    // Level 17
-  2000000,    // Level 18
-  2500000,    // Level 19
-  3000000,    // Level 20
-  3500000,    // Level 21
-  4000000,    // Level 22
-  4500000,    // Level 23
-  5000000,    // Level 24
-  5500000,    // Level 25
-  6000000,    // Level 26
-  6500000,    // Level 27
-  7000000,    // Level 28
-  7500000,    // Level 29
-  8000000,    // Level 30
-  8500000,    // Level 31
-  9000000,    // Level 32
-  9500000,    // Level 33
-  10000000,   // Level 34 (10M)
-  10500000,   // Level 35
-  11000000,   // Level 36
-  11500000,   // Level 37
-  12000000,   // Level 38
-  12500000,   // Level 39
-  13000000,   // Level 40
-  13500000,   // Level 41
-  14000000,   // Level 42
-  14500000,   // Level 43
-  15000000,   // Level 44
-  15500000,   // Level 45
-  16000000,   // Level 46
-  16500000,   // Level 47
-  17000000,   // Level 48
-  17500000,   // Level 49
-  18000000,   // Level 50
-  19000000,   // Level 51
-  20000000,   // Level 52
-  21000000,   // Level 53
-  22000000,   // Level 54
-  23000000,   // Level 55
-  24000000,   // Level 56
-  25000000,   // Level 57
-  26000000,   // Level 58
-  27000000,   // Level 59
-  28000000,   // Level 60
-  30000000,   // Level 61 (30M)
-  32000000,   // Level 62
-  34000000,   // Level 63
-  36000000,   // Level 64
-  38000000,   // Level 65
-  40000000,   // Level 66
-  45000000,   // Level 67
-  50000000,   // Level 68
-  55000000,   // Level 69
-  60000000,   // Level 70
-  65000000,   // Level 71
-  70000000,   // Level 72
-  75000000,   // Level 73
-  80000000,   // Level 74
-  85000000,   // Level 75
-  90000000,   // Level 76
-  95000000,   // Level 77
-  100000000,  // Level 78 (100M)
-  110000000,  // Level 79
-  120000000,  // Level 80
-  130000000,  // Level 81
-  140000000,  // Level 82
-  150000000,  // Level 83
-  160000000,  // Level 84
-  170000000,  // Level 85
-  180000000,  // Level 86
-  190000000,  // Level 87
-  200000000,  // Level 88
-  250000000,  // Level 89
-  300000000,  // Level 90
-  350000000,  // Level 91
-  400000000,  // Level 92
-  450000000,  // Level 93
-  500000000,  // Level 94
-  550000000,  // Level 95
-  600000000,  // Level 96
-  700000000,  // Level 97
-  800000000,  // Level 98
-  900000000,  // Level 99
-  1000000000, // Level 100 (1 Billion)
+  10000, 20000, 50000, 100000, 200000, 300000, 400000, 500000, 600000, 700000,
+  800000, 900000, 1000000, 1200000, 1400000, 1600000, 1800000, 2000000, 2500000, 3000000,
+  3500000, 4000000, 4500000, 5000000, 5500000, 6000000, 6500000, 7000000, 7500000, 8000000,
+  8500000, 9000000, 9500000, 10000000, 10500000, 11000000, 11500000, 12000000, 12500000, 13000000,
+  13500000, 14000000, 14500000, 15000000, 15500000, 16000000, 16500000, 17000000, 17500000, 18000000,
+  19000000, 20000000, 21000000, 22000000, 23000000, 24000000, 25000000, 26000000, 27000000, 28000000,
+  30000000, 32000000, 34000000, 36000000, 38000000, 40000000, 45000000, 50000000, 55000000, 60000000,
+  65000000, 70000000, 75000000, 80000000, 85000000, 90000000, 95000000, 100000000, 110000000, 120000000,
+  130000000, 140000000, 150000000, 160000000, 170000000, 180000000, 190000000, 200000000, 250000000, 300000000,
+  350000000, 400000000, 450000000, 500000000, 550000000, 600000000, 700000000, 800000000, 900000000, 1000000000,
 ];
 
 /**
- * Calculate level based on coins using the threshold array
+ * Calculate level based on coins using the threshold cache/array
  * @param {number} coins - Total coins spent (for user) or earned (for host)
  */
 const calculateLevel = (coins) => {
   let level = 0;
-  for (let i = 0; i < levelThresholds.length; i++) {
-    if (coins >= levelThresholds[i]) {
+  const thresholds = levelsCache.length > 0 ? levelsCache.map(l => l.threshold) : levelThresholds;
+  
+  for (let i = 0; i < thresholds.length; i++) {
+    if (coins >= thresholds[i]) {
       level = i + 1;
     } else {
       break;
     }
   }
   return level;
+};
+
+/**
+ * Get level details including images
+ * @param {number} levelNumber 
+ */
+const getLevelDetails = (levelNumber) => {
+  if (levelNumber <= 0) return null;
+  
+  const levelData = levelsCache.find(l => l.level === levelNumber);
+  if (levelData) {
+    return {
+      level: levelData.level,
+      threshold: levelData.threshold,
+      userImage: levelData.userImage,
+      hostImage: levelData.hostImage
+    };
+  }
+  
+  return {
+    level: levelNumber,
+    threshold: levelThresholds[levelNumber - 1] || 0,
+    userImage: "",
+    hostImage: ""
+  };
 };
 
 /**
@@ -177,3 +135,5 @@ exports.addHostExp = async (hostId, earnedAmount) => {
 };
 
 exports.calculateLevel = calculateLevel;
+exports.getLevelDetails = getLevelDetails;
+exports.loadLevelsCache = loadLevelsCache;
