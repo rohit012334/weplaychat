@@ -161,7 +161,7 @@ exports.updateAgencyWithdrawalStatus = async (req, res) => {
           },
         };
 
-        const adminInstance = await admin;
+        const adminInstance = await admin();
         adminInstance
           .messaging()
           .send(payload)
@@ -212,7 +212,7 @@ exports.updateAgencyWithdrawalStatus = async (req, res) => {
           },
         };
 
-        const adminInstance = await admin;
+        const adminInstance = await admin();
         adminInstance
           .messaging()
           .send(payload)

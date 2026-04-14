@@ -163,7 +163,7 @@ exports.processDailyCheckIn = async (req, res) => {
         },
       };
 
-      const adminPromise = await admin;
+      const adminPromise = await admin();
       adminPromise
         .messaging()
         .send(payload)

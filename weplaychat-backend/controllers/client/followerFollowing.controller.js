@@ -62,16 +62,20 @@ exports.handleFollowUnfollow = async (req, res) => {
       res.status(200).json({ status: true, message: "Followed successfully.", isFollow: true, isFriend: !!isMutual });
 
       if (target.fcmToken) {
-        const payload = {
-          token: target.fcmToken,
-          data: { 
-            title: isMutual ? "🤝 New Friend!" : "🌟 New Follower!", 
-            body: isMutual ? `You and ${target.name} are now friends!` : "Someone just followed you!", 
-            type: isMutual ? "FRIEND" : "FOLLOW" 
-          },
-        };
-        const adminPromise = await admin;
-        adminPromise.messaging().send(payload).catch(console.error);
+        try {
+          const payload = {
+            token: target.fcmToken,
+            data: { 
+              title: isMutual ? "🤝 New Friend!" : "🌟 New Follower!", 
+              body: isMutual ? `You and ${target.name} are now friends!` : "Someone just followed you!", 
+              type: isMutual ? "FRIEND" : "FOLLOW" 
+            },
+          };
+          const adminPromise = await admin();
+          adminPromise.messaging().send(payload).catch(console.error);
+        } catch (fcmError) {
+          console.error("FCM Send Error:", fcmError);
+        }
       }
     }
   } catch (error) {

@@ -84,6 +84,46 @@ const getLevelDetails = (levelNumber) => {
 };
 
 /**
+ * Get full level progress information for a progress bar
+ * @param {number} coins - Total coins spent or earned
+ */
+const getLevelProgress = (coins) => {
+  const currentLevel = calculateLevel(coins);
+  const nextLevel = currentLevel + 1;
+  
+  const currentLevelDetails = getLevelDetails(currentLevel);
+  const nextLevelDetails = getLevelDetails(nextLevel);
+  
+  const thresholds = levelsCache.length > 0 ? levelsCache.map(l => l.threshold) : levelThresholds;
+  
+  // If they somehow exceeded the max predefined level
+  if (nextLevel > thresholds.length) {
+    return {
+      currentLevel,
+      currentLevelDetails,
+      nextLevel: currentLevel,
+      nextLevelDetails: currentLevelDetails,
+      currentCoins: coins,
+      nextLevelThreshold: coins, // Already maxed
+      coinsNeededForNext: 0
+    };
+  }
+  
+  const nextLevelThreshold = nextLevelDetails ? nextLevelDetails.threshold : thresholds[nextLevel - 1];
+  const coinsNeededForNext = Math.max(0, nextLevelThreshold - coins);
+  
+  return {
+    currentLevel,
+    currentLevelDetails,
+    nextLevel,
+    nextLevelDetails,
+    currentCoins: coins,
+    nextLevelThreshold,
+    coinsNeededForNext
+  };
+};
+
+/**
  * Add experience/coins spent to a user and update level
  * @param {string} userId - ID of the user
  * @param {number} spentAmount - Amount of coins spent
@@ -136,4 +176,5 @@ exports.addHostExp = async (hostId, earnedAmount) => {
 
 exports.calculateLevel = calculateLevel;
 exports.getLevelDetails = getLevelDetails;
+exports.getLevelProgress = getLevelProgress;
 exports.loadLevelsCache = loadLevelsCache;

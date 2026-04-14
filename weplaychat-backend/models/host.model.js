@@ -48,6 +48,24 @@ const hostSchema = new mongoose.Schema(
     totalEarnings: { type: Number, default: 0 },
     level: { type: Number, default: 0 },
 
+    inventory: [{
+        itemId: { type: mongoose.Schema.Types.ObjectId },
+        itemType: { type: String, enum: ["frame", "entry", "entryTag", "background", "tag"] }
+    }],
+    equipped: {
+        frame: { type: String, default: "" },
+        background: { type: String, default: "" },
+        entry: { type: String, default: "" },
+        entryTag: { type: String, default: "" },
+        tag: { type: String, default: "" },
+        
+        frameId: { type: String, default: "" },
+        backgroundId: { type: String, default: "" },
+        entryId: { type: String, default: "" },
+        entryTagId: { type: String, default: "" },
+        tagId: { type: String, default: "" },
+    },
+
     redeemedCoins: { type: Number, default: 0 },
     redeemedAmount: { type: Number, default: 0 },
 

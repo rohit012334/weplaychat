@@ -308,7 +308,7 @@ io.on("connection", async (socket) => {
           };
 
           try {
-            const adminInstance = await admin;
+            const adminInstance = await admin();
             const response = await adminInstance.messaging().send(payload);
             console.log("✅ Successfully sent FCM notification: ", response);
           } catch (error) {
@@ -536,7 +536,7 @@ io.on("connection", async (socket) => {
       };
 
       try {
-        const adminInstance = await admin;
+        const adminInstance = await admin();
         const response = await adminInstance.messaging().send(payload);
         console.log(
           "✅ Successfully sent FCM notification for gift:",
@@ -806,7 +806,7 @@ io.on("connection", async (socket) => {
             },
           };
 
-          const adminInstance = await admin;
+          const adminInstance = await admin();
           adminInstance
             .messaging()
             .send(payload)
@@ -1501,7 +1501,7 @@ io.on("connection", async (socket) => {
         },
       };
 
-      const adminPromise = await admin;
+      const adminPromise = await admin();
       adminPromise
         .messaging()
         .send(payload)
@@ -3007,7 +3007,7 @@ io.on("connection", async (socket) => {
             },
           };
 
-          const adminInstance = await admin;
+          const adminInstance = await admin();
           adminInstance
             .messaging()
             .send(payload)

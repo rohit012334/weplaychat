@@ -26,7 +26,7 @@ const { deleteFile } = require("../../util/deletefile");
 
 //userFunction
 const userFunction = require("../../util/userFunction");
-const { addUserExp, addHostExp, calculateLevel, getLevelDetails } = require("../../util/levelManager");
+const { addUserExp, addHostExp, calculateLevel, getLevelDetails, getLevelProgress } = require("../../util/levelManager");
 
 function deleteFileIfExists(filePath) {
   if (filePath) {
@@ -240,7 +240,7 @@ exports.quickUserVerification = async (req, res) => {
 //           },
 //         };
 
-//         const adminPromise = await admin;
+//         const adminPromise = await admin();
 //         adminPromise
 //           .messaging()
 //           .send(payload)
@@ -350,7 +350,7 @@ exports.quickUserVerification = async (req, res) => {
 //             },
 //           };
 
-//           const adminInstance = await admin;
+//           const adminInstance = await admin();
 //           adminInstance.messaging().send(payload).catch(console.error);
 //         }
 //       }
@@ -901,7 +901,7 @@ exports.verifyOtp = async (req, res) => {
             },
           };
 
-          const adminInstance = await admin;
+          const adminInstance = await admin();
           adminInstance.messaging().send(payload).catch(console.error);
         }
       }
@@ -1085,13 +1085,30 @@ exports.retrieveUserProfile = async (req, res) => {
       privileges = await VipPlanPrivilege.findOne({ level: user.vipLevel }).lean();
     }
 
+    // User Level (spentCoins based)
+    const userLevel = calculateLevel(user.spentCoins || 0);
+    const userLevelDetails = getLevelDetails(userLevel);
+
+    // Host Level (totalEarnings based) - sirf tab jab user host bhi hai
+    let hostLevel = null;
+    let hostLevelDetails = null;
+    if (user.isHost && user.hostId) {
+      const hostData = await Host.findById(user.hostId).select("totalEarnings").lean();
+      if (hostData) {
+        hostLevel = calculateLevel(hostData.totalEarnings || 0);
+        hostLevelDetails = getLevelDetails(hostLevel);
+      }
+    }
+
     res.status(200).json({
       status: true,
       message: "The user has retrieved their profile.",
       user: { 
         ...user, 
-        level: calculateLevel(user.spentCoins || 0),
-        levelDetails: getLevelDetails(calculateLevel(user.spentCoins || 0)),
+        level: userLevel,
+        levelDetails: userLevelDetails,
+        hostLevel,
+        hostLevelDetails,
         privileges 
       },
       hasHostRequest,
@@ -1210,7 +1227,7 @@ exports.deactivateMyAccount = async (req, res) => {
 
     if (user.firebaseUid) {
       try {
-        const adminPromise = await admin;
+        const adminPromise = await admin();
         adminPromise.auth().deleteUser(user.firebaseUid);
         console.log(`✅ Firebase user deleted: ${user.firebaseUid}`);
       } catch (err) {
@@ -1245,7 +1262,7 @@ exports.retrieveProfileDetails = async (req, res) => {
 
     // 1. Sabse pehle User collection mein search karo
     let user = await User.findOne({ _id: targetId, isBlock: false })
-      .select("name gender bio identity language image coin isVip vipLevel country countryFlagImage mobileNumber uniqueId selfIntro isHost hostId level spentCoins")
+      .select("name gender bio identity language image coin isVip vipLevel country countryFlagImage mobileNumber uniqueId selfIntro isHost hostId level spentCoins equipped")
       .lean();
 
     if (!user) {
@@ -1258,7 +1275,7 @@ exports.retrieveProfileDetails = async (req, res) => {
     // 2. Agar isHost true hai, toh Host ka sara data fetch karo
     if (user.isHost && user.hostId) {
       const hostData = await Host.findOne({ _id: user.hostId, isBlock: false })
-        .select("name email gender dob bio uniqueId countryFlagImage country impression language image photoGallery profileVideo randomCallRate randomCallFemaleRate randomCallMaleRate privateCallRate audioCallRate chatRate coin isFake video liveVideo userId level totalEarnings")
+        .select("name email gender dob bio uniqueId countryFlagImage country impression language image photoGallery profileVideo randomCallRate randomCallFemaleRate randomCallMaleRate privateCallRate audioCallRate chatRate coin isFake video liveVideo userId level totalEarnings equipped")
         .lean();
 
       if (hostData) {
@@ -1319,15 +1336,23 @@ exports.retrieveProfileDetails = async (req, res) => {
       ]);
     }
 
-    // Attach dynamic levels
+    // Attach dynamic levels - user level always from User record (spentCoins)
+    const userLevelNumber = calculateLevel(user.spentCoins || 0);
+    target.userLevel = userLevelNumber;
+    target.userLevelDetails = getLevelDetails(userLevelNumber);
+
     if (profileType === "User") {
-      const levelNumber = calculateLevel(target.spentCoins || 0);
-      target.level = levelNumber;
-      target.levelDetails = getLevelDetails(levelNumber);
+      // Normal user: level = userLevel
+      target.level = userLevelNumber;
+      target.levelDetails = getLevelDetails(userLevelNumber);
     } else if (profileType === "Host") {
-      const levelNumber = calculateLevel(target.totalEarnings || 0);
-      target.level = levelNumber;
-      target.levelDetails = getLevelDetails(levelNumber);
+      // Host: hostLevel from totalEarnings, userLevel from spentCoins (dono dikhao)
+      const hostLevelNumber = calculateLevel(target.totalEarnings || 0);
+      target.hostLevel = hostLevelNumber;
+      target.hostLevelDetails = getLevelDetails(hostLevelNumber);
+      // Primary level = hostLevel for display
+      target.level = hostLevelNumber;
+      target.levelDetails = getLevelDetails(hostLevelNumber);
     }
 
     return res.status(200).json({
@@ -1339,6 +1364,45 @@ exports.retrieveProfileDetails = async (req, res) => {
 
   } catch (error) {
     console.error(error);
+    return res.status(500).json({ status: false, message: error.message || "Internal Server Error" });
+  }
+};
+
+// get user's (and host's) level progress
+exports.getMyLevel = async (req, res) => {
+  try {
+    if (!req.user || !req.user.userId) {
+      return res.status(401).json({ status: false, message: "Unauthorized access." });
+    }
+
+    const user = await User.findById(req.user.userId).select("spentCoins isHost hostId").lean();
+    if (!user) {
+      return res.status(200).json({ status: false, message: "User not found." });
+    }
+
+    // User Level Progress (spentCoins based) - always available
+    const userLevelProgress = getLevelProgress(user.spentCoins || 0);
+
+    // Host Level Progress (totalEarnings based) - sirf jab user host bhi hai
+    let hostLevelProgress = null;
+    if (user.isHost && user.hostId) {
+      const host = await Host.findById(user.hostId).select("totalEarnings").lean();
+      if (host) {
+        hostLevelProgress = getLevelProgress(host.totalEarnings || 0);
+      }
+    }
+
+    return res.status(200).json({
+      status: true,
+      message: "Level progress retrieved successfully.",
+      data: {
+        userLevel: userLevelProgress,
+        hostLevel: hostLevelProgress // null if not a host
+      }
+    });
+
+  } catch (error) {
+    console.error("getMyLevel error:", error);
     return res.status(500).json({ status: false, message: error.message || "Internal Server Error" });
   }
 };

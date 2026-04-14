@@ -161,7 +161,7 @@ exports.HostStreaming = async (req, res) => {
           },
         };
 
-        const firebaseApp = await admin;
+        const firebaseApp = await admin();
         firebaseApp
           .messaging()
           .sendEachForMulticast(payload)

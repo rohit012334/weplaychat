@@ -98,7 +98,7 @@ exports.submitWithdrawalRequest = async (req, res) => {
     }
 
     if (host.fcmToken) {
-      const adminApp = await admin;
+      const adminApp = await admin();
       const notificationPayload = {
         token: host.fcmToken,
         data: {

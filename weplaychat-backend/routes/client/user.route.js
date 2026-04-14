@@ -42,6 +42,8 @@ route.delete("/deactivateMyAccount", validateUserToken, checkAccessWithSecretKey
 //common profile retrieval
 route.get("/retrieveProfileDetails", validateUserToken, checkAccessWithSecretKey(), UserController.retrieveProfileDetails);
 
+//get user's level progress
+route.get("/getMyLevel", validateUserToken, checkAccessWithSecretKey(), UserController.getMyLevel);
 
 
 module.exports = route;

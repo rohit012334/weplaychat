@@ -130,7 +130,7 @@ exports.manageHostRequest = async (req, res) => {
         };
 
         try {
-          const adminInstance = await admin;
+          const adminInstance = await admin();
           await adminInstance.messaging().send(payload);
           console.log("Notification sent successfully.");
         } catch (error) {
@@ -158,7 +158,7 @@ exports.manageHostRequest = async (req, res) => {
         };
 
         try {
-          const adminInstance = await admin;
+          const adminInstance = await admin();
           await adminInstance.messaging().send(payload);
           console.log("Notification sent successfully.");
         } catch (error) {

@@ -34,6 +34,25 @@ const userSchema = new mongoose.Schema(
 
     // Spin wheel (panel-managed rewards)
     spins: { type: Number, default: 0 },
+    
+    inventory: [{
+        itemId: { type: mongoose.Schema.Types.ObjectId },
+        itemType: { type: String, enum: ["frame", "entry", "entryTag", "background", "tag"] }
+    }],
+    equipped: {
+        frame: { type: String, default: "" },
+        background: { type: String, default: "" },
+        entry: { type: String, default: "" },
+        entryTag: { type: String, default: "" },
+        tag: { type: String, default: "" },
+        
+        frameId: { type: String, default: "" },
+        backgroundId: { type: String, default: "" },
+        entryId: { type: String, default: "" },
+        entryTagId: { type: String, default: "" },
+        tagId: { type: String, default: "" },
+    },
+
 
     isVip: { type: Boolean, default: false },
     vipLevel: { type: Number, enum: [1, 2, 3], default: 1 }, // 1: VIP, 2: VVIP, 3: SVIP

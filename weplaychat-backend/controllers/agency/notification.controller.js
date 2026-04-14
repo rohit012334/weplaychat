@@ -42,7 +42,7 @@ exports.notifyHost = async (req, res) => {
         },
       };
 
-      const adminInstance = await admin;
+      const adminInstance = await admin();
       const response = adminInstance.messaging().send(notificationPayload);
       console.log("Notification sent successfully:", response);
 
@@ -99,7 +99,7 @@ exports.sendBulkHostNotifications = async (req, res) => {
     }
 
     if (tokens.length > 0) {
-      const adminInstance = await admin;
+      const adminInstance = await admin();
       const response = await adminInstance.messaging().sendEachForMulticast({
         tokens,
         data: {

@@ -18,6 +18,9 @@ const historySchema = new mongoose.Schema(
     giftImage: { type: String, default: "" },
     giftsvgaImage: { type: String, default: "" },
     
+    storeItemId: { type: mongoose.Schema.Types.ObjectId, default: null }, // ID of the store item bought
+    storeItemType: { type: String, default: "" }, // 'frame', 'background', etc.
+    
     callType: { type: String, default: "" }, //1.audio 2.video
     isRandom: { type: Boolean, default: false },
     isPrivate: { type: Boolean, default: false },

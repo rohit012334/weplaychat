@@ -176,7 +176,7 @@ exports.updateWithdrawalStatus = async (req, res) => {
           },
         };
 
-        const adminInstance = await admin;
+        const adminInstance = await admin();
         adminInstance
           .messaging()
           .send(payload)
@@ -228,7 +228,7 @@ exports.updateWithdrawalStatus = async (req, res) => {
           },
         };
 
-        const adminInstance = await admin;
+        const adminInstance = await admin();
         adminInstance
           .messaging()
           .send(payload)

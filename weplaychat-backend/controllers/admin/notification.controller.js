@@ -48,7 +48,7 @@ exports.sendNotificationToSingleUserByAdmin = async (req, res) => {
         },
       };
 
-      const adminPromise = await admin;
+      const adminPromise = await admin();
       adminPromise
         .messaging()
         .send(notificationPayload)
@@ -115,7 +115,7 @@ exports.sendNotificationToSingleHostByAdmin = async (req, res) => {
         },
       };
 
-      const adminPromise = await admin;
+      const adminPromise = await admin();
       adminPromise
         .messaging()
         .send(notificationPayload)
@@ -192,7 +192,7 @@ exports.sendNotifications = async (req, res) => {
     }
 
     if (tokens.length > 0) {
-      const adminInstance = await admin;
+      const adminInstance = await admin();
       const response = await adminInstance.messaging().sendEachForMulticast({
         tokens,
         data: {
