@@ -675,11 +675,11 @@ export const vipsSidebarMenu = [
       },
       {
         "title": "Level Gifts",
-        "href": "#"
+        "href": "/LevelGift"
       },
       {
-        "title": "Level Settings",
-        "href": "#"
+        "title": "Level Edit",
+        "href": "/LevelEdit"
       }
     ]
   },

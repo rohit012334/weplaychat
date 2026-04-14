@@ -1,7 +1,9 @@
 const Level = require("../../models/Level.model");
+const User = require("../../models/user.model");
+const Host = require("../../models/host.model");
 const { deleteFile } = require("../../util/deletefile");
 const fs = require("fs");
-const { loadLevelsCache } = require("../../util/levelManager");
+const { loadLevelsCache, grantLevelRewards } = require("../../util/levelManager");
 
 // Get all levels
 exports.index = async (req, res) => {
@@ -31,19 +33,31 @@ exports.update = async (req, res) => {
       level.threshold = req.body.threshold;
     }
 
-    if (req.files) {
-      if (req.files.userImage) {
-        if (level.userImage) {
-          deleteFile(level.userImage);
-        }
-        level.userImage = req.files.userImage[0].path;
+    if (req.body.rewards) {
+      try {
+        level.rewards = typeof req.body.rewards === "string" ? JSON.parse(req.body.rewards) : req.body.rewards;
+      } catch (error) {
+        console.error("Error parsing rewards:", error);
       }
-      if (req.files.hostImage) {
-        if (level.hostImage) {
-          deleteFile(level.hostImage);
+    }
+
+    if (req.files && Array.isArray(req.files)) {
+      req.files.forEach((file) => {
+        if (file.fieldname === "userImage") {
+          if (level.userImage) deleteFile(level.userImage);
+          level.userImage = file.path;
+        } else if (file.fieldname === "hostImage") {
+          if (level.hostImage) deleteFile(level.hostImage);
+          level.hostImage = file.path;
+        } else if (file.fieldname.startsWith("rewardFile_")) {
+          const index = parseInt(file.fieldname.split("_")[1]);
+          if (!isNaN(index) && level.rewards[index]) {
+            if (level.rewards[index].customFile) deleteFile(level.rewards[index].customFile);
+            level.rewards[index].customFile = file.path;
+          }
         }
-        level.hostImage = req.files.hostImage[0].path;
-      }
+      });
+      level.markModified('rewards');
     }
 
     await level.save();
@@ -88,6 +102,122 @@ exports.initialize = async (req, res) => {
     loadLevelsCache(); // Reload in-memory cache
 
     return res.status(200).json({ status: true, message: "Levels initialized successfully" });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ status: false, message: error.message || "Internal Server Error" });
+  }
+};
+
+// Search user/host by uniqueId
+exports.searchUser = async (req, res) => {
+  try {
+    const { uniqueId } = req.query;
+    if (!uniqueId) {
+      return res.status(200).json({ status: false, message: "Unique ID is required" });
+    }
+
+    let user = null;
+    let hostDetails = null;
+
+    // 1. Search in User model
+    user = await User.findOne({ uniqueId: uniqueId }).lean();
+    
+    if (user) {
+      if (user.isHost && user.hostId) {
+        hostDetails = await Host.findById(user.hostId).lean();
+      }
+    } else {
+      // 2. Search in Host model if not found in User
+      hostDetails = await Host.findOne({ uniqueId: uniqueId }).lean();
+      if (hostDetails && hostDetails.userId) {
+        user = await User.findById(hostDetails.userId).lean();
+      }
+    }
+
+    if (!user) {
+      return res.status(200).json({ status: false, message: "User/Host not found" });
+    }
+
+    return res.status(200).json({
+      status: true,
+      message: "Found",
+      data: {
+        user,
+        host: hostDetails
+      }
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ status: false, message: error.message || "Internal Server Error" });
+  }
+};
+
+// Manual update of levels
+exports.manualUpdate = async (req, res) => {
+  try {
+    const { userId, userLevel, hostLevel } = req.body;
+    
+    if (!userId) {
+        return res.status(200).json({ status: false, message: "User ID is required" });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(200).json({ status: false, message: "User not found" });
+    }
+
+    // Load levels to get thresholds
+    const levels = await Level.find().sort({ level: 1 }).lean();
+    
+    if (userLevel !== undefined) {
+      const targetLevel = parseInt(userLevel);
+      if (targetLevel > 0) {
+          const levelInfo = levels.find(l => l.level === targetLevel);
+          if (levelInfo) {
+              user.spentCoins = levelInfo.threshold;
+              user.level = targetLevel;
+              // Grant rewards for each level up to the target level
+              for (let l = 1; l <= targetLevel; l++) {
+                  await grantLevelRewards(user, l);
+              }
+          } else {
+              // If level doesn't exist in our table, we might still want to set it?
+              // But requirements imply using the defined levels.
+              user.level = targetLevel;
+          }
+      } else {
+          user.spentCoins = 0;
+          user.level = 0;
+      }
+    }
+
+    await user.save();
+
+    if (user.isHost && user.hostId && hostLevel !== undefined) {
+        const host = await Host.findById(user.hostId);
+        if (host) {
+            const targetLevel = parseInt(hostLevel);
+            if (targetLevel > 0) {
+                const levelInfo = levels.find(l => l.level === targetLevel);
+                if (levelInfo) {
+                    host.totalEarnings = levelInfo.threshold;
+                    host.level = targetLevel;
+                    // For host level up, we also grant rewards to the user inventory
+                    for (let l = 1; l <= targetLevel; l++) {
+                        await grantLevelRewards(user, l);
+                    }
+                } else {
+                    host.level = targetLevel;
+                }
+            } else {
+                host.totalEarnings = 0;
+                host.level = 0;
+            }
+            await host.save();
+        }
+    }
+
+    return res.status(200).json({ status: true, message: "Levels updated successfully" });
   } catch (error) {
     console.log(error);
     return res.status(500).json({ status: false, message: error.message || "Internal Server Error" });

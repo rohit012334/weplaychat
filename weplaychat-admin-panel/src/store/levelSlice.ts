@@ -41,6 +41,22 @@ export const initLevels: any = createAsyncThunk(
     }
 );
 
+// SEARCH user for level
+export const searchUserForLevel: any = createAsyncThunk(
+    "level/searchUserForLevel",
+    async (uniqueId: string) => {
+        return apiInstanceFetch.get(`api/admin/level/search?uniqueId=${uniqueId}`);
+    }
+);
+
+// MANUAL update levels
+export const manualUpdateLevels: any = createAsyncThunk(
+    "level/manualUpdateLevels",
+    async (payload: { userId: string; userLevel?: number; hostLevel?: number }) => {
+        return apiInstanceFetch.post(`api/admin/level/manualUpdate`, payload);
+    }
+);
+
 const levelSlice = createSlice({
     name: "level",
     initialState,
@@ -93,6 +109,22 @@ const levelSlice = createSlice({
             }
         });
         builder.addCase(initLevels.rejected, (state) => {
+            state.isLoading = false;
+        });
+
+        // MANUAL update levels
+        builder.addCase(manualUpdateLevels.pending, (state) => {
+            state.isLoading = true;
+        });
+        builder.addCase(manualUpdateLevels.fulfilled, (state, action: PayloadAction<any>) => {
+            state.isLoading = false;
+            if (action.payload.status) {
+                Success(action.payload.message || "Levels Updated Successfully");
+            } else {
+                DangerRight(action.payload.message);
+            }
+        });
+        builder.addCase(manualUpdateLevels.rejected, (state) => {
             state.isLoading = false;
         });
     },

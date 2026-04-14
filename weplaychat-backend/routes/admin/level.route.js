@@ -15,15 +15,15 @@ route.get("/", checkAccessWithSecretKey(), LevelController.index);
 route.patch(
   "/update",
   checkAccessWithSecretKey(),
-  upload.fields([
-    { name: "userImage", maxCount: 1 },
-    { name: "hostImage", maxCount: 1 },
-  ]),
+  upload.any(),
   normalizeStoragePath,
   LevelController.update
 );
 
-// Initialize levels
-route.post("/init", checkAccessWithSecretKey(), LevelController.initialize);
+// Search user/host by uniqueId
+route.get("/search", checkAccessWithSecretKey(), LevelController.searchUser);
+
+// Manual update of levels
+route.post("/manualUpdate", checkAccessWithSecretKey(), LevelController.manualUpdate);
 
 module.exports = route;

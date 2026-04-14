@@ -71,7 +71,8 @@ const getLevelDetails = (levelNumber) => {
       level: levelData.level,
       threshold: levelData.threshold,
       userImage: levelData.userImage,
-      hostImage: levelData.hostImage
+      hostImage: levelData.hostImage,
+      rewards: levelData.rewards || []
     };
   }
   
@@ -79,8 +80,37 @@ const getLevelDetails = (levelNumber) => {
     level: levelNumber,
     threshold: levelThresholds[levelNumber - 1] || 0,
     userImage: "",
-    hostImage: ""
+    hostImage: "",
+    rewards: []
   };
+};
+
+/**
+ * Grant rewards for a specific level to a user
+ */
+const grantLevelRewards = async (user, levelNumber) => {
+  const levelDetails = getLevelDetails(levelNumber);
+  if (!levelDetails || !levelDetails.rewards || levelDetails.rewards.length === 0) return;
+
+  for (const reward of levelDetails.rewards) {
+    // Check if user already has this item in inventory
+    const hasItem = user.inventory.some(item => {
+      if (reward.customFile) {
+        return item.customFile === reward.customFile;
+      }
+      return item.itemId && reward.itemId && item.itemId.toString() === reward.itemId.toString() && item.itemType === reward.itemType;
+    });
+
+    if (!hasItem) {
+      const newItem = {
+        itemType: reward.itemType,
+        itemId: reward.itemId || null,
+        customFile: reward.customFile || "",
+        customName: reward.customName || ""
+      };
+      user.inventory.push(newItem);
+    }
+  }
 };
 
 /**
@@ -133,11 +163,18 @@ exports.addUserExp = async (userId, spentAmount) => {
     const user = await User.findById(userId);
     if (!user) return;
 
+    const oldLevel = user.level || 0;
+    
     // Coins spent increases user level
     user.spentCoins = (user.spentCoins || 0) + spentAmount;
     
     const newLevel = calculateLevel(user.spentCoins);
-    if (newLevel !== user.level) {
+    
+    if (newLevel > oldLevel) {
+      // Grant rewards for each level reached
+      for (let l = oldLevel + 1; l <= newLevel; l++) {
+        await grantLevelRewards(user, l);
+      }
       user.level = newLevel;
     }
 
@@ -155,16 +192,31 @@ exports.addUserExp = async (userId, spentAmount) => {
  */
 exports.addHostExp = async (hostId, earnedAmount) => {
   try {
-    const host = await Host.findById(hostId);
+    const host = await Host.findById(hostId).populate("userId");
     if (!host) return;
+
+    const oldLevel = host.level || 0;
 
     // Coins earned/received increases host balance and level
     host.coin = (host.coin || 0) + earnedAmount;
     host.totalEarnings = (host.totalEarnings || 0) + earnedAmount;
     
     const newLevel = calculateLevel(host.totalEarnings);
-    if (newLevel !== host.level) {
+    
+    if (newLevel > oldLevel) {
       host.level = newLevel;
+      
+      // If the host has a corresponding user record, give them the rewards too?
+      // Usually host level and user level are separate, but gifts might go to the user inventory.
+      if (host.userId) {
+        const user = await User.findById(host.userId);
+        if (user) {
+          for (let l = oldLevel + 1; l <= newLevel; l++) {
+            await grantLevelRewards(user, l);
+          }
+          await user.save();
+        }
+      }
     }
 
     await host.save();
@@ -178,3 +230,4 @@ exports.calculateLevel = calculateLevel;
 exports.getLevelDetails = getLevelDetails;
 exports.getLevelProgress = getLevelProgress;
 exports.loadLevelsCache = loadLevelsCache;
+exports.grantLevelRewards = grantLevelRewards;

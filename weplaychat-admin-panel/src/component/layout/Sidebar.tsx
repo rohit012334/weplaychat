@@ -110,7 +110,7 @@ const Sidebar = () => {
       "/GiftCategory", "/GiftPage", "/DailyCheckInReward", "/SpinWheel", "/Banner",
       "/Store", "/Background", "/EntryTag", "/Frame", "/Entry", "/Tag", "/Event",
       "/Plan", "/VipPlanPrevilage",
-      "/WithdrawRequest", "/adminProfile",
+      "/WithdrawRequest", "/adminProfile", "/Level", "/LevelGift",
       "/User/UserInfoPage", "/User/CoinPlanHistoryPage", "/PurchaseCoinPlanHistory",
       "/Host/AgencyWiseHost", "/Host/HostInfoPage", "/Host/HostHistoryPage", "/HostProfile"
     ].some(route => route.toLowerCase() === p.toLowerCase());

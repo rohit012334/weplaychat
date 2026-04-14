@@ -138,8 +138,9 @@ exports.equipStoreItem = async (req, res) => {
 
         // If itemId is empty or null, unequip
         if (!itemId) {
-            account.equipped[itemType] = "";
-            account.equipped[itemType + "Id"] = "";
+            const field = itemType === "custom" ? "custom" : itemType;
+            account.equipped[field] = "";
+            account.equipped[field + "Id"] = "";
             await account.save();
             return res.status(200).json({ status: true, message: `${itemType} unequipped successfully.` });
         }
@@ -163,24 +164,35 @@ exports.equipStoreItem = async (req, res) => {
              if (!fileUrl) return res.status(200).json({ status: false, message: "This VIP level does not have this item." });
 
         } else {
-            // Handle Store item equip
-            const ownsItem = account.inventory.some(inv => inv.itemId.toString() === itemId.toString());
-            if (!ownsItem) return res.status(200).json({ status: false, message: "You do not own this item." });
+            // Check for Custom item (by inventory _id) OR Store item (by itemId)
+            const invItem = account.inventory.find(inv => 
+                inv._id.toString() === itemId.toString() || 
+                (inv.itemId && inv.itemId.toString() === itemId.toString())
+            );
 
-            let Model;
-            if (itemType === "frame") Model = Frame;
-            else if (itemType === "background") Model = Background;
-            else if (itemType === "entry") Model = Entry;
-            else if (itemType === "entryTag") Model = EntryTag;
-            else if (itemType === "tag") Model = Tag;
+            if (!invItem) return res.status(200).json({ status: false, message: "You do not own this item." });
 
-            const storeItem = await Model.findById(itemId).lean();
-            if (!storeItem) return res.status(200).json({ status: false, message: "Item not found in store." });
-            fileUrl = storeItem.file || storeItem.image; // Some schemas might use image, mostly file.
+            if (invItem.customFile) {
+                fileUrl = invItem.customFile;
+            } else {
+                // Handle Store item equip
+                let Model;
+                if (itemType === "frame") Model = Frame;
+                else if (itemType === "background") Model = Background;
+                else if (itemType === "entry") Model = Entry;
+                else if (itemType === "entryTag") Model = EntryTag;
+                else if (itemType === "tag") Model = Tag;
+                else return res.status(200).json({ status: false, message: "Invalid itemType for store item." });
+
+                const storeItem = await Model.findById(itemId).lean();
+                if (!storeItem) return res.status(200).json({ status: false, message: "Item not found in store." });
+                fileUrl = storeItem.file || storeItem.image || storeItem.svgaImage || storeItem.webpImage;
+            }
         }
 
-        account.equipped[itemType] = fileUrl;
-        account.equipped[itemType + "Id"] = itemId;
+        const field = itemType === "custom" ? "custom" : itemType;
+        account.equipped[field] = fileUrl;
+        account.equipped[field + "Id"] = itemId;
         await account.save();
         return res.status(200).json({ status: true, message: `${itemType} equipped successfully.` });
 
@@ -205,15 +217,16 @@ exports.getMyBag = async (req, res) => {
             background: [],
             entry: [],
             entryTag: [],
-            tag: []
+            tag: [],
+            custom: []
         };
 
         if (account.inventory && account.inventory.length > 0) {
-             const frameIds = account.inventory.filter(i => i.itemType === 'frame').map(i => i.itemId);
-             const backgroundIds = account.inventory.filter(i => i.itemType === 'background').map(i => i.itemId);
-             const entryIds = account.inventory.filter(i => i.itemType === 'entry').map(i => i.itemId);
-             const entryTagIds = account.inventory.filter(i => i.itemType === 'entryTag').map(i => i.itemId);
-             const tagIds = account.inventory.filter(i => i.itemType === 'tag').map(i => i.itemId);
+             const frameIds = account.inventory.filter(i => i.itemType === 'frame' && i.itemId).map(i => i.itemId);
+             const backgroundIds = account.inventory.filter(i => i.itemType === 'background' && i.itemId).map(i => i.itemId);
+             const entryIds = account.inventory.filter(i => i.itemType === 'entry' && i.itemId).map(i => i.itemId);
+             const entryTagIds = account.inventory.filter(i => i.itemType === 'entryTag' && i.itemId).map(i => i.itemId);
+             const tagIds = account.inventory.filter(i => i.itemType === 'tag' && i.itemId).map(i => i.itemId);
 
              const [frames, backgrounds, entries, entryTags, tags] = await Promise.all([
                  Frame.find({ _id: { $in: frameIds } }).lean(),
@@ -228,6 +241,21 @@ exports.getMyBag = async (req, res) => {
              bag.entry = entries;
              bag.entryTag = entryTags;
              bag.tag = tags;
+
+             // Now add Custom items (those with customFile)
+             account.inventory.forEach(inv => {
+                 if (inv.customFile) {
+                     const customItem = {
+                         _id: inv._id, // User sends this as itemId to equip
+                         file: inv.customFile,
+                         name: inv.customName || "Custom Reward",
+                         isCustom: true,
+                         itemType: inv.itemType
+                     };
+                     if (bag[inv.itemType]) bag[inv.itemType].push(customItem);
+                     else if (inv.itemType === "custom") bag.custom.push(customItem);
+                 }
+             });
         }
 
         // Add VIP Privileges as items in the bag!

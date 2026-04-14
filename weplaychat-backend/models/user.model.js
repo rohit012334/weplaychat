@@ -37,7 +37,9 @@ const userSchema = new mongoose.Schema(
     
     inventory: [{
         itemId: { type: mongoose.Schema.Types.ObjectId },
-        itemType: { type: String, enum: ["frame", "entry", "entryTag", "background", "tag"] }
+        itemType: { type: String, enum: ["frame", "entry", "entryTag", "background", "tag", "gift", "custom"] },
+        customFile: { type: String, default: "" },
+        customName: { type: String, default: "" }
     }],
     equipped: {
         frame: { type: String, default: "" },
@@ -45,12 +47,14 @@ const userSchema = new mongoose.Schema(
         entry: { type: String, default: "" },
         entryTag: { type: String, default: "" },
         tag: { type: String, default: "" },
-        
+        custom: { type: String, default: "" },
+
         frameId: { type: String, default: "" },
         backgroundId: { type: String, default: "" },
         entryId: { type: String, default: "" },
         entryTagId: { type: String, default: "" },
         tagId: { type: String, default: "" },
+        customId: { type: String, default: "" },
     },
 
 
