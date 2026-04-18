@@ -37,6 +37,8 @@ const Dashboard = () => {
   const [type, setType] = useState<string | null>(null);
   const router = useRouter();
   const dashboard: any = useSelector((state: RootStore) => state.dashboard);
+  const { currentRole: roleFromStore } = useSelector((state: RootStore) => state?.admin);
+  const role = roleFromStore ?? (typeof window !== "undefined" ? sessionStorage.getItem("currentRole") : null);
 
   useEffect(() => {
     const storedType = localStorage.getItem("dashType") || "Recent Users";
@@ -250,7 +252,7 @@ const Dashboard = () => {
         <div className="db-hero">
           <div className="db-hero-left">
             <p className="db-greeting">{greeting} 👋</p>
-            <h1 className="db-welcome">Welcome back, Admin!</h1>
+            <h1 className="db-welcome">Welcome back, {role === "manager" ? "Manager" : "Admin"}!</h1>
             <p className="db-date">
               {new Date().toLocaleDateString("en-GB", { weekday: "long", day: "2-digit", month: "long", year: "numeric" })}
             </p>

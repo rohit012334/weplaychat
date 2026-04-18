@@ -864,7 +864,7 @@ const Sidebar = () => {
                 {/* Animated pill subtitle */}
                 <div className="sb-brand-pill">
                   <span className="sb-brand-pill-dot" />
-                  <span className="sb-brand-pill-text">Global Admin</span>
+                  <span className="sb-brand-pill-text">{role === "manager" ? "Manager Portal" : "Global Admin"}</span>
                 </div>
 
               </div>
@@ -885,32 +885,28 @@ const Sidebar = () => {
             <nav>
               <ul className="mainMenu webMenu">
 
-                {role !== "admin" && role !== "manager" && renderMenuItems(genralMenu)}
+                {(role === "admin" || (role !== "admin" && role !== "manager")) && renderMenuItems(genralMenu)}
                 {role === "manager" && renderMenuItems(managerMenu)}
-                {renderMenuItems(fastOrdersMenu)}
 
-                {renderMenuItems(hostAndAgency)}
-
-                {role !== "admin" && role !== "manager" && (
+                {role !== "manager" && (
                   <>
+                    {renderMenuItems(fastOrdersMenu)}
+                    {renderMenuItems(hostAndAgency)}
                     {renderMenuItems(giftAndRewards)}
-
                     {renderMenuItems(storeMenu)}
-
                     {renderMenuItems(bannerAndEvent)}
-
                     {renderMenuItems(vipMenu)}
+                    {renderMenuItems(reelsAndMoments)}
+                    {renderMenuItems(gamesMenu)}
+                    {renderMenuItems(levelMenu)}
+
+                    <li className="sb-label">More Modules</li>
+                    {renderMenuItems(vipsImportedMenu)}
+
+                    <li className="sb-label">Finance</li>
+                    {renderMenuItems(finance)}
                   </>
                 )}
-                {renderMenuItems(reelsAndMoments)}
-                {renderMenuItems(gamesMenu)}
-                {renderMenuItems(levelMenu)}
-
-                <li className="sb-label">More Modules</li>
-                {renderMenuItems(vipsImportedMenu)}
-
-                <li className="sb-label">Finance</li>
-                {renderMenuItems(finance)}
 
 
 
